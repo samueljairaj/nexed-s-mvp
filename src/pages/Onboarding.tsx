@@ -190,8 +190,9 @@ const Onboarding = () => {
     try {
       // Only include fields that are defined in UserProfile
       await updateProfile({
-        employer: data.employer,
-        jobTitle: data.jobTitle,
+        // Remove employer field since it doesn't exist in the UserProfile type
+        // employer: data.employer,
+        // jobTitle: data.jobTitle,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -287,6 +288,13 @@ const Onboarding = () => {
           <OnboardingComplete
             onFinish={handleFinish}
             isSubmitting={isSubmitting}
+            userData={{
+              name: currentUser?.name,
+              visaType: visaData.visaType,
+              university: academicData.university,
+              fieldOfStudy: academicData.fieldOfStudy,
+              employer: employmentData.employer
+            }}
           />
         );
       default:

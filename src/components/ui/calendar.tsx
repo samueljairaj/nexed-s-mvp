@@ -59,7 +59,6 @@ function Calendar({
       captionLayout="dropdown-buttons"
       fromYear={1920}
       toYear={2050}
-      className="pointer-events-auto"
       {...props}
     />
   );
