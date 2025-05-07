@@ -60,7 +60,7 @@ export const sevisInfoSchema = z.object({
 });
 
 export const employmentInfoSchema = z.object({
-  employmentStatus: z.enum(["Not Employed", "On-Campus Employment", "CPT", "OPT", "STEM OPT Extension", "H-1B"]),
+  employmentStatus: z.enum(["Not Employed", "On-Campus Employment", "CPT", "OPT", "STEM OPT Extension", "H1B"]),
   employerName: z.string().optional(),
   jobTitle: z.string().optional(),
   employmentStartDate: z.date().optional(),

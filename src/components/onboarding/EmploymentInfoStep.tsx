@@ -93,10 +93,10 @@ export function EmploymentInfoStep({
                 <SelectContent>
                   <SelectItem value="Not Employed">Not Employed</SelectItem>
                   {isF1OrJ1() && <SelectItem value="On-Campus Employment">On-Campus Employment</SelectItem>}
-                  {visaType === "F-1" && <SelectItem value="CPT">CPT (Curricular Practical Training)</SelectItem>}
-                  {visaType === "F-1" && <SelectItem value="OPT">OPT (Optional Practical Training)</SelectItem>}
-                  {visaType === "F-1" && <SelectItem value="STEM OPT Extension">STEM OPT Extension</SelectItem>}
-                  <SelectItem value="H-1B">H-1B</SelectItem>
+                  {visaType === "F1" && <SelectItem value="CPT">CPT (Curricular Practical Training)</SelectItem>}
+                  {visaType === "F1" && <SelectItem value="OPT">OPT (Optional Practical Training)</SelectItem>}
+                  {visaType === "F1" && <SelectItem value="STEM OPT Extension">STEM OPT Extension</SelectItem>}
+                  <SelectItem value="H1B">H-1B</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -417,6 +417,10 @@ export function EmploymentInfoStep({
             />
           </>
         )}
+        
+        <Button type="submit" className="w-full">
+          Continue
+        </Button>
       </form>
     </Form>
   );

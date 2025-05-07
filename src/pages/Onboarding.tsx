@@ -7,7 +7,7 @@ import { AccountCreationStep, AccountCreationFormData } from "@/components/onboa
 import { PersonalInfoStep, PersonalInfoFormData } from "@/components/onboarding/PersonalInfoStep";
 import { VisaStatusStep, VisaStatusFormData } from "@/components/onboarding/VisaStatusStep";
 import { AcademicInfoStep, AcademicInfoFormData } from "@/components/onboarding/AcademicInfoStep";
-import { EmploymentStep, EmploymentFormData } from "@/components/onboarding/EmploymentStep";
+import { EmploymentInfoStep } from "@/components/onboarding/EmploymentInfoStep";
 import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 
@@ -37,7 +37,7 @@ const Onboarding = () => {
   });
   
   const [visaData, setVisaData] = useState<Partial<VisaStatusFormData>>({
-    visaType: "F1",  // Updated to uppercase to match the database enum
+    visaType: "F1",
     currentStatus: ""
   });
   
@@ -48,8 +48,18 @@ const Onboarding = () => {
     isSTEM: false
   });
   
-  const [employmentData, setEmploymentData] = useState<Partial<EmploymentFormData>>({
-    employmentStatus: ""
+  const [employmentData, setEmploymentData] = useState({
+    employmentStatus: "Not Employed",
+    employerName: "",
+    jobTitle: "",
+    employmentStartDate: null,
+    employmentEndDate: null,
+    isFieldRelated: false,
+    optCptStartDate: null,
+    optCptEndDate: null,
+    eadNumber: "",
+    stemEVerify: "",
+    stemI983Date: null
   });
 
   useEffect(() => {
@@ -70,7 +80,7 @@ const Onboarding = () => {
       }
       
       if (currentUser.visaType) {
-        setVisaData(prev => ({ ...prev, visaType: currentUser.visaType as any }));
+        setVisaData(prev => ({ ...prev, visaType: currentUser.visaType }));
       }
       
       if (currentUser.university) {
@@ -183,16 +193,14 @@ const Onboarding = () => {
     }
   };
 
-  const handleEmploymentInfo = async (data: EmploymentFormData) => {
+  const handleEmploymentInfo = async (data: any) => {
     setEmploymentData(data);
     setIsSubmitting(true);
     
     try {
       // Only include fields that are defined in UserProfile
       await updateProfile({
-        // Remove employer field since it doesn't exist in the UserProfile type
-        // employer: data.employer,
-        // jobTitle: data.jobTitle,
+        // employmentStatus would be saved here if it was in UserProfile
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -204,6 +212,25 @@ const Onboarding = () => {
   
   const handleEmploymentStatusChange = (status: string) => {
     setEmploymentData(prev => ({ ...prev, employmentStatus: status }));
+  };
+  
+  // Helper functions for the EmploymentInfoStep
+  const isF1OrJ1 = () => {
+    return visaData.visaType === "F1" || visaData.visaType === "J1";
+  };
+  
+  const isEmployed = () => {
+    return employmentData.employmentStatus !== "Not Employed";
+  };
+  
+  const isOptOrCpt = () => {
+    return employmentData.employmentStatus === "CPT" || 
+           employmentData.employmentStatus === "OPT" || 
+           employmentData.employmentStatus === "STEM OPT Extension";
+  };
+  
+  const isStemOpt = () => {
+    return employmentData.employmentStatus === "STEM OPT Extension";
   };
 
   const handleFinish = async () => {
@@ -274,13 +301,15 @@ const Onboarding = () => {
         );
       case 4:
         return (
-          <EmploymentStep
+          <EmploymentInfoStep
             defaultValues={employmentData}
             onSubmit={handleEmploymentInfo}
             visaType={visaData.visaType || "F1"}
             onEmploymentStatusChange={handleEmploymentStatusChange}
-            employmentStatus={employmentData.employmentStatus || ""}
-            isSubmitting={isSubmitting}
+            isF1OrJ1={isF1OrJ1}
+            isEmployed={isEmployed}
+            isOptOrCpt={isOptOrCpt}
+            isStemOpt={isStemOpt}
           />
         );
       case 5:
@@ -293,7 +322,7 @@ const Onboarding = () => {
               visaType: visaData.visaType,
               university: academicData.university,
               fieldOfStudy: academicData.fieldOfStudy,
-              employer: employmentData.employer
+              employer: employmentData.employerName
             }}
           />
         );
