@@ -3,10 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { 
   Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+  CardContent
 } from "@/components/ui/card";
 import {
   Tabs,
@@ -14,20 +11,18 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertTriangle,
   Calendar,
-  CheckCircle2,
-  Clock,
-  Filter,
-  Search
+  Search,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { TimelineView } from "@/components/compliance/TimelineView";
+import { TaskList } from "@/components/compliance/TaskList";
+import { generateMockTasks } from "@/utils/mockTasks";
 
 // Task interface
 interface Task {
@@ -240,11 +235,12 @@ const Compliance = () => {
 
       {/* Task Lists */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-8">
+        <TabsList className="grid grid-cols-5 mb-8">
           <TabsTrigger value="all">All Tasks</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
           <TabsTrigger value="completed">Completed</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">
@@ -284,241 +280,13 @@ const Compliance = () => {
             emptyMessage="No completed tasks yet"
           />
         </TabsContent>
+
+        <TabsContent value="timeline">
+          <TimelineView tasks={filteredTasks} />
+        </TabsContent>
       </Tabs>
     </div>
   );
-};
-
-const TaskList = ({ 
-  tasks, 
-  toggleTaskStatus,
-  emptyMessage
-}: { 
-  tasks: Task[], 
-  toggleTaskStatus: (id: string) => void,
-  emptyMessage: string
-}) => {
-  if (tasks.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">{emptyMessage}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {tasks.map(task => (
-        <Card key={task.id} className={`nexed-card ${task.completed ? 'bg-gray-50' : ''}`}>
-          <CardContent className="p-4">
-            <div className="flex items-start">
-              <Checkbox 
-                checked={task.completed} 
-                onCheckedChange={() => toggleTaskStatus(task.id)}
-                className="mt-1 mr-4"
-              />
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className={`font-medium text-lg ${task.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                      {task.title}
-                    </h3>
-                    <p className={`mt-1 ${task.completed ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {task.description}
-                    </p>
-                  </div>
-                  <div className="ml-4 flex items-center space-x-2">
-                    <Badge variant="outline" className="capitalize">
-                      {task.category}
-                    </Badge>
-                    <Badge 
-                      className={
-                        task.priority === "high" ? "bg-red-100 text-red-800 hover:bg-red-100" : 
-                        task.priority === "medium" ? "bg-amber-100 text-amber-800 hover:bg-amber-100" : 
-                        "bg-green-100 text-green-800 hover:bg-green-100"
-                      }
-                    >
-                      {task.priority}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex items-center mt-3 text-sm text-gray-500">
-                  <Clock size={14} className="mr-1" />
-                  <span>Due: {task.dueDate}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-};
-
-// Generate mock tasks based on visa type
-const generateMockTasks = (visaType: string): Task[] => {
-  const commonTasks: Task[] = [
-    {
-      id: "task-1",
-      title: "Update Local Address in SEVIS",
-      description: "You must update your address in SEVIS within 10 days of moving to a new location.",
-      dueDate: "May 20, 2025",
-      category: "immigration",
-      completed: false,
-      priority: "high"
-    },
-    {
-      id: "task-2",
-      title: "Health Insurance Renewal",
-      description: "Renew your health insurance policy before it expires to maintain coverage.",
-      dueDate: "June 15, 2025",
-      category: "personal",
-      completed: false,
-      priority: "medium"
-    },
-    {
-      id: "task-3",
-      title: "Passport Validity Check",
-      description: "Ensure your passport is valid for at least 6 months beyond your expected stay.",
-      dueDate: "August 30, 2025",
-      category: "immigration",
-      completed: true,
-      priority: "medium"
-    },
-    {
-      id: "task-4",
-      title: "Update Emergency Contact Information",
-      description: "Keep your emergency contact information up to date with your school.",
-      dueDate: "September 5, 2025",
-      category: "personal",
-      completed: true,
-      priority: "low"
-    }
-  ];
-
-  // Visa-specific tasks
-  let specificTasks: Task[] = [];
-
-  if (visaType === "F1") {
-    specificTasks = [
-      {
-        id: "task-f1-1",
-        title: "Enroll in Full Course Load",
-        description: "Maintain full-time enrollment (min. 12 credits for undergrad, 9 credits for graduate).",
-        dueDate: "May 25, 2025",
-        category: "academic",
-        completed: false,
-        priority: "high"
-      },
-      {
-        id: "task-f1-2",
-        title: "SEVIS Registration for Fall",
-        description: "Your DSO must register you in SEVIS each semester.",
-        dueDate: "September 15, 2025",
-        category: "immigration",
-        completed: false,
-        priority: "high"
-      },
-      {
-        id: "task-f1-3",
-        title: "Request I-20 Extension",
-        description: "If your program will extend beyond your I-20 expiration date, request an extension.",
-        dueDate: "October 1, 2025",
-        category: "immigration",
-        completed: false,
-        priority: "medium"
-      },
-      {
-        id: "task-f1-4",
-        title: "Verify On-Campus Employment Hours",
-        description: "Ensure you're not working more than 20 hours per week during the semester.",
-        dueDate: "Recurring",
-        category: "employment",
-        completed: true,
-        priority: "medium"
-      }
-    ];
-  } else if (visaType === "OPT") {
-    specificTasks = [
-      {
-        id: "task-opt-1",
-        title: "Submit Employment Updates",
-        description: "Report any changes to employment within 10 days to your DSO.",
-        dueDate: "Within 10 days of change",
-        category: "employment",
-        completed: false,
-        priority: "high"
-      },
-      {
-        id: "task-opt-2",
-        title: "Track Unemployment Days",
-        description: "Monitor your unemployment days (max 90 days permitted during OPT).",
-        dueDate: "Ongoing",
-        category: "employment",
-        completed: false,
-        priority: "high"
-      },
-      {
-        id: "task-opt-3",
-        title: "Submit 6-Month OPT Progress Report",
-        description: "File a report on your OPT employment and activities.",
-        dueDate: "July 15, 2025",
-        category: "employment",
-        completed: false,
-        priority: "medium"
-      },
-      {
-        id: "task-opt-4",
-        title: "Consider STEM OPT Extension",
-        description: "Apply for STEM OPT extension 90 days before your current OPT expires (if eligible).",
-        dueDate: "November 1, 2025",
-        category: "immigration",
-        completed: false,
-        priority: "medium"
-      }
-    ];
-  } else if (visaType === "H1B") {
-    specificTasks = [
-      {
-        id: "task-h1b-1",
-        title: "Verify Employer Records H-1B Compliance",
-        description: "Ensure your employer maintains proper Public Access Files for your H-1B.",
-        dueDate: "May 30, 2025",
-        category: "employment",
-        completed: false,
-        priority: "medium"
-      },
-      {
-        id: "task-h1b-2",
-        title: "Update Address with USCIS",
-        description: "File Form AR-11 within 10 days if you change your residence address.",
-        dueDate: "Within 10 days of moving",
-        category: "immigration",
-        completed: false,
-        priority: "high"
-      },
-      {
-        id: "task-h1b-3",
-        title: "Confirm H-1B Expiration Date",
-        description: "Review your H-1B expiration date and prepare for renewal 6 months in advance.",
-        dueDate: "June 15, 2025",
-        category: "immigration",
-        completed: true,
-        priority: "medium"
-      },
-      {
-        id: "task-h1b-4",
-        title: "Consult Attorney Before Travel",
-        description: "Speak with an immigration attorney prior to international travel.",
-        dueDate: "Before any travel",
-        category: "immigration",
-        completed: false,
-        priority: "medium"
-      }
-    ];
-  }
-
-  return [...commonTasks, ...specificTasks];
 };
 
 export default Compliance;
