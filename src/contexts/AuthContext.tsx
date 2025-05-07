@@ -261,13 +261,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           onboardingComplete: true,
         }));
         
-        // Navigate to dashboard
-        navigate("/app/dashboard");
+        // The navigation is now handled in OnboardingComplete.tsx
+        // This ensures that the state is updated before navigation
+        return true;
       } catch (error: any) {
         console.error("Error completing onboarding:", error);
         toast.error(`Failed to complete onboarding: ${error.message}`);
+        throw error; // Re-throw the error so the calling function can handle it
       }
     }
+    return false;
   };
 
   // Check if user should be directed to onboarding

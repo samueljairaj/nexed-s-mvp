@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth, VisaType } from "../contexts/AuthContext";
 import { toast } from "sonner";
@@ -219,10 +218,15 @@ export function useOnboardingState() {
   const handleFinish = async () => {
     setIsSubmitting(true);
     try {
+      // Mark onboarding as complete in the database
       await completeOnboarding();
       toast.success("Onboarding completed successfully!");
+      
+      // Navigation is now handled directly in the OnboardingComplete component
+      // This ensures proper order - first complete onboarding, then navigate
     } catch (error) {
       toast.error("Failed to complete onboarding");
+      console.error("Error completing onboarding:", error);
     } finally {
       setIsSubmitting(false);
     }

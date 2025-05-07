@@ -31,8 +31,11 @@ export function OnboardingComplete({ onFinish, isSubmitting = false, userData = 
   }, []);
 
   const handleGoToDashboard = () => {
+    // First call the onFinish function to update the user's onboarding status
     onFinish();
-    // Force navigation to the dashboard path
+    
+    // Then explicitly navigate to the dashboard using replace to prevent 
+    // the user from navigating back to the onboarding flow with the back button
     navigate("/app/dashboard", { replace: true });
   };
 
