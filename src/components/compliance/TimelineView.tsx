@@ -21,14 +21,29 @@ interface TimelineViewProps {
 
 export function TimelineView({ tasks }: TimelineViewProps) {
   // Sort tasks by due date (completed at the end)
-  const sortedTasks = [...tasks].sort((a, b) => {
-    // Put completed tasks at the end
-    if (a.completed && !b.completed) return 1;
-    if (!a.completed && b.completed) return -1;
-    
-    // Sort by due date
-    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-  });
+  const sortedTasks = React.useMemo(() => {
+    return [...tasks].sort((a, b) => {
+      // Put completed tasks at the end
+      if (a.completed && !b.completed) return 1;
+      if (!a.completed && b.completed) return -1;
+      
+      // Sort by due date
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
+  }, [tasks]);
+
+  // If no tasks, show empty state
+  if (!tasks || tasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-center">
+        <div className="text-gray-400 mb-2">
+          <CheckCircle2 size={48} />
+        </div>
+        <h3 className="text-lg font-medium mb-1">No tasks available</h3>
+        <p className="text-gray-500">There are no tasks to display in the timeline view</p>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-6">
