@@ -9,7 +9,156 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      compliance_task_templates: {
+        Row: {
+          created_at: string | null
+          days_from_start: number | null
+          description: string | null
+          id: string
+          is_recurring: boolean | null
+          recurring_interval: string | null
+          title: string
+          visa_type: Database["public"]["Enums"]["visa_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          days_from_start?: number | null
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          recurring_interval?: string | null
+          title: string
+          visa_type: Database["public"]["Enums"]["visa_type"]
+        }
+        Update: {
+          created_at?: string | null
+          days_from_start?: number | null
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          recurring_interval?: string | null
+          title?: string
+          visa_type?: Database["public"]["Enums"]["visa_type"]
+        }
+        Relationships: []
+      }
+      compliance_tasks: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          is_completed: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string
+          visa_type: Database["public"]["Enums"]["visa_type"] | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+          visa_type?: Database["public"]["Enums"]["visa_type"] | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          visa_type?: Database["public"]["Enums"]["visa_type"] | null
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          category: string
+          created_at: string | null
+          file_type: string | null
+          file_url: string
+          id: string
+          is_required: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          is_required?: boolean | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          is_required?: boolean | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          country: string | null
+          course_start_date: string | null
+          created_at: string | null
+          email: string | null
+          employment_start_date: string | null
+          id: string
+          name: string | null
+          onboarding_complete: boolean | null
+          university: string | null
+          updated_at: string | null
+          us_entry_date: string | null
+          visa_type: Database["public"]["Enums"]["visa_type"] | null
+        }
+        Insert: {
+          country?: string | null
+          course_start_date?: string | null
+          created_at?: string | null
+          email?: string | null
+          employment_start_date?: string | null
+          id: string
+          name?: string | null
+          onboarding_complete?: boolean | null
+          university?: string | null
+          updated_at?: string | null
+          us_entry_date?: string | null
+          visa_type?: Database["public"]["Enums"]["visa_type"] | null
+        }
+        Update: {
+          country?: string | null
+          course_start_date?: string | null
+          created_at?: string | null
+          email?: string | null
+          employment_start_date?: string | null
+          id?: string
+          name?: string | null
+          onboarding_complete?: boolean | null
+          university?: string | null
+          updated_at?: string | null
+          us_entry_date?: string | null
+          visa_type?: Database["public"]["Enums"]["visa_type"] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +167,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      visa_type: "F1" | "OPT" | "H1B" | "Other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +282,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      visa_type: ["F1", "OPT", "H1B", "Other"],
+    },
   },
 } as const
