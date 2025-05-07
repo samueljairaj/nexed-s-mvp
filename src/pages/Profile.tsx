@@ -89,11 +89,11 @@ const Profile = () => {
   const getRequiredDocuments = () => {
     const docs = ["Valid Passport", "Visa Document"];
 
-    if (form.visaType === "F-1") {
+    if (form.visaType === "F1") {
       docs.push("I-20 Form", "SEVIS Fee Receipt", "I-94 Arrival Record");
-    } else if (form.visaType === "J-1") {
+    } else if (form.visaType === "J1") {
       docs.push("DS-2019 Form", "SEVIS Fee Receipt", "I-94 Arrival Record", "Health Insurance Documentation");
-    } else if (form.visaType === "H-1B") {
+    } else if (form.visaType === "H1B") {
       docs.push("I-797 Approval Notice", "Labor Condition Application", "Employment Verification Letter");
     }
 
@@ -168,9 +168,9 @@ const Profile = () => {
                         <SelectValue placeholder="Select visa type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="F-1">F-1 (Student)</SelectItem>
-                        <SelectItem value="J-1">J-1 (Exchange Visitor)</SelectItem>
-                        <SelectItem value="H-1B">H-1B (Work)</SelectItem>
+                        <SelectItem value="F1">F-1 (Student)</SelectItem>
+                        <SelectItem value="J1">J-1 (Exchange Visitor)</SelectItem>
+                        <SelectItem value="H1B">H-1B (Work)</SelectItem>
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
@@ -341,19 +341,19 @@ const Profile = () => {
                   <p className="font-medium">{form.visaType || "Not specified"}</p>
                 </div>
                 
-                {form.visaType === "F-1" && (
+                {form.visaType === "F1" && (
                   <div className="p-3 bg-amber-50 rounded-md">
                     <p className="text-amber-800 text-sm">Remember to maintain full-time enrollment</p>
                   </div>
                 )}
                 
-                {form.visaType === "J-1" && (
+                {form.visaType === "J1" && (
                   <div className="p-3 bg-amber-50 rounded-md">
                     <p className="text-amber-800 text-sm">Health insurance is mandatory</p>
                   </div>
                 )}
                 
-                {form.visaType === "H-1B" && (
+                {form.visaType === "H1B" && (
                   <div className="p-3 bg-amber-50 rounded-md">
                     <p className="text-amber-800 text-sm">Employment limited to sponsoring employer</p>
                   </div>

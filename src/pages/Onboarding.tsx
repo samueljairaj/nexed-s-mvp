@@ -37,7 +37,7 @@ const Onboarding = () => {
   });
   
   const [visaData, setVisaData] = useState<Partial<VisaStatusFormData>>({
-    visaType: "f1",
+    visaType: "F1",  // Updated to uppercase to match the database enum
     currentStatus: ""
   });
   
@@ -150,7 +150,7 @@ const Onboarding = () => {
       });
       
       // Skip to employment step for non-student visas
-      if (data.visaType !== "f1" && data.visaType !== "j1") {
+      if (data.visaType !== "F1" && data.visaType !== "J1") {
         setCurrentStep(currentStep + 2);
       } else {
         setCurrentStep(currentStep + 1);
@@ -163,7 +163,7 @@ const Onboarding = () => {
   };
   
   const handleVisaTypeChange = (visaType: string) => {
-    setVisaData(prev => ({ ...prev, visaType: visaType as "f1" | "j1" | "h1b" | "other" }));
+    setVisaData(prev => ({ ...prev, visaType: visaType as "F1" | "J1" | "H1B" | "Other" }));
   };
 
   const handleAcademicInfo = async (data: AcademicInfoFormData) => {
@@ -268,7 +268,7 @@ const Onboarding = () => {
           <AcademicInfoStep
             defaultValues={academicData}
             onSubmit={handleAcademicInfo}
-            isF1OrJ1={visaData.visaType === "f1" || visaData.visaType === "j1"}
+            isF1OrJ1={visaData.visaType === "F1" || visaData.visaType === "J1"}
             isSubmitting={isSubmitting}
           />
         );
@@ -277,7 +277,7 @@ const Onboarding = () => {
           <EmploymentStep
             defaultValues={employmentData}
             onSubmit={handleEmploymentInfo}
-            visaType={visaData.visaType || "f1"}
+            visaType={visaData.visaType || "F1"}
             onEmploymentStatusChange={handleEmploymentStatusChange}
             employmentStatus={employmentData.employmentStatus || ""}
             isSubmitting={isSubmitting}

@@ -76,10 +76,10 @@ export function VisaInfoStep({ defaultValues, onSubmit, onVisaTypeChange, onVisa
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="f1">F-1 (Student)</SelectItem>
-                  <SelectItem value="j1">J-1 (Exchange Visitor)</SelectItem>
-                  <SelectItem value="h1b">H-1B (Work)</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="F1">F-1 (Student)</SelectItem>
+                  <SelectItem value="J1">J-1 (Exchange Visitor)</SelectItem>
+                  <SelectItem value="H1B">H-1B (Work)</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -87,7 +87,7 @@ export function VisaInfoStep({ defaultValues, onSubmit, onVisaTypeChange, onVisa
           )}
         />
         
-        {form.watch("visaType") === "other" && (
+        {form.watch("visaType") === "Other" && (
           <FormField
             control={form.control}
             name="otherVisaType"

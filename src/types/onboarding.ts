@@ -1,7 +1,7 @@
 
 import { z } from "zod";
 
-export type VisaType = "f1" | "j1" | "h1b" | "other" | null;
+export type VisaType = "F1" | "J1" | "H1B" | "Other" | null;
 
 export const personalInfoSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -18,7 +18,7 @@ export const personalInfoSchema = z.object({
 });
 
 export const visaInfoSchema = z.object({
-  visaType: z.enum(["f1", "j1", "h1b", "other"]),
+  visaType: z.enum(["F1", "J1", "H1B", "Other"]),
   otherVisaType: z.string().optional(),
   countryOfOrigin: z.string().min(1, "Please select your country of origin"),
   visaStatus: z.enum(["Active", "Pending", "Expiring Soon", "Expired", "Not Yet Obtained"]),

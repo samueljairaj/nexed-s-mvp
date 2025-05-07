@@ -30,7 +30,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const visaStatusSchema = z.object({
-  visaType: z.enum(["f1", "j1", "h1b", "other"]),
+  visaType: z.enum(["F1", "J1", "H1B", "Other"]),
   currentStatus: z.string().min(1, "Please select your current status"),
   sevisId: z.string().optional(),
   i797Number: z.string().optional(),
@@ -59,7 +59,7 @@ export function VisaStatusStep({
   const form = useForm<VisaStatusFormData>({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
-      visaType: "f1",
+      visaType: "F1",
       currentStatus: "",
       ...defaultValues
     }
@@ -71,7 +71,7 @@ export function VisaStatusStep({
   // Status options based on visa type
   const getStatusOptions = () => {
     switch (visaType) {
-      case "f1":
+      case "F1":
         return [
           { value: "Active", label: "Active" },
           { value: "Initial", label: "Initial (Not yet in US)" },
@@ -80,14 +80,14 @@ export function VisaStatusStep({
           { value: "OPT", label: "Optional Practical Training (OPT)" },
           { value: "STEM_OPT", label: "STEM OPT Extension" },
         ];
-      case "j1":
+      case "J1":
         return [
           { value: "Active", label: "Active" },
           { value: "Initial", label: "Initial (Not yet in US)" },
           { value: "Terminated", label: "Terminated" },
           { value: "Academic_Training", label: "Academic Training" },
         ];
-      case "h1b":
+      case "H1B":
         return [
           { value: "Active", label: "Active" },
           { value: "Approved", label: "Approved (Not yet in US)" },
@@ -136,7 +136,7 @@ export function VisaStatusStep({
                     <FormItem>
                       <FormControl>
                         <RadioGroupItem 
-                          value="f1" 
+                          value="F1" 
                           id="visa-f1" 
                           className="peer sr-only" 
                         />
@@ -153,7 +153,7 @@ export function VisaStatusStep({
                     <FormItem>
                       <FormControl>
                         <RadioGroupItem 
-                          value="j1" 
+                          value="J1" 
                           id="visa-j1" 
                           className="peer sr-only" 
                         />
@@ -170,7 +170,7 @@ export function VisaStatusStep({
                     <FormItem>
                       <FormControl>
                         <RadioGroupItem 
-                          value="h1b" 
+                          value="H1B" 
                           id="visa-h1b" 
                           className="peer sr-only" 
                         />
@@ -187,7 +187,7 @@ export function VisaStatusStep({
                     <FormItem>
                       <FormControl>
                         <RadioGroupItem 
-                          value="other" 
+                          value="Other" 
                           id="visa-other" 
                           className="peer sr-only" 
                         />
@@ -233,7 +233,7 @@ export function VisaStatusStep({
             )}
           />
           
-          {(visaType === "F-1" || visaType === "J-1") && (
+          {(visaType === "F1" || visaType === "J1") && (
             <FormField
               control={form.control}
               name="sevisId"
@@ -256,7 +256,7 @@ export function VisaStatusStep({
             />
           )}
           
-          {visaType === "H-1B" && (
+          {visaType === "H1B" && (
             <FormField
               control={form.control}
               name="i797Number"
@@ -393,14 +393,14 @@ export function VisaStatusStep({
               )}
             />
           
-          {(visaType === "F-1" || visaType === "J-1") && (
+          {(visaType === "F1" || visaType === "J1") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="programStartDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>{visaType === "F-1" ? "I-20" : "DS-2019"} Program Start Date</FormLabel>
+                    <FormLabel>{visaType === "F1" ? "I-20" : "DS-2019"} Program Start Date</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -437,7 +437,7 @@ export function VisaStatusStep({
                 name="programEndDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>{visaType === "F-1" ? "I-20" : "DS-2019"} Program End Date</FormLabel>
+                    <FormLabel>{visaType === "F1" ? "I-20" : "DS-2019"} Program End Date</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
