@@ -3,8 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Flag, Home, User, Phone } from "lucide-react";
-import { format } from "date-fns";
+import { Calendar as CalendarIcon, Flag, Home, User, Phone } from "lucide-react";
+import { format, parse, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -27,7 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { countries } from "@/types/onboarding";
 
 const personalInfoSchema = z.object({
@@ -64,6 +64,9 @@ export function PersonalInfoStep({
   onSubmit,
   isSubmitting = false 
 }: PersonalInfoStepProps) {
+  const [passportExpiryInputValue, setPassportExpiryInputValue] = useState("");
+  const [dateOfBirthInputValue, setDateOfBirthInputValue] = useState("");
+  
   const form = useForm<PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
@@ -74,6 +77,26 @@ export function PersonalInfoStep({
       ...defaultValues
     }
   });
+
+  // Function to handle manual date input
+  const handleManualDateInput = (value: string, fieldName: "passportExpiryDate" | "dateOfBirth") => {
+    if (fieldName === "passportExpiryDate") {
+      setPassportExpiryInputValue(value);
+    } else {
+      setDateOfBirthInputValue(value);
+    }
+    
+    // Try to parse the date in multiple formats
+    const formats = ["MM/dd/yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "yyyy.MM.dd"];
+    
+    for (const dateFormat of formats) {
+      const parsedDate = parse(value, dateFormat, new Date());
+      if (isValid(parsedDate)) {
+        form.setValue(fieldName, parsedDate);
+        return;
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -165,33 +188,36 @@ export function PersonalInfoStep({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Passport Expiry Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                        >
-                          <div className="relative w-full">
-                            <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                            <span className="pl-2">
-                              {field.value ? format(field.value, "PPP") : "Select expiry date"}
-                            </span>
-                          </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="MM/DD/YYYY"
+                      value={passportExpiryInputValue || (field.value ? format(field.value, "MM/dd/yyyy") : "")}
+                      onChange={(e) => handleManualDateInput(e.target.value, "passportExpiryDate")}
+                      className="flex-1"
+                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="icon" type="button">
+                          <CalendarIcon className="h-4 w-4" />
                         </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            if (date) {
+                              setPassportExpiryInputValue(format(date, "MM/dd/yyyy"));
+                            }
+                          }}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className="p-3"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -203,33 +229,36 @@ export function PersonalInfoStep({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Birth</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                        >
-                          <div className="relative w-full">
-                            <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                            <span className="pl-2">
-                              {field.value ? format(field.value, "PPP") : "Select date of birth"}
-                            </span>
-                          </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="MM/DD/YYYY"
+                      value={dateOfBirthInputValue || (field.value ? format(field.value, "MM/dd/yyyy") : "")}
+                      onChange={(e) => handleManualDateInput(e.target.value, "dateOfBirth")}
+                      className="flex-1"
+                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="icon" type="button">
+                          <CalendarIcon className="h-4 w-4" />
                         </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date > new Date()}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            if (date) {
+                              setDateOfBirthInputValue(format(date, "MM/dd/yyyy"));
+                            }
+                          }}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                          className="p-3"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -189,13 +188,11 @@ const Onboarding = () => {
     setIsSubmitting(true);
     
     try {
-      const profileUpdate = {
-        // Type-safe properties for UserProfile
+      // Only include fields that are defined in UserProfile
+      await updateProfile({
         employer: data.employer,
         jobTitle: data.jobTitle,
-      };
-      
-      await updateProfile(profileUpdate);
+      });
       setCurrentStep(currentStep + 1);
     } catch (error) {
       toast.error("Failed to save employment information");
