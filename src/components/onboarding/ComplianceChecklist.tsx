@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -187,6 +186,9 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Your Personalized Document Checklist</DialogTitle>
+          <DialogDescription className="text-center">
+            We've created a customized compliance plan based on your visa status
+          </DialogDescription>
         </DialogHeader>
         
         <div className="overflow-y-auto flex-1">

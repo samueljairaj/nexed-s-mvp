@@ -3,6 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { ComplianceChecklist } from "./ComplianceChecklist";
+import { useNavigate } from "react-router-dom";
 
 interface OnboardingCompleteProps {
   onFinish: () => void;
@@ -18,6 +19,7 @@ interface OnboardingCompleteProps {
 
 export function OnboardingComplete({ onFinish, isSubmitting = false, userData = {} }: OnboardingCompleteProps) {
   const [showChecklist, setShowChecklist] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Show compliance checklist automatically after a short delay
@@ -27,6 +29,11 @@ export function OnboardingComplete({ onFinish, isSubmitting = false, userData = 
     
     return () => clearTimeout(timer);
   }, []);
+
+  const handleGoToDashboard = () => {
+    onFinish();
+    // This ensures we properly navigate to the dashboard through the auth provider's handling
+  };
 
   return (
     <>
@@ -53,7 +60,7 @@ export function OnboardingComplete({ onFinish, isSubmitting = false, userData = 
         </div>
         
         <Button 
-          onClick={onFinish} 
+          onClick={handleGoToDashboard} 
           className="mt-6 px-10"
           disabled={isSubmitting}
         >

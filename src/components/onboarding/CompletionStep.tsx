@@ -3,6 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { ComplianceChecklist } from "./ComplianceChecklist";
+import { useNavigate } from "react-router-dom";
 
 interface CompletionStepProps {
   onFinish: () => void;
@@ -18,6 +19,7 @@ interface CompletionStepProps {
 
 export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }: CompletionStepProps) {
   const [showChecklist, setShowChecklist] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Show compliance checklist automatically after a short delay
@@ -27,6 +29,11 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
     
     return () => clearTimeout(timer);
   }, []);
+
+  const handleGoToDashboard = () => {
+    onFinish();
+    // Let the parent component handle navigation through auth context
+  };
 
   return (
     <>
@@ -48,7 +55,7 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
           </ol>
         </div>
         <Button 
-          onClick={onFinish} 
+          onClick={handleGoToDashboard} 
           className="nexed-gradient-button" 
           disabled={isSubmitting}
         >
