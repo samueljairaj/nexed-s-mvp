@@ -11,8 +11,9 @@ import { FileCheck, FolderArchive, MessageCircle, ChevronRight } from "lucide-re
 const Index = () => {
   const { isAuthenticated, currentUser, login, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("demo@example.com");
+  const [password, setPassword] = useState("Password123!");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -26,7 +27,18 @@ const Index = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    if (!email || !password) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -96,8 +108,17 @@ const Index = () => {
                           onChange={(e) => setPassword(e.target.value)}
                         />
                       </div>
-                      <Button type="submit" className="w-full nexed-gradient">
-                        Sign In
+                      <Button 
+                        type="submit" 
+                        className="w-full nexed-gradient"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <span className="flex items-center">
+                            <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                            Signing In...
+                          </span>
+                        ) : "Sign In"}
                       </Button>
                       <p className="text-center text-sm text-gray-500">
                         Note: Demo account auto-filled, just click Sign In

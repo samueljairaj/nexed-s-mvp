@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 
 interface CompletionStepProps {
   onFinish: () => void;
+  isSubmitting: boolean;
 }
 
-export function CompletionStep({ onFinish }: CompletionStepProps) {
+export function CompletionStep({ onFinish, isSubmitting = false }: CompletionStepProps) {
   return (
     <div className="text-center py-6">
       <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6">
@@ -25,8 +26,17 @@ export function CompletionStep({ onFinish }: CompletionStepProps) {
           <li>Explore the dashboard to understand your visa status</li>
         </ol>
       </div>
-      <Button onClick={onFinish} className="nexed-gradient-button">
-        Go to Dashboard
+      <Button 
+        onClick={onFinish} 
+        className="nexed-gradient-button" 
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <span className="flex items-center">
+            <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+            Redirecting...
+          </span>
+        ) : "Go to Dashboard"}
       </Button>
     </div>
   );

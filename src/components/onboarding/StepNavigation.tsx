@@ -25,7 +25,7 @@ export function StepNavigation({
         type="button"
         variant="outline"
         onClick={onPrevious}
-        disabled={isFirstStep}
+        disabled={isFirstStep || isSubmitting}
       >
         <ChevronLeft className="mr-2 h-4 w-4" /> Previous
       </Button>
@@ -35,8 +35,17 @@ export function StepNavigation({
         disabled={isSubmitting}
         className={isLastStep ? "nexed-gradient-button" : ""}
       >
-        {isLastStep ? "Finish Setup" : "Next"}
-        {!isLastStep && <ChevronRight className="ml-2 h-4 w-4" />}
+        {isSubmitting ? (
+          <span className="flex items-center">
+            <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+            {isLastStep ? "Finishing..." : "Processing..."}
+          </span>
+        ) : (
+          <>
+            {isLastStep ? "Finish Setup" : "Next"}
+            {!isLastStep && <ChevronRight className="ml-2 h-4 w-4" />}
+          </>
+        )}
       </Button>
     </div>
   );

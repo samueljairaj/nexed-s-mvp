@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, VisaType } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,11 +31,11 @@ const Profile = () => {
     name: "",
     email: "",
     country: "",
-    visaType: "",
+    visaType: "" as VisaType,
     university: "",
-    courseStartDate: null,
-    usEntryDate: null,
-    employmentStartDate: null,
+    courseStartDate: null as Date | null,
+    usEntryDate: null as Date | null,
+    employmentStartDate: null as Date | null,
   });
 
   // Fetch current user data
@@ -45,7 +45,7 @@ const Profile = () => {
         name: currentUser.name || "",
         email: currentUser.email || "",
         country: currentUser.country || "",
-        visaType: currentUser.visaType || "",
+        visaType: currentUser.visaType || null,
         university: currentUser.university || "",
         courseStartDate: currentUser.courseStartDate || null,
         usEntryDate: currentUser.usEntryDate || null,
@@ -159,9 +159,9 @@ const Profile = () => {
                   <div className="space-y-2">
                     <Label htmlFor="visaType">Visa Type</Label>
                     <Select
-                      value={form.visaType}
+                      value={form.visaType || ""}
                       onValueChange={(value) =>
-                        handleSelectChange("visaType", value)
+                        handleSelectChange("visaType", value as VisaType)
                       }
                     >
                       <SelectTrigger>

@@ -139,6 +139,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      if (!email || !password) {
+        throw new Error("Email and password are required");
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -160,6 +164,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      if (!email || !password) {
+        throw new Error("Email and password are required");
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
