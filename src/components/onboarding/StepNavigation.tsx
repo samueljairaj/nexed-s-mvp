@@ -1,49 +1,52 @@
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface StepNavigationProps {
+  onNext: () => void;
+  onPrevious: () => void;
   currentStep: number;
   isFirstStep: boolean;
   isLastStep: boolean;
-  onNext: () => void;
-  onPrevious: () => void;
-  isSubmitting: boolean;
+  isSubmitting?: boolean;
 }
 
 export function StepNavigation({
+  onNext,
+  onPrevious,
   currentStep,
   isFirstStep,
   isLastStep,
-  onNext,
-  onPrevious,
-  isSubmitting
+  isSubmitting = false
 }: StepNavigationProps) {
   return (
-    <div className="flex justify-between pt-6">
+    <div className="flex justify-between mt-8 pt-4 border-t">
       <Button
         type="button"
         variant="outline"
         onClick={onPrevious}
         disabled={isFirstStep || isSubmitting}
+        className="flex items-center gap-2"
       >
-        <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+        <ArrowLeft size={16} />
+        Back
       </Button>
+      
       <Button
-        type="button"
+        type="submit"
         onClick={onNext}
         disabled={isSubmitting}
-        className={isLastStep ? "nexed-gradient-button" : ""}
+        className="flex items-center gap-2"
       >
         {isSubmitting ? (
-          <span className="flex items-center">
-            <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-            {isLastStep ? "Finishing..." : "Processing..."}
-          </span>
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+            Loading...
+          </>
         ) : (
           <>
-            {isLastStep ? "Finish Setup" : "Next"}
-            {!isLastStep && <ChevronRight className="ml-2 h-4 w-4" />}
+            {isLastStep ? "Complete" : "Continue"}
+            {!isLastStep && <ArrowRight size={16} />}
           </>
         )}
       </Button>

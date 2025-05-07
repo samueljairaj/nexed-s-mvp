@@ -1,80 +1,57 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { personalInfoSchema } from "@/types/onboarding";
 import { toast } from "sonner";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
-import { PersonalInfoStep } from "@/components/onboarding/PersonalInfoStep";
-import { VisaInfoStep } from "@/components/onboarding/VisaInfoStep";
-import { EducationalInfoStep } from "@/components/onboarding/EducationalInfoStep";
-import { SevisInfoStep } from "@/components/onboarding/SevisInfoStep";
-import { EmploymentInfoStep } from "@/components/onboarding/EmploymentInfoStep";
-import { DocumentPreferencesStep } from "@/components/onboarding/DocumentPreferencesStep";
-import { TermsStep } from "@/components/onboarding/TermsStep";
-import { CompletionStep } from "@/components/onboarding/CompletionStep";
+import { AccountCreationStep, AccountCreationFormData } from "@/components/onboarding/AccountCreationStep";
+import { PersonalInfoStep, PersonalInfoFormData } from "@/components/onboarding/PersonalInfoStep";
+import { VisaStatusStep, VisaStatusFormData } from "@/components/onboarding/VisaStatusStep";
+import { AcademicInfoStep, AcademicInfoFormData } from "@/components/onboarding/AcademicInfoStep";
+import { EmploymentStep, EmploymentFormData } from "@/components/onboarding/EmploymentStep";
+import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 
 const Onboarding = () => {
-  const { isAuthenticated, currentUser, updateProfile, signup, login, completeOnboarding, isLoading } = useAuth();
+  const { isAuthenticated, currentUser, updateProfile, signup, completeOnboarding, isLoading } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // This is used when we have multiple steps, to track progress
   const [currentStep, setCurrentStep] = useState(0);
-
-  // Personal Info / Account Creation
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  // Visa Information
-  const [visaType, setVisaType] = useState<string | null>(null);
-  const [country, setCountry] = useState("");
-  const [visaStatus, setVisaStatus] = useState("");
-  const [visaExpiryDate, setVisaExpiryDate] = useState<Date | null>(null);
-  const [otherVisaType, setOtherVisaType] = useState("");
-
-  // Educational Information
-  const [university, setUniversity] = useState("");
-  const [program, setProgram] = useState("");
-  const [major, setMajor] = useState("");
-  const [programStartDate, setProgramStartDate] = useState<Date | null>(null);
-  const [programEndDate, setProgramEndDate] = useState<Date | null>(null);
-
-  // SEVIS Information
-  const [sevisId, setSevisId] = useState("");
-  const [i20IssueDate, setI20IssueDate] = useState<Date | null>(null);
-  const [i20ExpiryDate, setI20ExpiryDate] = useState<Date | null>(null);
-  const [previousSevisIds, setPreviousSevisIds] = useState<string[]>([]);
-
-  // Employment Information
-  const [employmentStatus, setEmploymentStatus] = useState("");
-  const [employer, setEmployer] = useState("");
-  const [jobTitle, setJobTitle] = useState("");
-  const [employmentStartDate, setEmploymentStartDate] = useState<Date | null>(null);
-  const [employmentEndDate, setEmploymentEndDate] = useState<Date | null>(null);
-  const [isRelatedToField, setIsRelatedToField] = useState<boolean | null>(null);
-  const [optCptStartDate, setOptCptStartDate] = useState<Date | null>(null);
-  const [optCptEndDate, setOptCptEndDate] = useState<Date | null>(null);
-  const [eadCardNumber, setEadCardNumber] = useState("");
-  const [stemEmployerEVerify, setStemEmployerEVerify] = useState("");
-  const [stemI983Date, setStemI983Date] = useState<Date | null>(null);
-
-  // Document Preferences
-  const [documentChecklist, setDocumentChecklist] = useState<string[]>([]);
-  const [notificationPreferences, setNotificationPreferences] = useState<string[]>([]);
-  const [communicationFrequency, setCommunicationFrequency] = useState("");
-
-  // Terms and Privacy
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
-  const [allowDataUsage, setAllowDataUsage] = useState(false);
-  const [acceptLegalDisclaimer, setAcceptLegalDisclaimer] = useState(false);
-
-  // Used to show errors
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Data for all steps
+  const [accountData, setAccountData] = useState<Partial<AccountCreationFormData>>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    acceptTerms: false
+  });
+  
+  const [personalData, setPersonalData] = useState<Partial<PersonalInfoFormData>>({
+    country: "",
+    phone: "",
+    passportNumber: "",
+    address: ""
+  });
+  
+  const [visaData, setVisaData] = useState<Partial<VisaStatusFormData>>({
+    visaType: "F-1",
+    currentStatus: ""
+  });
+  
+  const [academicData, setAcademicData] = useState<Partial<AcademicInfoFormData>>({
+    university: "",
+    degreeLevel: "",
+    fieldOfStudy: "",
+    isSTEM: false
+  });
+  
+  const [employmentData, setEmploymentData] = useState<Partial<EmploymentFormData>>({
+    employmentStatus: ""
+  });
 
   useEffect(() => {
     if (isAuthenticated && currentUser?.onboardingComplete) {
@@ -83,20 +60,22 @@ const Onboarding = () => {
     
     // If user is already authenticated, pre-fill the fields
     if (isAuthenticated && currentUser) {
-      setEmail(currentUser.email || "");
-      setFirstName(currentUser.name?.split(" ")[0] || "");
-      setLastName(currentUser.name?.split(" ")[1] || "");
-      setCountry(currentUser.country || "");
-      setVisaType(currentUser.visaType || null);
-      setUniversity(currentUser.university || "");
-      if (currentUser.courseStartDate) {
-        setProgramStartDate(currentUser.courseStartDate);
+      setAccountData({
+        firstName: currentUser.name?.split(" ")[0] || "",
+        lastName: currentUser.name?.split(" ")[1] || "",
+        email: currentUser.email || "",
+      });
+      
+      if (currentUser.country) {
+        setPersonalData(prev => ({ ...prev, country: currentUser.country || "" }));
       }
-      if (currentUser.usEntryDate) {
-        setVisaExpiryDate(currentUser.usEntryDate);
+      
+      if (currentUser.visaType) {
+        setVisaData(prev => ({ ...prev, visaType: currentUser.visaType as any }));
       }
-      if (currentUser.employmentStartDate) {
-        setEmploymentStartDate(currentUser.employmentStartDate);
+      
+      if (currentUser.university) {
+        setAcademicData(prev => ({ ...prev, university: currentUser.university || "" }));
       }
     }
   }, [isAuthenticated, currentUser, navigate]);
@@ -105,310 +84,129 @@ const Onboarding = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nexed-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  const handleNextStep = async () => {
-    setErrors({});
-    let isValid = true;
+  const handleAccountCreation = async (data: AccountCreationFormData) => {
+    setAccountData(data);
     
-    // Validation depending on current step
-    if (currentStep === 0) {
+    if (!isAuthenticated) {
+      setIsSubmitting(true);
       try {
-        // Validate personal info step with Zod schema
-        personalInfoSchema.parse({
-          firstName,
-          lastName,
-          email,
-          password: isAuthenticated ? "placeholder" : password,
-          confirmPassword: isAuthenticated ? "placeholder" : confirmPassword,
+        await signup(data.email, data.password);
+        // Update the profile with name
+        await updateProfile({ 
+          name: `${data.firstName} ${data.lastName}` 
         });
-        
-        // Create account if not authenticated
-        if (!isAuthenticated) {
-          setIsSubmitting(true);
-          
-          try {
-            await signup(email, password);
-            toast.success("Account created successfully. Please proceed with onboarding.");
-            // Next step will happen after auth state updates and component re-renders
-          } catch (error: any) {
-            toast.error(`Account creation failed: ${error.message}`);
-            setIsSubmitting(false);
-            return;
-          }
-        } else {
-          // Update the profile with name if authenticated
-          await updateProfile({ 
-            name: `${firstName} ${lastName}` 
-          });
-          
-          setCurrentStep(currentStep + 1);
-        }
+        toast.success("Account created successfully!");
+        setCurrentStep(currentStep + 1);
       } catch (error: any) {
-        // Handle Zod validation errors
-        if (error.errors) {
-          const newErrors: Record<string, string> = {};
-          error.errors.forEach((err: any) => {
-            const field = err.path[0];
-            newErrors[field] = err.message;
-          });
-          setErrors(newErrors);
-          isValid = false;
-        }
+        toast.error(`Account creation failed: ${error.message}`);
+      } finally {
+        setIsSubmitting(false);
       }
-    } else if (currentStep === 1) {
-      // Visa Information validation
-      if (!visaType) {
-        setErrors(prev => ({ ...prev, visaType: "Please select a visa type" }));
-        isValid = false;
+    } else {
+      // Just update the profile with name if authenticated
+      setIsSubmitting(true);
+      try {
+        await updateProfile({ 
+          name: `${data.firstName} ${data.lastName}` 
+        });
+        setCurrentStep(currentStep + 1);
+      } catch (error) {
+        toast.error("Failed to update profile");
+      } finally {
+        setIsSubmitting(false);
       }
-      if (!country) {
-        setErrors(prev => ({ ...prev, country: "Please enter your country of origin" }));
-        isValid = false;
-      }
-      if (!visaStatus) {
-        setErrors(prev => ({ ...prev, visaStatus: "Please select your current visa status" }));
-        isValid = false;
-      }
-      if (visaStatus === "Active" && !visaExpiryDate) {
-        setErrors(prev => ({ ...prev, visaExpiryDate: "Please enter your visa expiration date" }));
-        isValid = false;
-      }
-      if (visaType === "Other" && !otherVisaType) {
-        setErrors(prev => ({ ...prev, otherVisaType: "Please specify your visa type" }));
-        isValid = false;
-      }
-
-      // Update profile data
-      if (isValid) {
-        setIsSubmitting(true);
-        try {
-          await updateProfile({
-            visaType: visaType as any,
-            country,
-            // Save other visa-related fields as needed
-          });
-          setIsSubmitting(false);
-        } catch (error) {
-          console.error("Error updating profile:", error);
-          toast.error("Failed to update visa information");
-          setIsSubmitting(false);
-          return;
-        }
-      }
-    } else if (currentStep === 2) {
-      // Educational Information validation - only required for certain visa types
-      if ((visaType === "F-1" || visaType === "J-1")) {
-        if (!university) {
-          setErrors(prev => ({ ...prev, university: "Please enter your university/institution name" }));
-          isValid = false;
-        }
-        if (!program) {
-          setErrors(prev => ({ ...prev, program: "Please select your program/degree" }));
-          isValid = false;
-        }
-        if (!major) {
-          setErrors(prev => ({ ...prev, major: "Please enter your major/field of study" }));
-          isValid = false;
-        }
-        if (!programStartDate) {
-          setErrors(prev => ({ ...prev, programStartDate: "Please enter your program start date" }));
-          isValid = false;
-        }
-        if (!programEndDate) {
-          setErrors(prev => ({ ...prev, programEndDate: "Please enter your expected completion date" }));
-          isValid = false;
-        } else if (programStartDate && programEndDate && programEndDate < programStartDate) {
-          setErrors(prev => ({ ...prev, programEndDate: "Completion date must be after program start date" }));
-          isValid = false;
-        }
-      } else if (visaType === "H-1B") {
-        // For H-1B, only institution is required
-        if (!university) {
-          setErrors(prev => ({ ...prev, university: "Please enter your institution name" }));
-          isValid = false;
-        }
-      }
-
-      // Update profile data
-      if (isValid) {
-        setIsSubmitting(true);
-        try {
-          await updateProfile({
-            university,
-            courseStartDate: programStartDate,
-            // Save other education-related fields as needed
-          });
-          setIsSubmitting(false);
-        } catch (error) {
-          console.error("Error updating profile:", error);
-          toast.error("Failed to update educational information");
-          setIsSubmitting(false);
-          return;
-        }
-      }
-    } else if (currentStep === 3) {
-      // SEVIS Information validation - only required for F-1 and J-1
-      if (visaType === "F-1" || visaType === "J-1") {
-        if (!sevisId || !/^N00\d{8}$/.test(sevisId)) {
-          setErrors(prev => ({ ...prev, sevisId: "Please enter a valid SEVIS ID (format: N00########)" }));
-          isValid = false;
-        }
-        if (!i20IssueDate) {
-          setErrors(prev => ({ 
-            ...prev, 
-            i20IssueDate: `Please enter your ${visaType === "F-1" ? "I-20" : "DS-2019"} issue date` 
-          }));
-          isValid = false;
-        }
-        if (!i20ExpiryDate) {
-          setErrors(prev => ({ 
-            ...prev, 
-            i20ExpiryDate: `Please enter your ${visaType === "F-1" ? "I-20" : "DS-2019"} expiration date` 
-          }));
-          isValid = false;
-        } else if (i20ExpiryDate < new Date()) {
-          setErrors(prev => ({ 
-            ...prev, 
-            i20ExpiryDate: `Your ${visaType === "F-1" ? "I-20" : "DS-2019"} has expired` 
-          }));
-          isValid = false;
-        }
-      }
-
-      // For all other visa types, we skip validation since this step is optional
-    } else if (currentStep === 4) {
-      // Employment Information validation
-      if (!employmentStatus) {
-        setErrors(prev => ({ ...prev, employmentStatus: "Please select your current employment status" }));
-        isValid = false;
-      }
-
-      // If employed, validate employment details
-      if (employmentStatus && employmentStatus !== "Not Employed") {
-        if (!employer) {
-          setErrors(prev => ({ ...prev, employer: "Please enter your employer name" }));
-          isValid = false;
-        }
-        if (!jobTitle) {
-          setErrors(prev => ({ ...prev, jobTitle: "Please enter your position/job title" }));
-          isValid = false;
-        }
-        if (!employmentStartDate) {
-          setErrors(prev => ({ ...prev, employmentStartDate: "Please enter your employment start date" }));
-          isValid = false;
-        }
-
-        // Validate employment end date if provided
-        if (employmentEndDate && employmentStartDate && employmentEndDate < employmentStartDate) {
-          setErrors(prev => ({ ...prev, employmentEndDate: "End date must be after start date" }));
-          isValid = false;
-        }
-
-        // Validate fields related to field of study
-        if ((employmentStatus === "CPT" || employmentStatus === "OPT") && isRelatedToField === null) {
-          setErrors(prev => ({ 
-            ...prev, 
-            isRelatedToField: "Please indicate if this position is related to your field of study" 
-          }));
-          isValid = false;
-        }
-
-        // Validate CPT/OPT specific fields
-        if (employmentStatus === "CPT" || employmentStatus === "OPT") {
-          if (!optCptStartDate) {
-            setErrors(prev => ({ 
-              ...prev, 
-              optCptStartDate: `Please enter your ${employmentStatus} authorization start date` 
-            }));
-            isValid = false;
-          }
-          if (!optCptEndDate) {
-            setErrors(prev => ({ 
-              ...prev, 
-              optCptEndDate: `Please enter your ${employmentStatus} authorization end date` 
-            }));
-            isValid = false;
-          }
-          if (employmentStatus === "OPT" && !eadCardNumber) {
-            setErrors(prev => ({ ...prev, eadCardNumber: "Please enter your EAD card number" }));
-            isValid = false;
-          }
-        }
-
-        // Validate STEM OPT Extension specific fields
-        if (employmentStatus === "STEM OPT Extension") {
-          if (!stemEmployerEVerify) {
-            setErrors(prev => ({ ...prev, stemEmployerEVerify: "Please enter the employer E-Verify number" }));
-            isValid = false;
-          }
-          if (!stemI983Date) {
-            setErrors(prev => ({ ...prev, stemI983Date: "Please enter the I-983 training plan submission date" }));
-            isValid = false;
-          }
-        }
-      }
-
-      // Update profile data
-      if (isValid) {
-        setIsSubmitting(true);
-        try {
-          await updateProfile({
-            employmentStartDate,
-            // Save other employment-related fields as needed
-          });
-          setIsSubmitting(false);
-        } catch (error) {
-          console.error("Error updating profile:", error);
-          toast.error("Failed to update employment information");
-          setIsSubmitting(false);
-          return;
-        }
-      }
-    } else if (currentStep === 5) {
-      // Document Upload Preparedness validation
-      if (documentChecklist.length === 0) {
-        setErrors(prev => ({ ...prev, documentChecklist: "Please select at least one document" }));
-        isValid = false;
-      }
-      if (notificationPreferences.length === 0) {
-        setErrors(prev => ({ ...prev, notificationPreferences: "Please select at least one notification method" }));
-        isValid = false;
-      }
-      if (!communicationFrequency) {
-        setErrors(prev => ({ ...prev, communicationFrequency: "Please select your preferred communication frequency" }));
-        isValid = false;
-      }
-    } else if (currentStep === 6) {
-      // Terms and Privacy validation
-      if (!acceptTerms) {
-        setErrors(prev => ({ ...prev, acceptTerms: "You must accept the Terms of Service to proceed" }));
-        isValid = false;
-      }
-      if (!acceptPrivacy) {
-        setErrors(prev => ({ ...prev, acceptPrivacy: "You must acknowledge the Privacy Policy to proceed" }));
-        isValid = false;
-      }
-      if (!acceptLegalDisclaimer) {
-        setErrors(prev => ({ 
-          ...prev, 
-          acceptLegalDisclaimer: "You must acknowledge the Legal Advice Disclaimer to proceed" 
-        }));
-        isValid = false;
-      }
-    }
-
-    // If valid, move to next step
-    if (isValid && currentStep < 7 && currentStep !== 0) {
-      setCurrentStep(currentStep + 1);
     }
   };
 
-  const handlePreviousStep = () => {
-    setCurrentStep(currentStep - 1);
+  const handlePersonalInfo = async (data: PersonalInfoFormData) => {
+    setPersonalData(data);
+    setIsSubmitting(true);
+    
+    try {
+      await updateProfile({
+        country: data.country,
+        // Save other personal data as needed
+      });
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      toast.error("Failed to save personal information");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVisaStatus = async (data: VisaStatusFormData) => {
+    setVisaData(data);
+    setIsSubmitting(true);
+    
+    try {
+      await updateProfile({
+        visaType: data.visaType as any,
+        // Save other visa data as needed
+      });
+      
+      // Skip to employment step for non-student visas
+      if (data.visaType !== "F-1" && data.visaType !== "J-1") {
+        setCurrentStep(currentStep + 2);
+      } else {
+        setCurrentStep(currentStep + 1);
+      }
+    } catch (error) {
+      toast.error("Failed to save visa information");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleVisaTypeChange = (visaType: string) => {
+    setVisaData(prev => ({ ...prev, visaType }));
+  };
+
+  const handleAcademicInfo = async (data: AcademicInfoFormData) => {
+    setAcademicData(data);
+    setIsSubmitting(true);
+    
+    try {
+      await updateProfile({
+        university: data.university,
+        courseStartDate: data.programStartDate,
+        // Save other academic data as needed
+      });
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      toast.error("Failed to save academic information");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEmploymentInfo = async (data: EmploymentFormData) => {
+    setEmploymentData(data);
+    setIsSubmitting(true);
+    
+    try {
+      await updateProfile({
+        employmentStatus: data.employmentStatus,
+        employer: data.employer,
+        jobTitle: data.jobTitle,
+        employmentStartDate: data.workStartDate,
+        // Save other employment data as needed
+      });
+      setCurrentStep(currentStep + 1);
+    } catch (error) {
+      toast.error("Failed to save employment information");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleEmploymentStatusChange = (status: string) => {
+    setEmploymentData(prev => ({ ...prev, employmentStatus: status }));
   };
 
   const handleFinish = async () => {
@@ -416,62 +214,28 @@ const Onboarding = () => {
     try {
       await completeOnboarding();
       toast.success("Onboarding completed successfully!");
-      // The navigation to dashboard will be handled by the completeOnboarding function
+      navigate("/app/dashboard");
     } catch (error) {
-      console.error("Error completing onboarding:", error);
       toast.error("Failed to complete onboarding");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Calculate total steps based on visa type
-  const getTotalSteps = () => {
-    if (!visaType) return 8; // Default to all steps
-    if (visaType === "F-1" || visaType === "J-1") return 8; // All steps
-    if (visaType === "H-1B") return 7; // Skip SEVIS
-    return 7; // Others: Skip SEVIS
-  };
-
-  // Determine if we should skip a step based on visa type
-  const shouldSkipStep = (stepIndex: number) => {
-    if (stepIndex === 3) { // SEVIS step
-      return !(visaType === "F-1" || visaType === "J-1");
-    }
-    return false;
-  };
-
-  // Determine if step is the first step (considering skipped steps)
+  // Determine if step is the first step
   const isFirstStep = () => {
     return currentStep === 0;
   };
 
-  // Determine if step is the last step before completion (considering skipped steps)
+  // Determine if step is the last step
   const isLastStep = () => {
-    return currentStep === 6 || (currentStep === 5 && shouldSkipStep(6)) || (currentStep === 7);
+    return currentStep === 4;
   };
 
   // Calculate the progress percentage
   const calculateProgress = () => {
-    const totalSteps = getTotalSteps();
-    // Add 1 because we're 0-indexed but want to show progress starting at step 1
-    const stepNumber = currentStep + 1;
-    return (stepNumber / totalSteps) * 100;
-  };
-
-  // Get step name for progress indicator
-  const getStepName = (index: number) => {
-    const stepNames = [
-      "Personal Info",
-      "Visa Info", 
-      "Education", 
-      "SEVIS", 
-      "Employment", 
-      "Documents", 
-      "Terms",
-      "Complete"
-    ];
-    return stepNames[index];
+    // We have 5 steps (0-indexed)
+    return ((currentStep + 1) / 5) * 100;
   };
 
   // Function to render the current step
@@ -479,52 +243,52 @@ const Onboarding = () => {
     switch (currentStep) {
       case 0:
         return (
-          <PersonalInfoStep
-            defaultValues={{
-              firstName,
-              lastName,
-              email,
-              password,
-              confirmPassword
-            }}
-            onSubmit={(data) => {
-              setFirstName(data.firstName);
-              setLastName(data.lastName);
-              setEmail(data.email);
-              setPassword(data.password);
-              setConfirmPassword(data.confirmPassword);
-              handleNextStep();
-            }}
-            isAuthenticated={isAuthenticated}
+          <AccountCreationStep
+            defaultValues={accountData}
+            onSubmit={handleAccountCreation}
+            isSubmitting={isSubmitting}
           />
         );
       case 1:
         return (
-          <VisaInfoStep />
+          <PersonalInfoStep
+            defaultValues={personalData}
+            onSubmit={handlePersonalInfo}
+            isSubmitting={isSubmitting}
+          />
         );
       case 2:
         return (
-          <EducationalInfoStep />
+          <VisaStatusStep
+            defaultValues={visaData}
+            onSubmit={handleVisaStatus}
+            onVisaTypeChange={handleVisaTypeChange}
+            isSubmitting={isSubmitting}
+          />
         );
       case 3:
         return (
-          <SevisInfoStep />
+          <AcademicInfoStep
+            defaultValues={academicData}
+            onSubmit={handleAcademicInfo}
+            isF1OrJ1={visaData.visaType === "F-1" || visaData.visaType === "J-1"}
+            isSubmitting={isSubmitting}
+          />
         );
       case 4:
         return (
-          <EmploymentInfoStep />
+          <EmploymentStep
+            defaultValues={employmentData}
+            onSubmit={handleEmploymentInfo}
+            visaType={visaData.visaType || "F-1"}
+            onEmploymentStatusChange={handleEmploymentStatusChange}
+            employmentStatus={employmentData.employmentStatus || ""}
+            isSubmitting={isSubmitting}
+          />
         );
       case 5:
         return (
-          <DocumentPreferencesStep />
-        );
-      case 6:
-        return (
-          <TermsStep />
-        );
-      case 7:
-        return (
-          <CompletionStep
+          <OnboardingComplete
             onFinish={handleFinish}
             isSubmitting={isSubmitting}
           />
@@ -534,14 +298,17 @@ const Onboarding = () => {
     }
   };
 
+  // Step names for the progress indicator
+  const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center">
           <div className="flex items-center">
-            <div className="h-8 w-8 rounded-md nexed-gradient" />
-            <span className="ml-2 text-xl font-bold text-nexed-900">neXed</span>
+            <div className="h-8 w-8 rounded-md bg-primary" />
+            <span className="ml-2 text-xl font-bold">neXed</span>
           </div>
         </div>
       </header>
@@ -555,9 +322,8 @@ const Onboarding = () => {
             {/* Progress bar */}
             <OnboardingProgress 
               currentStep={currentStep}
-              totalSteps={getTotalSteps()}
               progress={calculateProgress()}
-              stepNames={Array(getTotalSteps()).fill(0).map((_, i) => getStepName(i))}
+              stepNames={stepNames}
             />
             
             {/* Step content */}
@@ -565,14 +331,16 @@ const Onboarding = () => {
               {renderCurrentStep()}
             </div>
             
-            {/* Navigation buttons */}
-            {currentStep !== 7 && (
+            {/* Navigation buttons - only show if not on the final completion screen */}
+            {currentStep !== 5 && currentStep !== 0 && (
               <StepNavigation
                 currentStep={currentStep}
                 isFirstStep={isFirstStep()}
                 isLastStep={isLastStep()}
-                onNext={handleNextStep}
-                onPrevious={handlePreviousStep}
+                onNext={() => {
+                  // This is handled by the individual form submissions
+                }}
+                onPrevious={() => setCurrentStep(currentStep - 1)}
                 isSubmitting={isSubmitting}
               />
             )}
