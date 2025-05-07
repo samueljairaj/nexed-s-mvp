@@ -33,8 +33,8 @@ export function StepNavigation({
       </Button>
       
       <Button
-        type="submit"
-        onClick={onNext}
+        type={isLastStep ? "button" : "submit"}
+        onClick={isLastStep ? onNext : undefined}
         disabled={isSubmitting}
         className="flex items-center gap-2"
       >
