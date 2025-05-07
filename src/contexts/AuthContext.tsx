@@ -2,8 +2,10 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Session, User } from "@supabase/supabase-js";
 
-export type VisaType = "F1" | "OPT" | "H1B" | "Other" | null;
+export type VisaType = "F-1" | "J-1" | "H-1B" | "Other" | null;
 
 export interface UserProfile {
   id: string;
@@ -23,6 +25,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
   completeOnboarding: () => void;
@@ -38,95 +41,241 @@ export const useAuth = () => {
   return context;
 };
 
-// Mock user for development purposes
-const MOCK_USER: UserProfile = {
-  id: "user-1",
-  name: "",
-  email: "student@university.edu",
-  country: "",
-  visaType: null,
-  onboardingComplete: false,
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
 
-  // Mock authentication for demo purposes
+  // Set up auth state listener and check current session
   useEffect(() => {
-    // Simulating auth check
-    const checkAuth = async () => {
-      try {
-        // Get user from localStorage or use mock
-        const savedUser = localStorage.getItem("nexed_user");
-        if (savedUser) {
-          setCurrentUser(JSON.parse(savedUser));
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        if (session?.user) {
+          // Fetch user profile data from profiles table
+          setTimeout(async () => {
+            await fetchUserProfile(session.user);
+          }, 0);
         } else {
-          // Auto-login with mock user
-          setCurrentUser(MOCK_USER);
-          localStorage.setItem("nexed_user", JSON.stringify(MOCK_USER));
+          setCurrentUser(null);
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error("Authentication error:", error);
-      } finally {
+      }
+    );
+
+    // Then check for existing session
+    const initializeAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      
+      if (data.session?.user) {
+        await fetchUserProfile(data.session.user);
+      } else {
         setIsLoading(false);
       }
     };
+    
+    initializeAuth();
 
-    checkAuth();
-  }, []);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
+  const fetchUserProfile = async (user: User) => {
     try {
-      // Mock login
-      setCurrentUser(MOCK_USER);
-      localStorage.setItem("nexed_user", JSON.stringify(MOCK_USER));
-      toast.success("Logged in successfully");
-      
-      if (!MOCK_USER.onboardingComplete) {
-        navigate("/onboarding");
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setCurrentUser({
+          id: user.id,
+          name: data.name || '',
+          email: data.email || user.email || '',
+          country: data.country || '',
+          visaType: data.visa_type as VisaType,
+          university: data.university || undefined,
+          courseStartDate: data.course_start_date ? new Date(data.course_start_date) : undefined,
+          usEntryDate: data.us_entry_date ? new Date(data.us_entry_date) : undefined,
+          employmentStartDate: data.employment_start_date ? new Date(data.employment_start_date) : undefined,
+          onboardingComplete: data.onboarding_complete || false
+        });
       } else {
-        navigate("/app/dashboard");
+        // Profile not found, create one
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert([{ 
+            id: user.id,
+            email: user.email,
+            onboarding_complete: false
+          }]);
+
+        if (insertError) throw insertError;
+        
+        setCurrentUser({
+          id: user.id,
+          name: '',
+          email: user.email || '',
+          country: '',
+          visaType: null,
+          onboardingComplete: false
+        });
       }
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Login failed");
+      console.error("Error fetching user profile:", error);
+      toast.error("Failed to load user profile");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem("nexed_user");
-    toast.info("Logged out");
-    navigate("/");
-  };
-
-  const updateProfile = (data: Partial<UserProfile>) => {
-    if (currentUser) {
-      const updatedUser = { ...currentUser, ...data };
-      setCurrentUser(updatedUser);
-      localStorage.setItem("nexed_user", JSON.stringify(updatedUser));
+  const signup = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Account created successfully! Please check your email for verification.");
+      return;
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      toast.error(`Signup failed: ${error.message}`);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const completeOnboarding = () => {
-    if (currentUser) {
-      const updatedUser = { ...currentUser, onboardingComplete: true };
-      setCurrentUser(updatedUser);
-      localStorage.setItem("nexed_user", JSON.stringify(updatedUser));
-      navigate("/app/dashboard");
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      // Successfully signed in
+      toast.success("Logged in successfully");
+      
+      // Navigate based on onboarding status
+      // The actual navigation will happen in the useEffect when user profile is loaded
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast.error(`Login failed: ${error.message}`);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setCurrentUser(null);
+      toast.info("Logged out");
+      navigate("/");
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast.error(`Logout failed: ${error.message}`);
+    }
+  };
+
+  const updateProfile = async (data: Partial<UserProfile>) => {
+    if (currentUser && currentUser.id) {
+      try {
+        // Convert date objects to strings for the database
+        const dbData: any = {
+          ...data,
+          course_start_date: data.courseStartDate ? data.courseStartDate.toISOString().split('T')[0] : undefined,
+          us_entry_date: data.usEntryDate ? data.usEntryDate.toISOString().split('T')[0] : undefined,
+          employment_start_date: data.employmentStartDate ? data.employmentStartDate.toISOString().split('T')[0] : undefined,
+          // Remove fields that don't exist in the database table
+          courseStartDate: undefined,
+          usEntryDate: undefined,
+          employmentStartDate: undefined,
+          visa_type: data.visaType
+        };
+        
+        // Remove undefined fields
+        Object.keys(dbData).forEach(key => {
+          if (dbData[key] === undefined) {
+            delete dbData[key];
+          }
+        });
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update(dbData)
+          .eq('id', currentUser.id);
+
+        if (error) throw error;
+        
+        // Update local state
+        setCurrentUser(prev => ({
+          ...prev!,
+          ...data,
+        }));
+      } catch (error: any) {
+        console.error("Error updating profile:", error);
+        toast.error(`Failed to update profile: ${error.message}`);
+      }
+    }
+  };
+
+  const completeOnboarding = async () => {
+    if (currentUser && currentUser.id) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ onboarding_complete: true })
+          .eq('id', currentUser.id);
+
+        if (error) throw error;
+        
+        // Update local state
+        setCurrentUser(prev => ({
+          ...prev!,
+          onboardingComplete: true,
+        }));
+        
+        // Navigate to dashboard
+        navigate("/app/dashboard");
+      } catch (error: any) {
+        console.error("Error completing onboarding:", error);
+        toast.error(`Failed to complete onboarding: ${error.message}`);
+      }
+    }
+  };
+
+  // Check if user should be directed to onboarding
+  useEffect(() => {
+    if (currentUser && !isLoading) {
+      // If user is logged in but hasn't completed onboarding
+      if (!currentUser.onboardingComplete && !window.location.pathname.includes("/onboarding")) {
+        navigate("/onboarding");
+      }
+    }
+  }, [currentUser, isLoading, navigate]);
 
   const value = {
     currentUser,
-    isAuthenticated: !!currentUser,
+    isAuthenticated: !!session,
     isLoading,
     login,
+    signup,
     logout,
     updateProfile,
     completeOnboarding
