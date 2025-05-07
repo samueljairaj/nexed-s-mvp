@@ -33,7 +33,7 @@ export function OnboardingComplete({ onFinish, isSubmitting = false, userData = 
   const handleGoToDashboard = () => {
     onFinish();
     // Force navigation to the dashboard path
-    navigate("/dashboard", { replace: true });
+    navigate("/app/dashboard", { replace: true });
   };
 
   return (
