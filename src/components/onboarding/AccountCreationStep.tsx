@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useNavigate } from "react-router-dom";
 
 const accountCreationSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -48,6 +49,7 @@ export function AccountCreationStep({
 }: AccountCreationStepProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
   
   const form = useForm<AccountCreationFormData>({
     resolver: zodResolver(accountCreationSchema),
@@ -62,12 +64,25 @@ export function AccountCreationStep({
     }
   });
 
+  const handleBackToLogin = () => {
+    navigate("/");
+  };
+
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Create Your Account</h2>
-        <p className="text-muted-foreground mt-2">Please enter your information as it appears on your official documents.</p>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleBackToLogin}
+          className="flex items-center gap-1 text-primary"
+        >
+          <ArrowLeft size={16} />
+          Back to Login
+        </Button>
       </div>
+      <p className="text-muted-foreground">Please enter your information as it appears on your official documents.</p>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
