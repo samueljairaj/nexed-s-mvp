@@ -48,9 +48,15 @@ export function VisaInfoStep({ defaultValues, onSubmit, onVisaTypeChange, onVisa
     defaultValues,
   });
 
+  // Turn form submission into a string value for visa_type
+  const handleSubmit = (data: any) => {
+    // Make sure the visa type is a string that matches the database enum
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="visaType"
@@ -70,10 +76,10 @@ export function VisaInfoStep({ defaultValues, onSubmit, onVisaTypeChange, onVisa
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="F-1">F-1 (Student)</SelectItem>
-                  <SelectItem value="J-1">J-1 (Exchange Visitor)</SelectItem>
-                  <SelectItem value="H-1B">H-1B (Work)</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="f1">F-1 (Student)</SelectItem>
+                  <SelectItem value="j1">J-1 (Exchange Visitor)</SelectItem>
+                  <SelectItem value="h1b">H-1B (Work)</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -81,7 +87,7 @@ export function VisaInfoStep({ defaultValues, onSubmit, onVisaTypeChange, onVisa
           )}
         />
         
-        {form.watch("visaType") === "Other" && (
+        {form.watch("visaType") === "other" && (
           <FormField
             control={form.control}
             name="otherVisaType"

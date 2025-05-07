@@ -30,7 +30,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const visaStatusSchema = z.object({
-  visaType: z.enum(["F-1", "J-1", "H-1B", "Other"]),
+  visaType: z.enum(["f1", "j1", "h1b", "other"]),
   currentStatus: z.string().min(1, "Please select your current status"),
   sevisId: z.string().optional(),
   i797Number: z.string().optional(),
@@ -59,7 +59,7 @@ export function VisaStatusStep({
   const form = useForm<VisaStatusFormData>({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
-      visaType: "F-1",
+      visaType: "f1",
       currentStatus: "",
       ...defaultValues
     }
@@ -71,7 +71,7 @@ export function VisaStatusStep({
   // Status options based on visa type
   const getStatusOptions = () => {
     switch (visaType) {
-      case "F-1":
+      case "f1":
         return [
           { value: "Active", label: "Active" },
           { value: "Initial", label: "Initial (Not yet in US)" },
@@ -80,14 +80,14 @@ export function VisaStatusStep({
           { value: "OPT", label: "Optional Practical Training (OPT)" },
           { value: "STEM_OPT", label: "STEM OPT Extension" },
         ];
-      case "J-1":
+      case "j1":
         return [
           { value: "Active", label: "Active" },
           { value: "Initial", label: "Initial (Not yet in US)" },
           { value: "Terminated", label: "Terminated" },
           { value: "Academic_Training", label: "Academic Training" },
         ];
-      case "H-1B":
+      case "h1b":
         return [
           { value: "Active", label: "Active" },
           { value: "Approved", label: "Approved (Not yet in US)" },
@@ -136,7 +136,7 @@ export function VisaStatusStep({
                     <FormItem>
                       <FormControl>
                         <RadioGroupItem 
-                          value="F-1" 
+                          value="f1" 
                           id="visa-f1" 
                           className="peer sr-only" 
                         />
@@ -153,7 +153,7 @@ export function VisaStatusStep({
                     <FormItem>
                       <FormControl>
                         <RadioGroupItem 
-                          value="J-1" 
+                          value="j1" 
                           id="visa-j1" 
                           className="peer sr-only" 
                         />
@@ -170,7 +170,7 @@ export function VisaStatusStep({
                     <FormItem>
                       <FormControl>
                         <RadioGroupItem 
-                          value="H-1B" 
+                          value="h1b" 
                           id="visa-h1b" 
                           className="peer sr-only" 
                         />
@@ -187,7 +187,7 @@ export function VisaStatusStep({
                     <FormItem>
                       <FormControl>
                         <RadioGroupItem 
-                          value="Other" 
+                          value="other" 
                           id="visa-other" 
                           className="peer sr-only" 
                         />
