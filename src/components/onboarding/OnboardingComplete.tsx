@@ -32,7 +32,7 @@ export function OnboardingComplete({ onFinish, isSubmitting = false, userData = 
 
   const handleGoToDashboard = () => {
     onFinish();
-    // This ensures we properly navigate to the dashboard through the auth provider's handling
+    navigate("/dashboard");
   };
 
   return (
