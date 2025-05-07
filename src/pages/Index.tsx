@@ -6,14 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileCheck, FolderArchive, MessageCircle, ChevronRight } from "lucide-react";
+import { FileCheck, FolderArchive, MessageCircle, ChevronRight, User } from "lucide-react";
+import { toast } from "sonner";
 
 const Index = () => {
-  const { isAuthenticated, currentUser, login, isLoading } = useAuth();
+  const { isAuthenticated, currentUser, login, signup, isLoading } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("demo@example.com");
   const [password, setPassword] = useState("Password123!");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSignup, setIsSignup] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -25,20 +30,56 @@ const Index = () => {
     }
   }, [isAuthenticated, currentUser, navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      return;
-    }
-    
     setIsSubmitting(true);
+    
     try {
-      await login(email, password);
-    } catch (error) {
-      console.error("Login error:", error);
+      if (isSignup) {
+        // Basic validation
+        if (!email || !password || !confirmPassword || !firstName || !lastName) {
+          toast.error("Please fill out all fields");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        if (password !== confirmPassword) {
+          toast.error("Passwords do not match");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        if (password.length < 8) {
+          toast.error("Password must be at least 8 characters");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        await signup(email, password);
+        toast.success("Account created! Proceeding to onboarding...");
+      } else {
+        // Login
+        if (!email || !password) {
+          toast.error("Please enter both email and password");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        await login(email, password);
+      }
+    } catch (error: any) {
+      console.error("Authentication error:", error);
+      toast.error(`Authentication failed: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const toggleAuthMode = () => {
+    setIsSignup(!isSignup);
+    // Clear passwords when toggling
+    setPassword("");
+    setConfirmPassword("");
   };
 
   if (isLoading) {
@@ -76,7 +117,11 @@ const Index = () => {
                   Stay compliant, organized, and worry-free with neXed's all-in-one visa management platform for international students.
                 </p>
                 <div className="pt-4 flex flex-wrap gap-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-                  <Button size="lg" className="bg-white text-nexed-700 hover:bg-blue-50">
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-nexed-700 hover:bg-blue-50"
+                    onClick={() => setIsSignup(true)}
+                  >
                     Get Started
                   </Button>
                   <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
@@ -87,7 +132,34 @@ const Index = () => {
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
                 <Card>
                   <CardContent className="pt-6">
-                    <form onSubmit={handleLogin} className="space-y-4">
+                    <form onSubmit={handleAuth} className="space-y-4">
+                      <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
+                        {isSignup ? "Create an Account" : "Sign In"}
+                      </h2>
+                      
+                      {isSignup && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input
+                              id="firstName"
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              placeholder="John"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input
+                              id="lastName"
+                              value={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
+                              placeholder="Doe"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
                         <Input
@@ -108,6 +180,20 @@ const Index = () => {
                           onChange={(e) => setPassword(e.target.value)}
                         />
                       </div>
+                      
+                      {isSignup && (
+                        <div className="space-y-2">
+                          <Label htmlFor="confirmPassword">Confirm Password</Label>
+                          <Input
+                            id="confirmPassword"
+                            type="password"
+                            placeholder="••••••••"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                          />
+                        </div>
+                      )}
+                      
                       <Button 
                         type="submit" 
                         className="w-full nexed-gradient"
@@ -116,13 +202,34 @@ const Index = () => {
                         {isSubmitting ? (
                           <span className="flex items-center">
                             <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                            Signing In...
+                            {isSignup ? "Creating Account..." : "Signing In..."}
                           </span>
-                        ) : "Sign In"}
+                        ) : (
+                          isSignup ? "Create Account" : "Sign In"
+                        )}
                       </Button>
-                      <p className="text-center text-sm text-gray-500">
-                        Note: Demo account auto-filled, just click Sign In
-                      </p>
+                      
+                      <div className="text-center space-y-2">
+                        <p className="text-sm text-gray-500">
+                          {isSignup ? "Already have an account?" : "Don't have an account?"}
+                        </p>
+                        <Button 
+                          type="button" 
+                          variant="link" 
+                          onClick={toggleAuthMode}
+                          className="text-nexed-600"
+                        >
+                          {isSignup ? "Sign In" : "Create Account"}
+                        </Button>
+                      </div>
+                      
+                      {!isSignup && (
+                        <div className="pt-2 border-t">
+                          <p className="text-center text-sm text-gray-500 mt-2">
+                            Demo account: demo@example.com / Password123!
+                          </p>
+                        </div>
+                      )}
                     </form>
                   </CardContent>
                 </Card>
