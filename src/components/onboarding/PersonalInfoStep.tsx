@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Flag, Home, Passport, Phone } from "lucide-react";
+import { Calendar, Flag, Home, User, Phone } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
@@ -147,7 +147,7 @@ export function PersonalInfoStep({
                       className="pl-10" 
                       {...field} 
                     />
-                    <Passport className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   </div>
                 </FormControl>
                 <p className="text-xs text-muted-foreground mt-1">

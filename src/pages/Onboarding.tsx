@@ -146,7 +146,7 @@ const Onboarding = () => {
     
     try {
       await updateProfile({
-        visaType: data.visaType as any,
+        visaType: data.visaType,
         // Save other visa data as needed
       });
       
@@ -164,7 +164,7 @@ const Onboarding = () => {
   };
   
   const handleVisaTypeChange = (visaType: string) => {
-    setVisaData(prev => ({ ...prev, visaType }));
+    setVisaData(prev => ({ ...prev, visaType: visaType as "F-1" | "J-1" | "H-1B" | "Other" }));
   };
 
   const handleAcademicInfo = async (data: AcademicInfoFormData) => {
@@ -174,7 +174,6 @@ const Onboarding = () => {
     try {
       await updateProfile({
         university: data.university,
-        courseStartDate: data.programStartDate,
         // Save other academic data as needed
       });
       setCurrentStep(currentStep + 1);
@@ -190,13 +189,13 @@ const Onboarding = () => {
     setIsSubmitting(true);
     
     try {
-      await updateProfile({
-        employmentStatus: data.employmentStatus,
+      const profileUpdate = {
+        // Type-safe properties for UserProfile
         employer: data.employer,
         jobTitle: data.jobTitle,
-        employmentStartDate: data.workStartDate,
-        // Save other employment data as needed
-      });
+      };
+      
+      await updateProfile(profileUpdate);
       setCurrentStep(currentStep + 1);
     } catch (error) {
       toast.error("Failed to save employment information");
