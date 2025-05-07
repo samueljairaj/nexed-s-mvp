@@ -1,319 +1,367 @@
 
-import { useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { User, Mail, Flag, GraduationCap, Calendar, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { countries } from "@/types/onboarding";
 
 const Profile = () => {
   const { currentUser, updateProfile } = useAuth();
-  
-  const [formData, setFormData] = useState({
-    name: currentUser?.name || "",
-    email: currentUser?.email || "",
-    country: currentUser?.country || "",
-    visaType: currentUser?.visaType || "",
-    university: currentUser?.university || "",
-    courseStartDate: currentUser?.courseStartDate ? new Date(currentUser.courseStartDate).toISOString().split('T')[0] : "",
-    usEntryDate: currentUser?.usEntryDate ? new Date(currentUser.usEntryDate).toISOString().split('T')[0] : "",
-    employmentStartDate: currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate).toISOString().split('T')[0] : "",
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    country: "",
+    visaType: "",
+    university: "",
+    courseStartDate: null,
+    usEntryDate: null,
+    employmentStartDate: null,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
+  // Fetch current user data
+  useEffect(() => {
+    if (currentUser) {
+      setForm({
+        name: currentUser.name || "",
+        email: currentUser.email || "",
+        country: currentUser.country || "",
+        visaType: currentUser.visaType || "",
+        university: currentUser.university || "",
+        courseStartDate: currentUser.courseStartDate || null,
+        usEntryDate: currentUser.usEntryDate || null,
+        employmentStartDate: currentUser.employmentStartDate || null,
+      });
+    }
+  }, [currentUser]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleSelectChange = (name, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleDateChange = (name, date) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: date,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    updateProfile({
-      name: formData.name,
-      country: formData.country,
-      visaType: formData.visaType as any,
-      university: formData.university,
-      courseStartDate: formData.courseStartDate ? new Date(formData.courseStartDate) : undefined,
-      usEntryDate: formData.usEntryDate ? new Date(formData.usEntryDate) : undefined,
-      employmentStartDate: formData.employmentStartDate ? new Date(formData.employmentStartDate) : undefined,
-    });
-    
-    setIsEditing(false);
-    toast.success("Profile updated successfully");
+    try {
+      await updateProfile(form);
+      toast.success("Profile updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update profile");
+    }
+  };
+
+  const getRequiredDocuments = () => {
+    const docs = ["Valid Passport", "Visa Document"];
+
+    if (form.visaType === "F-1") {
+      docs.push("I-20 Form", "SEVIS Fee Receipt", "I-94 Arrival Record");
+    } else if (form.visaType === "J-1") {
+      docs.push("DS-2019 Form", "SEVIS Fee Receipt", "I-94 Arrival Record", "Health Insurance Documentation");
+    } else if (form.visaType === "H-1B") {
+      docs.push("I-797 Approval Notice", "Labor Condition Application", "Employment Verification Letter");
+    }
+
+    return docs;
   };
 
   return (
-    <div>
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold">My Profile</h1>
-        <p className="text-gray-600 mt-2">
-          View and update your personal information
-        </p>
-      </header>
+    <div className="container max-w-4xl mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Profile Overview */}
-        <Card className="nexed-card md:col-span-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Profile Overview</CardTitle>
-            <CardDescription>Your account information</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="flex justify-center mb-6">
-              <div className="h-24 w-24 rounded-full bg-nexed-100 flex items-center justify-center">
-                <User size={40} className="text-nexed-600" />
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <User className="h-5 w-5 text-gray-500 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Full Name</p>
-                  <p className="font-medium">{currentUser?.name || "Not provided"}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Mail className="h-5 w-5 text-gray-500 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">{currentUser?.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Flag className="h-5 w-5 text-gray-500 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Country of Origin</p>
-                  <p className="font-medium">{currentUser?.country || "Not provided"}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <GraduationCap className="h-5 w-5 text-gray-500 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-500">Visa Type</p>
-                  <div>
-                    {currentUser?.visaType === "F1" && <span className="font-medium">F-1 Student Visa</span>}
-                    {currentUser?.visaType === "OPT" && <span className="font-medium">Optional Practical Training (OPT)</span>}
-                    {currentUser?.visaType === "H1B" && <span className="font-medium">H-1B Work Visa</span>}
-                    {(!currentUser?.visaType || currentUser.visaType === "Other") && <span className="font-medium">Other Visa Type</span>}
+        <div className="md:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      disabled
+                    />
                   </div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Profile Details / Edit Form */}
-        <Card className="nexed-card md:col-span-2">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="text-xl">Profile Details</CardTitle>
-                <CardDescription>Update your personal information</CardDescription>
-              </div>
-              {!isEditing && (
-                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  Edit Profile
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    disabled
-                    readOnly
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="country">Country of Origin</Label>
-                  <Input
-                    id="country"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    placeholder="India"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="visaType">Visa Type</Label>
-                  {isEditing ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country of Origin</Label>
                     <Select
-                      value={formData.visaType}
-                      onValueChange={(value) => handleSelectChange("visaType", value)}
-                      disabled={!isEditing}
+                      value={form.country}
+                      onValueChange={(value) =>
+                        handleSelectChange("country", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="visaType">Visa Type</Label>
+                    <Select
+                      value={form.visaType}
+                      onValueChange={(value) =>
+                        handleSelectChange("visaType", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select visa type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="F1">F-1 Student Visa</SelectItem>
-                        <SelectItem value="OPT">Optional Practical Training (OPT)</SelectItem>
-                        <SelectItem value="H1B">H-1B Work Visa</SelectItem>
+                        <SelectItem value="F-1">F-1 (Student)</SelectItem>
+                        <SelectItem value="J-1">J-1 (Exchange Visitor)</SelectItem>
+                        <SelectItem value="H-1B">H-1B (Work)</SelectItem>
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
-                  ) : (
-                    <Input
-                      id="visaType"
-                      value={
-                        formData.visaType === "F1" ? "F-1 Student Visa" :
-                        formData.visaType === "OPT" ? "Optional Practical Training (OPT)" :
-                        formData.visaType === "H1B" ? "H-1B Work Visa" :
-                        "Other Visa Type"
-                      }
-                      disabled
-                      readOnly
-                    />
-                  )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="university">University/School</Label>
+                  <Label htmlFor="university">University/Institution</Label>
                   <Input
                     id="university"
                     name="university"
-                    value={formData.university}
+                    value={form.university || ""}
                     onChange={handleChange}
-                    disabled={!isEditing}
-                    placeholder="Harvard University"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="courseStartDate">Course Start Date</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                    <Input
-                      id="courseStartDate"
-                      name="courseStartDate"
-                      type="date"
-                      value={formData.courseStartDate}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="usEntryDate">U.S. Entry Date</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                    <Input
-                      id="usEntryDate"
-                      name="usEntryDate"
-                      type="date"
-                      value={formData.usEntryDate}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className="pl-10"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Course Start Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !form.courseStartDate && "text-muted-foreground"
+                          )}
+                        >
+                          {form.courseStartDate ? (
+                            format(new Date(form.courseStartDate), "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            form.courseStartDate
+                              ? new Date(form.courseStartDate)
+                              : undefined
+                          }
+                          onSelect={(date) =>
+                            handleDateChange("courseStartDate", date)
+                          }
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>US Entry Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !form.usEntryDate && "text-muted-foreground"
+                          )}
+                        >
+                          {form.usEntryDate ? (
+                            format(new Date(form.usEntryDate), "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            form.usEntryDate
+                              ? new Date(form.usEntryDate)
+                              : undefined
+                          }
+                          onSelect={(date) =>
+                            handleDateChange("usEntryDate", date)
+                          }
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Employment Start Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !form.employmentStartDate && "text-muted-foreground"
+                          )}
+                        >
+                          {form.employmentStartDate ? (
+                            format(new Date(form.employmentStartDate), "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            form.employmentStartDate
+                              ? new Date(form.employmentStartDate)
+                              : undefined
+                          }
+                          onSelect={(date) =>
+                            handleDateChange("employmentStartDate", date)
+                          }
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
-                {(formData.visaType === "OPT" || formData.visaType === "H1B") && (
-                  <div className="space-y-2">
-                    <Label htmlFor="employmentStartDate">
-                      {formData.visaType === "OPT" ? "OPT Start Date" : "H-1B Start Date"}
-                    </Label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                      <Input
-                        id="employmentStartDate"
-                        name="employmentStartDate"
-                        type="date"
-                        value={formData.employmentStartDate}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        className="pl-10"
-                      />
-                    </div>
+
+                <div className="pt-4">
+                  <Button type="submit" className="nexed-gradient-button">
+                    Update Profile
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Document Checklist</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm mb-4">
+                Based on your visa type, ensure you have the following documents:
+              </p>
+              <ul className="space-y-2">
+                {getRequiredDocuments().map((doc, index) => (
+                  <li key={index} className="flex items-center">
+                    <div className="w-2 h-2 rounded-full bg-nexed-600 mr-2"></div>
+                    {doc}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Visa Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-sm text-gray-500">Current Status:</span>
+                  <p className="font-medium">{form.visaType || "Not specified"}</p>
+                </div>
+                
+                {form.visaType === "F-1" && (
+                  <div className="p-3 bg-amber-50 rounded-md">
+                    <p className="text-amber-800 text-sm">Remember to maintain full-time enrollment</p>
+                  </div>
+                )}
+                
+                {form.visaType === "J-1" && (
+                  <div className="p-3 bg-amber-50 rounded-md">
+                    <p className="text-amber-800 text-sm">Health insurance is mandatory</p>
+                  </div>
+                )}
+                
+                {form.visaType === "H-1B" && (
+                  <div className="p-3 bg-amber-50 rounded-md">
+                    <p className="text-amber-800 text-sm">Employment limited to sponsoring employer</p>
                   </div>
                 )}
               </div>
-
-              {isEditing && (
-                <div className="flex justify-end space-x-4">
-                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="nexed-gradient">
-                    Save Changes
-                  </Button>
-                </div>
-              )}
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Additional Settings or Information */}
-        <Card className="nexed-card md:col-span-3">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Account Settings</CardTitle>
-            <CardDescription>Manage your account preferences</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border shadow-sm">
-                <CardContent className="pt-6">
-                  <h3 className="font-medium text-lg mb-2">Notification Preferences</h3>
-                  <p className="text-gray-500 text-sm mb-4">
-                    Control how you receive notifications and reminders.
-                  </p>
-                  <Button variant="outline">Manage Notifications</Button>
-                </CardContent>
-              </Card>
-              <Card className="border shadow-sm">
-                <CardContent className="pt-6">
-                  <h3 className="font-medium text-lg mb-2">Data & Privacy</h3>
-                  <p className="text-gray-500 text-sm mb-4">
-                    View and adjust how your data is used within the platform.
-                  </p>
-                  <Button variant="outline">Privacy Settings</Button>
-                </CardContent>
-              </Card>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
