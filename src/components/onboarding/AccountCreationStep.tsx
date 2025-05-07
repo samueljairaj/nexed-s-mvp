@@ -65,6 +65,7 @@ export function AccountCreationStep({
   });
 
   const handleBackToLogin = () => {
+    // Navigate directly to the root path which contains the login form
     navigate("/");
   };
 
