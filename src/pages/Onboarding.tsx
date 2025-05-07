@@ -1,91 +1,51 @@
-import { useState, useEffect } from "react";
+
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth, VisaType } from "../contexts/AuthContext";
-import { toast } from "sonner";
+import { useOnboardingState } from "../hooks/useOnboardingState";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
-import { AccountCreationStep, AccountCreationFormData } from "@/components/onboarding/AccountCreationStep";
-import { PersonalInfoStep, PersonalInfoFormData } from "@/components/onboarding/PersonalInfoStep";
-import { VisaStatusStep, VisaStatusFormData } from "@/components/onboarding/VisaStatusStep";
-import { AcademicInfoStep, AcademicInfoFormData } from "@/components/onboarding/AcademicInfoStep";
-import { EmploymentInfoStep } from "@/components/onboarding/EmploymentInfoStep";
-import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
+import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepContent";
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
+import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 
 const Onboarding = () => {
-  const { isAuthenticated, currentUser, updateProfile, signup, completeOnboarding, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const onboardingState = useOnboardingState();
+  const {
+    currentStep,
+    isSubmitting,
+    isAuthenticated,
+    currentUser,
+    isLoading,
+    accountData,
+    personalData,
+    visaData,
+    academicData,
+    employmentData,
+    handleAccountCreation,
+    handlePersonalInfo,
+    handleVisaStatus,
+    handleVisaTypeChange,
+    handleAcademicInfo,
+    handleEmploymentInfo,
+    handleEmploymentStatusChange,
+    isF1OrJ1,
+    isEmployed,
+    isOptOrCpt,
+    isStemOpt,
+    handleFinish,
+    goToPreviousStep,
+    isFirstStep,
+    isLastStep,
+    calculateProgress,
+    setCurrentStep
+  } = onboardingState;
 
-  // This is used when we have multiple steps, to track progress
-  const [currentStep, setCurrentStep] = useState(0);
-  
-  // Data for all steps
-  const [accountData, setAccountData] = useState<Partial<AccountCreationFormData>>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    acceptTerms: false
-  });
-  
-  const [personalData, setPersonalData] = useState<Partial<PersonalInfoFormData>>({
-    country: "",
-    phone: "",
-    passportNumber: "",
-    address: ""
-  });
-  
-  const [visaData, setVisaData] = useState<Partial<VisaStatusFormData>>({
-    visaType: "F1",
-    currentStatus: ""
-  });
-  
-  const [academicData, setAcademicData] = useState<Partial<AcademicInfoFormData>>({
-    university: "",
-    degreeLevel: "",
-    fieldOfStudy: "",
-    isSTEM: false
-  });
-  
-  const [employmentData, setEmploymentData] = useState({
-    employmentStatus: "Not Employed",
-    employerName: "",
-    jobTitle: "",
-    employmentStartDate: null,
-    employmentEndDate: null,
-    isFieldRelated: false,
-    optCptStartDate: null,
-    optCptEndDate: null,
-    eadNumber: "",
-    stemEVerify: "",
-    stemI983Date: null
-  });
+  // Step names for the progress indicator
+  const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
 
   useEffect(() => {
     if (isAuthenticated && currentUser?.onboardingComplete) {
       navigate("/app/dashboard");
-    }
-    
-    // If user is already authenticated, pre-fill the fields
-    if (isAuthenticated && currentUser) {
-      setAccountData({
-        firstName: currentUser.name?.split(" ")[0] || "",
-        lastName: currentUser.name?.split(" ")[1] || "",
-        email: currentUser.email || "",
-      });
-      
-      if (currentUser.country) {
-        setPersonalData(prev => ({ ...prev, country: currentUser.country || "" }));
-      }
-      
-      if (currentUser.visaType) {
-        setVisaData(prev => ({ ...prev, visaType: currentUser.visaType }));
-      }
-      
-      if (currentUser.university) {
-        setAcademicData(prev => ({ ...prev, university: currentUser.university || "" }));
-      }
     }
   }, [isAuthenticated, currentUser, navigate]);
 
@@ -98,292 +58,55 @@ const Onboarding = () => {
     );
   }
 
-  const handleAccountCreation = async (data: AccountCreationFormData) => {
-    setAccountData(data);
-    
-    if (!isAuthenticated) {
-      setIsSubmitting(true);
-      try {
-        await signup(data.email, data.password);
-        // Update the profile with name
-        await updateProfile({ 
-          name: `${data.firstName} ${data.lastName}` 
-        });
-        toast.success("Account created successfully!");
-        setCurrentStep(currentStep + 1);
-      } catch (error: any) {
-        toast.error(`Account creation failed: ${error.message}`);
-      } finally {
-        setIsSubmitting(false);
-      }
-    } else {
-      // Just update the profile with name if authenticated
-      setIsSubmitting(true);
-      try {
-        await updateProfile({ 
-          name: `${data.firstName} ${data.lastName}` 
-        });
-        setCurrentStep(currentStep + 1);
-      } catch (error) {
-        toast.error("Failed to update profile");
-      } finally {
-        setIsSubmitting(false);
-      }
-    }
-  };
-
-  const handlePersonalInfo = async (data: PersonalInfoFormData) => {
-    setPersonalData(data);
-    setIsSubmitting(true);
-    
-    try {
-      await updateProfile({
-        country: data.country,
-        // Save other personal data as needed
-      });
-      setCurrentStep(currentStep + 1);
-    } catch (error) {
-      toast.error("Failed to save personal information");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleVisaStatus = async (data: VisaStatusFormData) => {
-    setVisaData(data);
-    setIsSubmitting(true);
-    
-    try {
-      await updateProfile({
-        visaType: data.visaType as VisaType,
-        // Save other visa data as needed
-      });
-      
-      // Skip to employment step for non-student visas
-      if (data.visaType !== "F1" && data.visaType !== "J1") {
-        setCurrentStep(currentStep + 2);
-      } else {
-        setCurrentStep(currentStep + 1);
-      }
-    } catch (error) {
-      toast.error("Failed to save visa information");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  const handleVisaTypeChange = (visaType: string) => {
-    setVisaData(prev => ({ 
-      ...prev, 
-      visaType: visaType as "F1" | "J1" | "H1B" | "Other"
-    }));
-  };
-
-  const handleAcademicInfo = async (data: AcademicInfoFormData) => {
-    setAcademicData(data);
-    setIsSubmitting(true);
-    
-    try {
-      await updateProfile({
-        university: data.university,
-        // Save other academic data as needed
-      });
-      setCurrentStep(currentStep + 1);
-    } catch (error) {
-      toast.error("Failed to save academic information");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleEmploymentInfo = async (data: any) => {
-    setEmploymentData(data);
-    setIsSubmitting(true);
-    
-    try {
-      // Only include fields that are defined in UserProfile
-      await updateProfile({
-        // employmentStatus would be saved here if it was in UserProfile
-      });
-      setCurrentStep(currentStep + 1);
-    } catch (error) {
-      toast.error("Failed to save employment information");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  const handleEmploymentStatusChange = (status: string) => {
-    setEmploymentData(prev => ({ ...prev, employmentStatus: status }));
-  };
-  
-  // Helper functions for the EmploymentInfoStep
-  const isF1OrJ1 = () => {
-    return visaData.visaType === "F1" || visaData.visaType === "J1";
-  };
-  
-  const isEmployed = () => {
-    return employmentData.employmentStatus !== "Not Employed";
-  };
-  
-  const isOptOrCpt = () => {
-    return employmentData.employmentStatus === "CPT" || 
-           employmentData.employmentStatus === "OPT" || 
-           employmentData.employmentStatus === "STEM OPT Extension";
-  };
-  
-  const isStemOpt = () => {
-    return employmentData.employmentStatus === "STEM OPT Extension";
-  };
-
-  const handleFinish = async () => {
-    setIsSubmitting(true);
-    try {
-      await completeOnboarding();
-      toast.success("Onboarding completed successfully!");
-      navigate("/app/dashboard");
-    } catch (error) {
-      toast.error("Failed to complete onboarding");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Determine if step is the first step
-  const isFirstStep = () => {
-    return currentStep === 0;
-  };
-
-  // Determine if step is the last step
-  const isLastStep = () => {
-    return currentStep === 4;
-  };
-
-  // Calculate the progress percentage
-  const calculateProgress = () => {
-    // We have 5 steps (0-indexed)
-    return ((currentStep + 1) / 5) * 100;
-  };
-
-  // Function to render the current step
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 0:
-        return (
-          <AccountCreationStep
-            defaultValues={accountData}
-            onSubmit={handleAccountCreation}
-            isSubmitting={isSubmitting}
-          />
-        );
-      case 1:
-        return (
-          <PersonalInfoStep
-            defaultValues={personalData}
-            onSubmit={handlePersonalInfo}
-            isSubmitting={isSubmitting}
-          />
-        );
-      case 2:
-        return (
-          <VisaStatusStep
-            defaultValues={visaData}
-            onSubmit={handleVisaStatus}
-            onVisaTypeChange={handleVisaTypeChange}
-            isSubmitting={isSubmitting}
-          />
-        );
-      case 3:
-        return (
-          <AcademicInfoStep
-            defaultValues={academicData}
-            onSubmit={handleAcademicInfo}
-            isF1OrJ1={visaData.visaType === "F1" || visaData.visaType === "J1"}
-            isSubmitting={isSubmitting}
-          />
-        );
-      case 4:
-        return (
-          <EmploymentInfoStep
-            defaultValues={employmentData}
-            onSubmit={handleEmploymentInfo}
-            visaType={visaData.visaType || "F1"}
-            onEmploymentStatusChange={handleEmploymentStatusChange}
-            isF1OrJ1={isF1OrJ1}
-            isEmployed={isEmployed}
-            isOptOrCpt={isOptOrCpt}
-            isStemOpt={isStemOpt}
-          />
-        );
-      case 5:
-        return (
-          <OnboardingComplete
-            onFinish={handleFinish}
-            isSubmitting={isSubmitting}
-            userData={{
-              name: currentUser?.name,
-              visaType: visaData.visaType,
-              university: academicData.university,
-              fieldOfStudy: academicData.fieldOfStudy,
-              employer: employmentData.employerName
-            }}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  // Step names for the progress indicator
-  const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
-
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center">
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-md bg-primary" />
-            <span className="ml-2 text-xl font-bold">neXed</span>
-          </div>
-        </div>
-      </header>
-
-      {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h1 className="text-2xl font-bold mb-6">Welcome to neXed</h1>
-            
-            {/* Progress bar */}
-            <OnboardingProgress 
-              currentStep={currentStep}
-              progress={calculateProgress()}
-              stepNames={stepNames}
-            />
-            
-            {/* Step content */}
-            <div className="mt-8">
-              {renderCurrentStep()}
-            </div>
-            
-            {/* Navigation buttons - only show if not on the final completion screen */}
-            {currentStep !== 5 && currentStep !== 0 && (
-              <StepNavigation
-                currentStep={currentStep}
-                isFirstStep={isFirstStep()}
-                isLastStep={isLastStep()}
-                onNext={() => {
-                  // This is handled by the individual form submissions
-                }}
-                onPrevious={() => setCurrentStep(currentStep - 1)}
-                isSubmitting={isSubmitting}
-              />
-            )}
-          </div>
-        </div>
-      </main>
-    </div>
+    <OnboardingLayout>
+      {/* Progress bar */}
+      <OnboardingProgress 
+        currentStep={currentStep}
+        progress={calculateProgress()}
+        stepNames={stepNames}
+      />
+      
+      {/* Step content */}
+      <div className="mt-8">
+        <OnboardingStepContent
+          currentStep={currentStep}
+          accountData={accountData}
+          personalData={personalData}
+          visaData={visaData}
+          academicData={academicData}
+          employmentData={employmentData}
+          isSubmitting={isSubmitting}
+          currentUser={currentUser}
+          handleAccountCreation={handleAccountCreation}
+          handlePersonalInfo={handlePersonalInfo}
+          handleVisaStatus={handleVisaStatus}
+          handleVisaTypeChange={handleVisaTypeChange}
+          handleAcademicInfo={handleAcademicInfo}
+          handleEmploymentInfo={handleEmploymentInfo}
+          handleEmploymentStatusChange={handleEmploymentStatusChange}
+          isF1OrJ1={isF1OrJ1}
+          isEmployed={isEmployed}
+          isOptOrCpt={isOptOrCpt}
+          isStemOpt={isStemOpt}
+          handleFinish={handleFinish}
+        />
+      </div>
+      
+      {/* Navigation buttons - only show if not on the final completion screen */}
+      {currentStep !== 5 && currentStep !== 0 && (
+        <StepNavigation
+          currentStep={currentStep}
+          isFirstStep={isFirstStep()}
+          isLastStep={isLastStep()}
+          onNext={() => {
+            // This is handled by the individual form submissions
+          }}
+          onPrevious={goToPreviousStep}
+          isSubmitting={isSubmitting}
+        />
+      )}
+    </OnboardingLayout>
   );
 };
 
