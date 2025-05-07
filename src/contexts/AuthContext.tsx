@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -210,11 +209,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           course_start_date: data.courseStartDate ? data.courseStartDate.toISOString().split('T')[0] : undefined,
           us_entry_date: data.usEntryDate ? data.usEntryDate.toISOString().split('T')[0] : undefined,
           employment_start_date: data.employmentStartDate ? data.employmentStartDate.toISOString().split('T')[0] : undefined,
+          // Fix: Map visaType to visa_type for database compatibility
+          visa_type: data.visaType, 
           // Remove fields that don't exist in the database table
           courseStartDate: undefined,
           usEntryDate: undefined,
           employmentStartDate: undefined,
-          visa_type: data.visaType
+          visaType: undefined // Remove visaType as we're using visa_type instead
         };
         
         // Remove undefined fields
@@ -239,6 +240,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error: any) {
         console.error("Error updating profile:", error);
         toast.error(`Failed to update profile: ${error.message}`);
+        throw error; // Propagate the error so the calling function can handle it
       }
     }
   };
