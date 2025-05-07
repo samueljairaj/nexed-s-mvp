@@ -1,11 +1,10 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 
-export type VisaType = "f1" | "j1" | "h1b" | "other" | null;
+export type VisaType = "F1" | "J1" | "H1B" | "Other" | null;
 
 export interface UserProfile {
   id: string;

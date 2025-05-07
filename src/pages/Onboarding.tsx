@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth, VisaType } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { AccountCreationStep, AccountCreationFormData } from "@/components/onboarding/AccountCreationStep";
@@ -155,7 +155,7 @@ const Onboarding = () => {
     
     try {
       await updateProfile({
-        visaType: data.visaType,
+        visaType: data.visaType as VisaType,
         // Save other visa data as needed
       });
       
@@ -173,7 +173,10 @@ const Onboarding = () => {
   };
   
   const handleVisaTypeChange = (visaType: string) => {
-    setVisaData(prev => ({ ...prev, visaType: visaType as "F1" | "J1" | "H1B" | "Other" }));
+    setVisaData(prev => ({ 
+      ...prev, 
+      visaType: visaType as "F1" | "J1" | "H1B" | "Other"
+    }));
   };
 
   const handleAcademicInfo = async (data: AcademicInfoFormData) => {
