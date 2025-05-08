@@ -4,13 +4,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
+import { DocumentCategory } from "@/types/document";
 
 interface Task {
   id: string;
   title: string;
   description: string;
   dueDate: string;
-  category: "immigration" | "academic" | "employment" | "personal";
+  category: DocumentCategory;
   completed: boolean;
   priority: "low" | "medium" | "high";
 }

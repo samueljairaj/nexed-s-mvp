@@ -2,16 +2,7 @@
 import React from "react";
 import { TaskItem } from "./TaskItem";
 import { DocumentCategory } from "@/types/document";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  category: DocumentCategory;
-  completed: boolean;
-  priority: "low" | "medium" | "high";
-}
+import { Task } from "@/hooks/useComplianceTasks";
 
 interface TaskListProps {
   tasks: Task[];
