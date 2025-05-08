@@ -1,13 +1,14 @@
 
 import React from "react";
 import { TaskItem } from "./TaskItem";
+import { DocumentCategory } from "@/types/document";
 
 interface Task {
   id: string;
   title: string;
   description: string;
   dueDate: string;
-  category: "immigration" | "academic" | "employment" | "personal";
+  category: DocumentCategory;
   completed: boolean;
   priority: "low" | "medium" | "high";
 }

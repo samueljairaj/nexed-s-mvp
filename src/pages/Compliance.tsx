@@ -28,7 +28,7 @@ import { generateMockTasks } from "@/utils/mockTasks";
 import { useAICompliance, AITask } from "@/hooks/useAICompliance";
 import { DocumentCategory } from "@/types/document";
 
-// Ensure Task uses the same DocumentCategory type as AITask
+// Ensure Task uses the same type as AITask for consistency
 type Task = AITask;
 
 const Compliance = () => {
@@ -140,10 +140,10 @@ const Compliance = () => {
     setIsLoading(true);
     
     try {
-      const aiTasks: AITask[] = await generateCompliance();
+      const aiTasks = await generateCompliance();
       
       if (aiTasks && aiTasks.length > 0) {
-        // Ensure type compatibility - AITask and Task are now the same type
+        // Both AITask and Task are now the same type
         setTasks(aiTasks);
         setFilteredTasks(aiTasks);
         
@@ -296,6 +296,13 @@ const Compliance = () => {
             onClick={() => toggleFilter("personal")}
           >
             Personal
+          </Badge>
+          <Badge 
+            variant={selectedFilters.includes("education") ? "default" : "outline"} 
+            className="cursor-pointer"
+            onClick={() => toggleFilter("education")}
+          >
+            Education
           </Badge>
           
           {/* AI Task Generation Button */}
