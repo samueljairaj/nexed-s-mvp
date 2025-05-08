@@ -24,13 +24,15 @@ export function usePersonalInfo() {
         country: data.country,
       };
       
-      // Check if dateOfBirth exists and is a Date object before calling toISOString
-      if (data.dateOfBirth && data.dateOfBirth instanceof Date) {
-        // Store as string in the database since usEntryDate is a string in the database
-        updateData.usEntryDate = data.dateOfBirth.toISOString();
-      } else if (data.dateOfBirth && typeof data.dateOfBirth === 'string') {
-        // If it's already a string, use it directly
-        updateData.usEntryDate = data.dateOfBirth;
+      // Safely handle dateOfBirth - ensure it's passed as a string to the database
+      if (data.dateOfBirth) {
+        // Check if it's a Date object before calling toISOString
+        if (data.dateOfBirth instanceof Date) {
+          updateData.usEntryDate = data.dateOfBirth.toISOString();
+        } else if (typeof data.dateOfBirth === 'string') {
+          // If it's already a string, use it directly
+          updateData.usEntryDate = data.dateOfBirth;
+        }
       }
       
       await updateProfile(updateData);

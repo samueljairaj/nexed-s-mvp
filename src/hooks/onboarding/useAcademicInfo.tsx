@@ -24,11 +24,13 @@ export function useAcademicInfo() {
         university: data.university,
       };
       
-      // Only include programStartDate if it exists and convert to ISO string
-      if (data.programStartDate && data.programStartDate instanceof Date) {
-        updateData.courseStartDate = data.programStartDate.toISOString();
-      } else if (data.programStartDate && typeof data.programStartDate === 'string') {
-        updateData.courseStartDate = data.programStartDate;
+      // Safely handle programStartDate
+      if (data.programStartDate) {
+        if (data.programStartDate instanceof Date) {
+          updateData.courseStartDate = data.programStartDate.toISOString();
+        } else if (typeof data.programStartDate === 'string') {
+          updateData.courseStartDate = data.programStartDate;
+        }
       }
       
       await updateProfile(updateData);
