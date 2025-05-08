@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -263,7 +262,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     }
     
     // Order the phases in a logical sequence
-    const orderedPhases = ["F1", "J1", "CPT", "OPT", "STEM OPT", "H1B", "general"];
+    const orderedPhases = ["F1", "CPT", "OPT", "STEM OPT", "J1", "H1B", "general"];
     
     // Sort the phase keys based on the ordered phases
     const sortedPhaseKeys = Object.keys(phaseGroups).sort((a, b) => {
@@ -395,15 +394,19 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
           </div>
 
           {/* Document Tabs */}
-          <Tabs defaultValue="all-documents" className="w-full" value={tab} onValueChange={setTab}>
+          <Tabs defaultValue="by-phase" className="w-full" value={tab} onValueChange={setTab}>
             <TabsList className="grid grid-cols-6 mb-4">
-              <TabsTrigger value="all-documents">All Documents</TabsTrigger>
               <TabsTrigger value="by-phase">By Visa Phase</TabsTrigger>
+              <TabsTrigger value="all-documents">All Documents</TabsTrigger>
               <TabsTrigger value="immigration">Immigration</TabsTrigger>
               <TabsTrigger value="employment">Employment</TabsTrigger>
               <TabsTrigger value="educational">Educational</TabsTrigger>
               <TabsTrigger value="personal">Personal</TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="by-phase">
+              {renderPhaseDocuments()}
+            </TabsContent>
             
             <TabsContent value="all-documents" className="space-y-4">
               <div className="mb-4">
@@ -449,10 +452,6 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
                 </h3>
                 {renderDocumentList('personal')}
               </div>
-            </TabsContent>
-            
-            <TabsContent value="by-phase">
-              {renderPhaseDocuments()}
             </TabsContent>
             
             <TabsContent value="immigration">

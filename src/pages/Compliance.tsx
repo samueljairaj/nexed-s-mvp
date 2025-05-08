@@ -36,6 +36,7 @@ interface Task {
   category: "immigration" | "academic" | "employment" | "personal";
   completed: boolean;
   priority: "low" | "medium" | "high";
+  phase?: string;
 }
 
 const Compliance = () => {
@@ -44,18 +45,15 @@ const Compliance = () => {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [selectedPhase, setSelectedPhase] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const { generateCompliance, isGenerating } = useAICompliance();
   const [showAiLoading, setShowAiLoading] = useState(false);
+  const [phaseGroups, setPhaseGroups] = useState<{[key: string]: Task[]}>({});
 
   useEffect(() => {
-    // Simulate API call to get tasks
-    setTimeout(() => {
-      const mockTasks = generateMockTasks(currentUser?.visaType || "F1");
-      setTasks(mockTasks);
-      setFilteredTasks(mockTasks);
-      setIsLoading(false);
-    }, 1000);
+    // On component mount, generate tasks using AI instead of mock data
+    generateTasksWithAI();
   }, [currentUser]);
 
   // Calculate completion progress
@@ -83,6 +81,21 @@ const Compliance = () => {
       )
     );
 
+    // Also update phase groups
+    setPhaseGroups(prev => {
+      const newGroups = { ...prev };
+      
+      Object.keys(newGroups).forEach(phase => {
+        newGroups[phase] = newGroups[phase].map(task => 
+          task.id === taskId 
+            ? { ...task, completed: !task.completed } 
+            : task
+        );
+      });
+      
+      return newGroups;
+    });
+
     const taskTitle = tasks.find(task => task.id === taskId)?.title;
     const newStatus = !tasks.find(task => task.id === taskId)?.completed;
     
@@ -94,10 +107,10 @@ const Compliance = () => {
 
   // Handle search
   useEffect(() => {
-    filterTasks(searchQuery, selectedFilters);
-  }, [searchQuery, selectedFilters, tasks]);
+    filterTasks(searchQuery, selectedFilters, selectedPhase);
+  }, [searchQuery, selectedFilters, selectedPhase, tasks]);
 
-  const filterTasks = (query: string, filters: string[]) => {
+  const filterTasks = (query: string, filters: string[], phase: string) => {
     let result = [...tasks];
     
     // Apply search query
@@ -111,6 +124,11 @@ const Compliance = () => {
     // Apply category filters
     if (filters.length > 0) {
       result = result.filter(task => filters.includes(task.category));
+    }
+    
+    // Apply phase filter
+    if (phase) {
+      result = result.filter(task => task.phase === phase);
     }
     
     setFilteredTasks(result);
@@ -127,6 +145,7 @@ const Compliance = () => {
   // Generate tasks using AI
   const generateTasksWithAI = async () => {
     setShowAiLoading(true);
+    setIsLoading(true);
     
     try {
       const aiTasks = await generateCompliance();
@@ -134,13 +153,43 @@ const Compliance = () => {
       if (aiTasks && aiTasks.length > 0) {
         setTasks(aiTasks);
         setFilteredTasks(aiTasks);
+        
+        // Group tasks by phase
+        const groupedByPhase = aiTasks.reduce((groups, task) => {
+          const phase = task.phase || "general";
+          if (!groups[phase]) {
+            groups[phase] = [];
+          }
+          groups[phase].push(task);
+          return groups;
+        }, {} as {[key: string]: Task[]});
+        
+        setPhaseGroups(groupedByPhase);
+        
         toast.success("AI-generated compliance tasks created successfully");
+      } else {
+        // Fallback to mock tasks if AI fails or returns empty
+        const mockTasks = generateMockTasks(currentUser?.visaType || "F1");
+        setTasks(mockTasks);
+        setFilteredTasks(mockTasks);
+        
+        // Group mock tasks by visa type
+        const mockGroups = {
+          [currentUser?.visaType || "F1"]: mockTasks
+        };
+        setPhaseGroups(mockGroups);
       }
     } catch (error) {
       console.error("Error generating AI tasks:", error);
-      toast.error("Failed to generate AI tasks");
+      toast.error("Failed to generate AI tasks, using mock data instead");
+      
+      // Fallback to mock tasks
+      const mockTasks = generateMockTasks(currentUser?.visaType || "F1");
+      setTasks(mockTasks);
+      setFilteredTasks(mockTasks);
     } finally {
       setShowAiLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -215,7 +264,7 @@ const Compliance = () => {
         </CardContent>
       </Card>
 
-      {/* Search and Filter */}
+      {/* Search, Filter, and Phase selector */}
       <div className="mb-6 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -270,12 +319,35 @@ const Compliance = () => {
         </div>
       </div>
 
+      {/* Phase Filter */}
+      {Object.keys(phaseGroups).length > 1 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Badge
+            variant={selectedPhase === "" ? "default" : "outline"}
+            className="cursor-pointer"
+            onClick={() => setSelectedPhase("")}
+          >
+            All Phases
+          </Badge>
+          {Object.keys(phaseGroups).map(phase => (
+            <Badge
+              key={phase}
+              variant={selectedPhase === phase ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setSelectedPhase(phase)}
+            >
+              {phase}
+            </Badge>
+          ))}
+        </div>
+      )}
+
       {/* Task Lists */}
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="grid grid-cols-5 mb-8">
           <TabsTrigger value="all">All Tasks</TabsTrigger>
+          <TabsTrigger value="by-phase">By Phase</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
           <TabsTrigger value="completed">Completed</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
@@ -288,25 +360,39 @@ const Compliance = () => {
           />
         </TabsContent>
 
+        <TabsContent value="by-phase">
+          <div className="space-y-8">
+            {Object.keys(phaseGroups)
+              .filter(phase => selectedPhase ? phase === selectedPhase : true)
+              .map(phase => (
+                <div key={phase}>
+                  <h2 className="text-xl font-medium mb-4 flex items-center">
+                    {phase} Documents
+                    <span className="ml-2 text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                      {phaseGroups[phase].length} items
+                    </span>
+                  </h2>
+                  <TaskList
+                    tasks={phaseGroups[phase].filter(task => 
+                      (selectedFilters.length === 0 || selectedFilters.includes(task.category)) &&
+                      (!searchQuery || 
+                        task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        task.description.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                    )}
+                    toggleTaskStatus={toggleTaskStatus}
+                    emptyMessage={`No tasks for ${phase} phase match your criteria`}
+                  />
+                </div>
+              ))}
+          </div>
+        </TabsContent>
+
         <TabsContent value="pending">
           <TaskList 
             tasks={filteredTasks.filter(task => !task.completed)} 
             toggleTaskStatus={toggleTaskStatus}
             emptyMessage="No pending tasks"
-          />
-        </TabsContent>
-
-        <TabsContent value="upcoming">
-          <TaskList 
-            tasks={filteredTasks.filter(task => {
-              const today = new Date();
-              const dueDate = new Date(task.dueDate);
-              const diffTime = dueDate.getTime() - today.getTime();
-              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-              return !task.completed && diffDays <= 30;
-            })} 
-            toggleTaskStatus={toggleTaskStatus}
-            emptyMessage="No upcoming tasks in the next 30 days"
           />
         </TabsContent>
 

@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { DocumentCategory } from "@/types/document";
+import { getBaselineChecklist, baselineItemsToAITasks, BaselineChecklistItem } from "@/utils/baselineChecklists";
 
 export interface AITask {
   id: string;
@@ -50,6 +52,34 @@ export function useAICompliance() {
         ...userData
       };
       
+      // Step 1: Generate baseline checklist based on visa type
+      const visaType = userProfile.visaType || "F1";
+      const employmentStatus = mapEmploymentStatus(userProfile);
+      
+      // Determine the appropriate phase
+      let phase = "F1";
+      if (employmentStatus === "OPT") {
+        phase = "OPT";
+      } else if (employmentStatus === "STEM OPT Extension") {
+        phase = "STEM OPT";
+      } else if (visaType === "J1") {
+        phase = "J1";
+      } else if (visaType === "H1B") {
+        phase = "H1B";
+      }
+      
+      // Get baseline checklist items
+      const baselineItems = getBaselineChecklist(visaType, phase);
+      
+      // Convert baseline items to AITask format
+      const baselineTasks = baselineItemsToAITasks(baselineItems);
+      
+      // If there are no items in the baseline, return an empty array early
+      if (baselineItems.length === 0) {
+        setIsGenerating(false);
+        return [];
+      }
+      
       // Include additional fields needed for rules evaluation
       const enhancedUserData = {
         name: userProfile.name,
@@ -61,7 +91,7 @@ export function useAICompliance() {
         usEntryDate: userProfile.usEntryDate ? new Date(userProfile.usEntryDate).toISOString() : null,
         employmentStartDate: userProfile.employmentStartDate ? new Date(userProfile.employmentStartDate).toISOString() : null,
         // Additional fields for rules engine
-        employmentStatus: mapEmploymentStatus(userProfile),
+        employmentStatus: employmentStatus,
         hasTransferred: Boolean(userProfile.previousUniversity || userProfile.transferDate),
         fieldOfStudy: userProfile.fieldOfStudy || "",
         employer: userProfile.employer || userProfile.employerName || "",
@@ -69,9 +99,13 @@ export function useAICompliance() {
         graduationDate: userProfile.graduationDate ? new Date(userProfile.graduationDate).toISOString() : null
       };
 
-      // Call the Supabase Edge Function - all checklist generation is now happening in the backend
+      // Step 2: Use AI to enhance the baseline checklist
+      // Call the Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('generate-compliance', {
-        body: { userData: enhancedUserData }
+        body: { 
+          userData: enhancedUserData,
+          baselineTasks: baselineTasks  // Pass the baseline checklist to the AI
+        }
       });
 
       if (error) {
