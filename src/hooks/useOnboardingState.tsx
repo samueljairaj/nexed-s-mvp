@@ -119,8 +119,8 @@ export function useOnboardingState() {
       // Only include properties that exist in the UserProfile type
       await updateProfile({
         country: data.country,
-        // Removed 'phone' as it doesn't exist in UserProfile type
-        // Add us_entry_date if dateOfBirth is present and map it to the correct field
+        // Map dateOfBirth to us_entry_date field if present
+        // Use the correct property name based on the database schema
         us_entry_date: data.dateOfBirth ? data.dateOfBirth.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
@@ -138,19 +138,24 @@ export function useOnboardingState() {
     setIsSubmitting(true);
     
     try {
-      // Ensure dates are properly formatted for database storage
+      // Ensure we're using the correct property names that match the database schema
       const formattedData = {
         visaType: data.visaType as VisaType,
-        visaStatus: data.currentStatus,
-        sevisId: data.sevisId,
-        i797Number: data.i797Number,
-        entryDate: data.entryDate ? data.entryDate.toISOString() : undefined,
-        visaExpirationDate: data.visaExpirationDate ? data.visaExpirationDate.toISOString() : undefined,
-        i94ExpirationDate: data.i94ExpirationDate ? data.i94ExpirationDate.toISOString() : undefined,
-        // Renamed from programStartDate/programEndDate to course_start_date as per UserProfile type
+        // These fields below don't appear to be in the database schema
+        // Let's keep only what's in the actual profiles table
+        // visaStatus: data.currentStatus,
+        // sevisId: data.sevisId,
+        // i797Number: data.i797Number,
+        
+        // Use the correct field names that match the database schema
+        us_entry_date: data.entryDate ? data.entryDate.toISOString() : undefined,
+        // visaExpirationDate and i94ExpirationDate don't seem to be in the database schema
+        
+        // Map program dates to course_start_date
         course_start_date: data.programStartDate ? data.programStartDate.toISOString() : undefined,
-        // Removed programEndDate as there's no direct mapping in UserProfile type
       };
+      
+      console.log("Attempting to update profile with visa data:", formattedData);
       
       // Update the user profile with the visa status information
       await updateProfile(formattedData);
@@ -184,12 +189,11 @@ export function useOnboardingState() {
     setIsSubmitting(true);
     
     try {
-      // Only include properties that exist in the UserProfile type
+      // Only include properties that exist in the database schema
       await updateProfile({
         university: data.university,
-        // course_start_date instead of programStartDate as per UserProfile type
+        // Use the correct property name for course start date
         course_start_date: data.programStartDate ? data.programStartDate.toISOString() : undefined,
-        // Removed programEndDate as there's no direct mapping in UserProfile type
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -205,17 +209,11 @@ export function useOnboardingState() {
     setIsSubmitting(true);
     
     try {
-      // Only include properties that exist in the UserProfile type
+      // Only include properties that exist in the database schema
       await updateProfile({
-        // Correctly map the employer field from employerName
-        // Removed 'employer' as it doesn't exist in UserProfile type directly
-        jobTitle: data.jobTitle,
+        // Only include fields that are in the actual database schema
+        // Looking at the errors, jobTitle doesn't exist in the schema
         employment_start_date: data.employmentStartDate ? data.employmentStartDate.toISOString() : undefined,
-        // Removed employmentEndDate as there's no direct mapping in UserProfile type
-        // The following fields might not exist in UserProfile and should be adjusted
-        // as needed based on the actual type definition
-        opt_cpt_start_date: data.optCptStartDate ? data.optCptStartDate.toISOString() : undefined, 
-        opt_cpt_end_date: data.optCptEndDate ? data.optCptEndDate.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
