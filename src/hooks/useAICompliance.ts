@@ -28,9 +28,8 @@ export function useAICompliance() {
         ...userData
       };
       
-      // Remove sensitive or unnecessary information
-      // Only include fields that exist in the current user object
-      const sanitizedUserData = {
+      // Include additional fields needed for rules evaluation
+      const enhancedUserData = {
         name: userProfile.name,
         email: userProfile.email,
         country: userProfile.country,
@@ -39,11 +38,16 @@ export function useAICompliance() {
         courseStartDate: userProfile.courseStartDate ? new Date(userProfile.courseStartDate).toISOString() : null,
         usEntryDate: userProfile.usEntryDate ? new Date(userProfile.usEntryDate).toISOString() : null,
         employmentStartDate: userProfile.employmentStartDate ? new Date(userProfile.employmentStartDate).toISOString() : null,
+        // Additional fields for rules engine
+        employmentStatus: mapEmploymentStatus(userProfile),
+        hasTransferred: Boolean(userProfile.previousUniversity || userProfile.transferDate),
+        fieldOfStudy: userProfile.fieldOfStudy || "",
+        employer: userProfile.employer || userProfile.employerName || ""
       };
 
       // Call the Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('generate-compliance', {
-        body: { userData: sanitizedUserData }
+        body: { userData: enhancedUserData }
       });
 
       if (error) {
@@ -64,6 +68,61 @@ export function useAICompliance() {
       setIsGenerating(false);
     }
   };
+
+  // Helper function to map user's employment status to standardized values
+  function mapEmploymentStatus(userProfile: any): string {
+    if (!userProfile) return "Unknown";
+    
+    const visaType = userProfile.visaType?.toLowerCase();
+    const employmentStatus = userProfile.employmentStatus?.toLowerCase();
+    const optType = userProfile.optType?.toLowerCase();
+    
+    // STEM OPT cases
+    if (
+      (visaType === 'f1' && optType === 'stem') || 
+      (employmentStatus?.includes('stem')) ||
+      (userProfile.hasOwnProperty('isStemOpt') && userProfile.isStemOpt === true)
+    ) {
+      return "STEM OPT Extension";
+    }
+    
+    // Regular OPT cases
+    if (
+      (visaType === 'f1' && employmentStatus?.includes('opt')) ||
+      (optType === 'regular') ||
+      (userProfile.hasOwnProperty('isOpt') && userProfile.isOpt === true)
+    ) {
+      return "OPT";
+    }
+    
+    // CPT cases
+    if (
+      (visaType === 'f1' && employmentStatus?.includes('cpt')) ||
+      (userProfile.hasOwnProperty('isCpt') && userProfile.isCpt === true)
+    ) {
+      return "CPT";
+    }
+    
+    // H1B cases
+    if (visaType === 'h1b') {
+      return "H1B Employment";
+    }
+    
+    // Unemployed students
+    if (
+      (visaType === 'f1' || visaType === 'j1') && 
+      (!userProfile.employer && !userProfile.employerName)
+    ) {
+      return "Unemployed Student";
+    }
+    
+    // Default employed cases
+    if (userProfile.employer || userProfile.employerName) {
+      return "Employed";
+    }
+    
+    return "Unknown";
+  }
 
   return {
     generateCompliance,

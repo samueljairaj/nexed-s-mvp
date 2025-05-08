@@ -111,7 +111,15 @@ export function OnboardingStepContent({
             visaType: visaData.visaType,
             university: academicData.university,
             fieldOfStudy: academicData.fieldOfStudy,
-            employer: employmentData.employerName
+            employer: employmentData.employerName,
+            courseStartDate: academicData.courseStartDate,
+            graduationDate: academicData.graduationDate,
+            employmentStatus: employmentData.employmentStatus,
+            optType: employmentData.optType,
+            previousUniversity: academicData.previousUniversity,
+            hasTransferred: academicData.hasTransferred,
+            employmentStartDate: employmentData.employmentStartDate,
+            usEntryDate: personalData.usEntryDate
           }}
         />
       );

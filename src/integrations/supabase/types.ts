@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      compliance_rules: {
+        Row: {
+          active: boolean | null
+          condition_logic: string
+          created_at: string | null
+          description: string | null
+          group_name: string
+          id: string
+          name: string
+          priority: number | null
+          required_documents: Json
+        }
+        Insert: {
+          active?: boolean | null
+          condition_logic: string
+          created_at?: string | null
+          description?: string | null
+          group_name: string
+          id?: string
+          name: string
+          priority?: number | null
+          required_documents: Json
+        }
+        Update: {
+          active?: boolean | null
+          condition_logic?: string
+          created_at?: string | null
+          description?: string | null
+          group_name?: string
+          id?: string
+          name?: string
+          priority?: number | null
+          required_documents?: Json
+        }
+        Relationships: []
+      }
       compliance_task_templates: {
         Row: {
           created_at: string | null
