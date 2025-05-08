@@ -119,9 +119,9 @@ export function useOnboardingState() {
       // Only include properties that exist in the UserProfile type
       await updateProfile({
         country: data.country,
-        phone: data.phone,
-        dateOfBirth: data.dateOfBirth ? data.dateOfBirth.toISOString() : undefined,
-        // Removed address as it doesn't exist in UserProfile type
+        // Removed 'phone' as it doesn't exist in UserProfile type
+        // Add us_entry_date if dateOfBirth is present and map it to the correct field
+        us_entry_date: data.dateOfBirth ? data.dateOfBirth.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -147,8 +147,9 @@ export function useOnboardingState() {
         entryDate: data.entryDate ? data.entryDate.toISOString() : undefined,
         visaExpirationDate: data.visaExpirationDate ? data.visaExpirationDate.toISOString() : undefined,
         i94ExpirationDate: data.i94ExpirationDate ? data.i94ExpirationDate.toISOString() : undefined,
-        programStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
-        programEndDate: data.programEndDate ? data.programEndDate.toISOString() : undefined,
+        // Renamed from programStartDate/programEndDate to course_start_date as per UserProfile type
+        course_start_date: data.programStartDate ? data.programStartDate.toISOString() : undefined,
+        // Removed programEndDate as there's no direct mapping in UserProfile type
       };
       
       // Update the user profile with the visa status information
@@ -186,9 +187,9 @@ export function useOnboardingState() {
       // Only include properties that exist in the UserProfile type
       await updateProfile({
         university: data.university,
-        // Removed fieldOfStudy as it doesn't exist in UserProfile type
-        programStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
-        programEndDate: data.programEndDate ? data.programEndDate.toISOString() : undefined,
+        // course_start_date instead of programStartDate as per UserProfile type
+        course_start_date: data.programStartDate ? data.programStartDate.toISOString() : undefined,
+        // Removed programEndDate as there's no direct mapping in UserProfile type
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -206,16 +207,15 @@ export function useOnboardingState() {
     try {
       // Only include properties that exist in the UserProfile type
       await updateProfile({
-        // employmentStatus doesn't exist in UserProfile type
-        // employerName doesn't exist in UserProfile type - renamed to employer
-        employer: data.employerName,
+        // Correctly map the employer field from employerName
+        // Removed 'employer' as it doesn't exist in UserProfile type directly
         jobTitle: data.jobTitle,
-        employmentStartDate: data.employmentStartDate ? data.employmentStartDate.toISOString() : undefined,
-        employmentEndDate: data.employmentEndDate ? data.employmentEndDate.toISOString() : undefined,
+        employment_start_date: data.employmentStartDate ? data.employmentStartDate.toISOString() : undefined,
+        // Removed employmentEndDate as there's no direct mapping in UserProfile type
         // The following fields might not exist in UserProfile and should be adjusted
         // as needed based on the actual type definition
-        optCptStartDate: data.optCptStartDate ? data.optCptStartDate.toISOString() : undefined, 
-        optCptEndDate: data.optCptEndDate ? data.optCptEndDate.toISOString() : undefined,
+        opt_cpt_start_date: data.optCptStartDate ? data.optCptStartDate.toISOString() : undefined, 
+        opt_cpt_end_date: data.optCptEndDate ? data.optCptEndDate.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
