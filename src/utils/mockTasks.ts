@@ -1,12 +1,15 @@
 
+import { DocumentCategory } from "@/types/document";
+
 interface Task {
   id: string;
   title: string;
   description: string;
   dueDate: string;
-  category: "immigration" | "academic" | "employment" | "personal";
+  category: DocumentCategory;
   completed: boolean;
   priority: "low" | "medium" | "high";
+  phase?: string;
 }
 
 // Generate mock tasks based on visa type
@@ -62,7 +65,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "May 25, 2025",
         category: "academic",
         completed: false,
-        priority: "high"
+        priority: "high",
+        phase: "F1"
       },
       {
         id: "task-f1-2",
@@ -71,7 +75,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "September 15, 2025",
         category: "immigration",
         completed: false,
-        priority: "high"
+        priority: "high",
+        phase: "F1"
       },
       {
         id: "task-f1-3",
@@ -80,7 +85,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "April 5, 2025",
         category: "immigration",
         completed: false,
-        priority: "medium"
+        priority: "medium",
+        phase: "F1"
       },
       {
         id: "task-f1-4",
@@ -89,7 +95,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "Recurring",
         category: "employment",
         completed: true,
-        priority: "medium"
+        priority: "medium",
+        phase: "F1"
       },
       {
         id: "task-f1-5",
@@ -98,7 +105,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "May 15, 2025",
         category: "employment",
         completed: false,
-        priority: "medium"
+        priority: "medium",
+        phase: "F1"
       },
       {
         id: "task-f1-6",
@@ -107,7 +115,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "February 28, 2025",
         category: "immigration",
         completed: true,
-        priority: "high"
+        priority: "high",
+        phase: "F1"
       }
     ];
   } else if (visaType === "OPT") {
@@ -119,7 +128,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "Within 10 days of change",
         category: "employment",
         completed: false,
-        priority: "high"
+        priority: "high",
+        phase: "OPT"
       },
       {
         id: "task-opt-2",
@@ -128,7 +138,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "Ongoing",
         category: "employment",
         completed: false,
-        priority: "high"
+        priority: "high",
+        phase: "OPT"
       },
       {
         id: "task-opt-3",
@@ -137,7 +148,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "July 15, 2025",
         category: "employment",
         completed: false,
-        priority: "medium"
+        priority: "medium",
+        phase: "OPT"
       },
       {
         id: "task-opt-4",
@@ -146,7 +158,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "November 1, 2025",
         category: "immigration",
         completed: false,
-        priority: "medium"
+        priority: "medium",
+        phase: "OPT"
       }
     ];
   } else if (visaType === "H1B") {
@@ -158,7 +171,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "May 30, 2025",
         category: "employment",
         completed: false,
-        priority: "medium"
+        priority: "medium",
+        phase: "H1B"
       },
       {
         id: "task-h1b-2",
@@ -167,7 +181,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "Within 10 days of moving",
         category: "immigration",
         completed: false,
-        priority: "high"
+        priority: "high",
+        phase: "H1B"
       },
       {
         id: "task-h1b-3",
@@ -176,7 +191,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "June 15, 2025",
         category: "immigration",
         completed: true,
-        priority: "medium"
+        priority: "medium",
+        phase: "H1B"
       },
       {
         id: "task-h1b-4",
@@ -185,7 +201,8 @@ export const generateMockTasks = (visaType: string): Task[] => {
         dueDate: "Before any travel",
         category: "immigration",
         completed: false,
-        priority: "medium"
+        priority: "medium",
+        phase: "H1B"
       }
     ];
   }
