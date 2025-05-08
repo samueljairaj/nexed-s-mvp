@@ -12,17 +12,18 @@ export function useOnboardingCompletion() {
   const handleFinish = async () => {
     setIsSubmitting(true);
     try {
-      // Mark onboarding as complete in the database
-      const success = await completeOnboarding();
-      if (success) {
-        toast.success("Onboarding completed successfully!");
-        // Navigate to dashboard after successful completion
-        setTimeout(() => {
-          navigate("/app/dashboard");
-        }, 1500);
-        return true;
-      }
-      return false;
+      // Call completeOnboarding() without checking its return value
+      await completeOnboarding();
+      
+      // Assume success if no error was thrown
+      toast.success("Onboarding completed successfully!");
+      
+      // Navigate to dashboard after successful completion
+      setTimeout(() => {
+        navigate("/app/dashboard");
+      }, 1500);
+      
+      return true;
     } catch (error) {
       toast.error("Failed to complete onboarding");
       console.error("Error completing onboarding:", error);
