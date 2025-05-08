@@ -29,8 +29,7 @@ export function usePersonalInfo() {
       
       // Format dates as YYYY-MM-DD strings
       if (data.dateOfBirth) {
-        // Convert to string format directly without using toISOString
-        updateData.usEntryDate = formatDateToString(data.dateOfBirth);
+        updateData.dateOfBirth = formatDateToString(data.dateOfBirth);
       }
 
       if (data.passportExpiryDate) {

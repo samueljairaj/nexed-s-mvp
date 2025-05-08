@@ -203,20 +203,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (currentUser && currentUser.id) {
       try {
-        // Convert date objects to strings for the database
-        const dbData: any = {
-          ...data,
-          course_start_date: data.courseStartDate ? data.courseStartDate.toISOString().split('T')[0] : undefined,
-          us_entry_date: data.usEntryDate ? data.usEntryDate.toISOString().split('T')[0] : undefined,
-          employment_start_date: data.employmentStartDate ? data.employmentStartDate.toISOString().split('T')[0] : undefined,
-          // Fix: Map visaType to visa_type for database compatibility
-          visa_type: data.visaType, 
-          // Remove fields that don't exist in the database table
-          courseStartDate: undefined,
-          usEntryDate: undefined,
-          employmentStartDate: undefined,
-          visaType: undefined // Remove visaType as we're using visa_type instead
-        };
+        // Create a new object for database fields
+        const dbData: any = { ...data };
+        
+        // Handle date fields being passed to the database
+        // Map properties to database column names
+        if (data.courseStartDate) {
+          const dateStr = typeof data.courseStartDate === 'string' 
+            ? data.courseStartDate 
+            : formatDateToString(data.courseStartDate);
+          dbData.course_start_date = dateStr;
+          delete dbData.courseStartDate;
+        }
+        
+        if (data.usEntryDate) {
+          const dateStr = typeof data.usEntryDate === 'string' 
+            ? data.usEntryDate 
+            : formatDateToString(data.usEntryDate);
+          dbData.us_entry_date = dateStr;
+          delete dbData.usEntryDate;
+        }
+        
+        if (data.employmentStartDate) {
+          const dateStr = typeof data.employmentStartDate === 'string' 
+            ? data.employmentStartDate 
+            : formatDateToString(data.employmentStartDate);
+          dbData.employment_start_date = dateStr;
+          delete dbData.employmentStartDate;
+        }
+        
+        // Map visa type
+        if (data.visaType !== undefined) {
+          dbData.visa_type = data.visaType;
+          delete dbData.visaType;
+        }
+        
+        // Handle date of birth
+        if (data.dateOfBirth) {
+          dbData.date_of_birth = typeof data.dateOfBirth === 'string' 
+            ? data.dateOfBirth 
+            : formatDateToString(data.dateOfBirth);
+          delete dbData.dateOfBirth;
+        }
+        
+        // Handle passport expiry
+        if (data.passportExpiryDate) {
+          dbData.passport_expiry_date = typeof data.passportExpiryDate === 'string' 
+            ? data.passportExpiryDate 
+            : formatDateToString(data.passportExpiryDate);
+          delete dbData.passportExpiryDate;
+        }
         
         // Remove undefined fields
         Object.keys(dbData).forEach(key => {
@@ -224,6 +260,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             delete dbData[key];
           }
         });
+        
+        console.log("Sending to database:", dbData);
         
         const { error } = await supabase
           .from('profiles')
@@ -271,6 +309,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     return false;
+  };
+
+  // Helper function to safely format dates
+  const formatDateToString = (date: Date): string => {
+    try {
+      // Format as YYYY-MM-DD manually
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      // Return today's date as fallback
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    }
   };
 
   // Check if user should be directed to onboarding
