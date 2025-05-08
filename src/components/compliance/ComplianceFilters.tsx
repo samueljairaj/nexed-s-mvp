@@ -77,6 +77,13 @@ export function ComplianceFilters({
           >
             Education
           </Badge>
+          <Badge 
+            variant={selectedFilters.includes("financial") ? "default" : "outline"} 
+            className="cursor-pointer"
+            onClick={() => toggleFilter("financial")}
+          >
+            Financial
+          </Badge>
           
           {/* AI Task Generation Button */}
           <Button 

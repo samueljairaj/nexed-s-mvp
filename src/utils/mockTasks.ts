@@ -3,6 +3,7 @@ import { Task } from "@/hooks/useComplianceTasks";
 
 // Generate mock tasks based on visa type
 export const generateMockTasks = (visaType: string): Task[] => {
+  // ... keep existing code (commonTasks and specificTasks implementation with the correct DocumentCategory type)
   const commonTasks: Task[] = [
     {
       id: "task-1",

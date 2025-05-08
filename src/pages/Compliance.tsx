@@ -11,7 +11,7 @@ import { TaskList } from "@/components/compliance/TaskList";
 import { ComplianceStatusSummary } from "@/components/compliance/ComplianceStatusSummary";
 import { ComplianceFilters } from "@/components/compliance/ComplianceFilters";
 import { PhaseGroupedTasks } from "@/components/compliance/PhaseGroupedTasks";
-import { useComplianceTasks } from "@/hooks/useComplianceTasks";
+import { useComplianceTasks, Task } from "@/hooks/useComplianceTasks";
 
 const Compliance = () => {
   const {
