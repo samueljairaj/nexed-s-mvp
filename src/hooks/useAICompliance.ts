@@ -1,17 +1,15 @@
-
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { DocumentCategory } from "@/types/document";
-import { getBaselineChecklist, baselineItemsToAITasks, BaselineChecklistItem } from "@/utils/baselineChecklists";
 
 export interface AITask {
   id: string;
   title: string;
   description: string;
   dueDate: string;
-  category: "immigration" | "academic" | "employment" | "personal";
+  category: DocumentCategory; // Updated to use DocumentCategory type
   completed: boolean;
   priority: "low" | "medium" | "high";
   phase?: string;

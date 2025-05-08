@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { 
@@ -26,18 +25,10 @@ import { TimelineView } from "@/components/compliance/TimelineView";
 import { TaskList } from "@/components/compliance/TaskList";
 import { generateMockTasks } from "@/utils/mockTasks";
 import { useAICompliance, AITask } from "@/hooks/useAICompliance";
+import { DocumentCategory } from "@/types/document";
 
-// Task interface
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  category: "immigration" | "academic" | "employment" | "personal";
-  completed: boolean;
-  priority: "low" | "medium" | "high";
-  phase?: string;
-}
+// Task interface (using AITask now)
+type Task = AITask;
 
 const Compliance = () => {
   const { currentUser } = useAuth();
