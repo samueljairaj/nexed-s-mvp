@@ -59,10 +59,10 @@ const Assistant = () => {
     setInputValue("");
     
     try {
-      // Send message to AI
+      // Send message to AI - filter out messages with roles other than "user" or "assistant"
       const responseMessage = await sendMessage(
         inputValue, 
-        messages.filter(m => m.role !== "system") // Don't send system messages to API
+        messages.filter(m => m.role === "user" || m.role === "assistant")
       );
       
       // Add AI response to messages

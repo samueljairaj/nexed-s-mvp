@@ -29,14 +29,13 @@ export function useAICompliance() {
       };
       
       // Remove sensitive or unnecessary information
+      // Only include fields that exist in the current user object
       const sanitizedUserData = {
         name: userProfile.name,
         email: userProfile.email,
         country: userProfile.country,
         visaType: userProfile.visaType,
-        university: userProfile.university,
-        fieldOfStudy: userProfile.fieldOfStudy || "",
-        employer: userProfile.employer || "",
+        university: userProfile.university || "",
         courseStartDate: userProfile.courseStartDate ? new Date(userProfile.courseStartDate).toISOString() : null,
         usEntryDate: userProfile.usEntryDate ? new Date(userProfile.usEntryDate).toISOString() : null,
         employmentStartDate: userProfile.employmentStartDate ? new Date(userProfile.employmentStartDate).toISOString() : null,
