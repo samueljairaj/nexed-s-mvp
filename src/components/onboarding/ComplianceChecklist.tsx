@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertTriangle, FileCheck, Upload, User, Briefcase, GraduationCap, Info } from "lucide-react";
+import { AlertTriangle, FileCheck, Upload, User, Briefcase, GraduationCap, Info, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAICompliance, AITask } from "@/hooks/useAICompliance";
 
 interface ComplianceChecklistProps {
   open: boolean;
@@ -21,9 +22,20 @@ interface ComplianceChecklistProps {
 export function ComplianceChecklist({ open, onOpenChange, userData }: ComplianceChecklistProps) {
   const navigate = useNavigate();
   const [tab, setTab] = useState("all-documents");
-  
-  // Mock data based on user profile
-  const studentInfo = {
+  const { generateCompliance, isGenerating } = useAICompliance();
+  const [documents, setDocuments] = useState<{
+    immigration: AITask[];
+    employment: AITask[];
+    educational: AITask[];
+    personal: AITask[];
+  }>({
+    immigration: [],
+    employment: [],
+    educational: [],
+    personal: []
+  });
+  const [loadingState, setLoadingState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [studentInfo, setStudentInfo] = useState({
     university: userData.university || "Stanford University",
     program: userData.fieldOfStudy || "Master of Science in Computer Science",
     optStartDate: "March 15, 2025",
@@ -32,129 +44,146 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     i20EndDate: "December 15, 2024",
     visaExpiration: "June 15, 2025",
     employer: userData.employer || "Tech Company Inc.",
-  };
-
-  // Mock document categories
-  const documents = {
-    immigration: [
-      {
-        id: "i20",
-        title: "Form I-20 (with OPT endorsement)",
-        description: "Your current I-20 should have OPT endorsement from your DSO. Ensure the dates match your approved OPT period.",
-        required: true,
-        uploaded: false
-      },
-      {
-        id: "ead",
-        title: "EAD Card (Form I-766)",
-        description: `Your Employment Authorization Document showing validity from ${studentInfo.optStartDate} to ${studentInfo.optEndDate}.`,
-        required: true,
-        uploaded: false
-      },
-      {
-        id: "visa",
-        title: "F-1 Visa",
-        description: `Your visa stamp showing expiration on ${studentInfo.visaExpiration}. Note: You can remain in the US with an expired visa, but will need renewal for re-entry.`,
-        required: true,
-        uploaded: false
-      },
-      {
-        id: "i94",
-        title: "Most Recent I-94 Record",
-        description: `Confirming entry on ${studentInfo.recentUSEntry} with correct visa type (student or F-1) as admission period.`,
-        required: true,
-        uploaded: false
-      },
-      {
-        id: "optreceipt",
-        title: "OPT Application Receipt (I-797C)",
-        description: "USCIS receipt notice for your Form I-765 OPT application.",
-        required: false,
-        uploaded: false
+  });
+  
+  // Generate AI compliance checklist when the component mounts
+  useEffect(() => {
+    if (open) {
+      generateAIChecklist();
+    }
+  }, [open]);
+  
+  const generateAIChecklist = async () => {
+    if (isGenerating) return;
+    
+    setLoadingState("loading");
+    
+    try {
+      const tasks = await generateCompliance(userData);
+      
+      // Categorize tasks
+      const categorizedTasks = {
+        immigration: tasks.filter(task => task.category === "immigration"),
+        employment: tasks.filter(task => task.category === "employment"),
+        educational: tasks.filter(task => task.category === "academic"),
+        personal: tasks.filter(task => task.category === "personal")
+      };
+      
+      setDocuments(categorizedTasks);
+      setLoadingState("success");
+      
+      // Update some student info based on AI-generated tasks
+      if (tasks.length > 0) {
+        // Look for visa expiration in tasks
+        const visaTask = tasks.find(t => 
+          t.title.toLowerCase().includes("visa") && 
+          t.description.toLowerCase().includes("expir"));
+          
+        if (visaTask && visaTask.dueDate) {
+          setStudentInfo(prev => ({
+            ...prev,
+            visaExpiration: new Date(visaTask.dueDate).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            })
+          }));
+        }
       }
-    ],
-    employment: [
-      {
-        id: "offer-letter",
-        title: `Job Offer Letter from ${studentInfo.employer}`,
-        description: "Official job offer letter showing position, start date, and confirmation that the role relates to your Computer Science degree.",
-        required: true,
-        uploaded: false
-      },
-      {
-        id: "verification",
-        title: "Employment Verification Letter",
-        description: "Letter from your employer confirming your current employment and that the work is related to your field of study.",
-        required: false,
-        uploaded: false
-      },
-      {
-        id: "paystubs",
-        title: "Recent Pay Stubs",
-        description: "Evidence of ongoing employment which may be requested during any status verification.",
-        required: false,
-        uploaded: false
-      }
-    ],
-    educational: [
-      {
-        id: "diploma",
-        title: "Diploma/Degree Certificate",
-        description: "Copy of your most recent degree certificate from your academic institution.",
-        required: true,
-        uploaded: false
-      },
-      {
-        id: "transcript",
-        title: "Academic Transcript",
-        description: "Official transcript showing completion of your academic program.",
-        required: false,
-        uploaded: false
-      }
-    ],
-    personal: [
-      {
-        id: "passport",
-        title: "Valid Passport",
-        description: "Ensuring it remains valid for at least 6 months beyond your intended period of stay.",
-        required: true,
-        uploaded: false
-      },
-      {
-        id: "insurance",
-        title: "Health Insurance Documentation",
-        description: "Proof of active health insurance coverage while in the United States.",
-        required: false,
-        uploaded: false
-      }
-    ]
+    } catch (error) {
+      console.error("Error generating AI checklist:", error);
+      setLoadingState("error");
+    }
   };
 
   // Count documents
-  const totalDocuments = [
-    ...documents.immigration,
-    ...documents.employment,
-    ...documents.educational,
-    ...documents.personal
-  ].length;
+  const totalDocuments = Object.values(documents).reduce(
+    (acc, category) => acc + category.length, 
+    0
+  );
   
-  const requiredDocuments = [
-    ...documents.immigration,
-    ...documents.employment,
-    ...documents.educational,
-    ...documents.personal
-  ].filter(doc => doc.required).length;
+  const requiredDocuments = Object.values(documents).reduce(
+    (acc, category) => acc + category.filter(doc => doc.priority !== "low").length, 
+    0
+  );
 
-  // Insights based on user data
-  const insights = [
-    `Submit your SEVIS address update by ${new Date(new Date(studentInfo.optStartDate).getTime() + 10*24*60*60*1000).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})} (within 10 days of your OPT start date)`,
-    `Request an employment verification letter that specifically mentions how your role at ${studentInfo.employer} relates to your ${studentInfo.program} degree`,
-    `Start visa renewal planning by ${new Date(new Date(studentInfo.visaExpiration).getTime() - 60*24*60*60*1000).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})} (2 months before expiration) if you intend to travel internationally`,
-    `Consider that you'll be eligible for 24-month STEM OPT extension after your initial OPT period`,
-    `Based on your I-94 entry date of ${studentInfo.recentUSEntry}, you must maintain continuous employment with no more than 90 cumulative days of unemployment`
-  ];
+  // AI-generated insights based on tasks
+  const generateInsights = () => {
+    const allTasks = [
+      ...documents.immigration,
+      ...documents.employment,
+      ...documents.educational,
+      ...documents.personal
+    ];
+    
+    const insights = [];
+    
+    // Check for time-sensitive tasks
+    const urgentTasks = allTasks.filter(task => 
+      task.priority === "high" && 
+      new Date(task.dueDate) > new Date()
+    ).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+    
+    if (urgentTasks.length > 0) {
+      insights.push(`Submit ${urgentTasks[0].title} by ${new Date(urgentTasks[0].dueDate).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}`);
+    }
+    
+    // Check for employer verification if employed
+    if (userData.employer) {
+      insights.push(`Request an employment verification letter that specifically mentions how your role at ${userData.employer} relates to your ${userData.fieldOfStudy || "degree"}`);
+    }
+    
+    // Add visa renewal planning
+    insights.push(`Start visa renewal planning by ${new Date(new Date(studentInfo.visaExpiration).getTime() - 60*24*60*60*1000).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})} (2 months before expiration) if you intend to travel internationally`);
+    
+    // Add STEM OPT extension if applicable
+    if (userData.fieldOfStudy && ["computer science", "engineering", "mathematics", "technology"].some(stem => userData.fieldOfStudy?.toLowerCase().includes(stem))) {
+      insights.push(`Consider that you'll be eligible for 24-month STEM OPT extension after your initial OPT period`);
+    }
+    
+    // Add unemployment grace period reminder
+    insights.push(`Based on your I-94 entry date of ${studentInfo.recentUSEntry}, you must maintain continuous employment with no more than 90 cumulative days of unemployment`);
+    
+    return insights;
+  };
+
+  const insights = generateInsights();
 
   const renderDocumentList = (category: keyof typeof documents) => {
+    if (loadingState === "loading") {
+      return (
+        <div className="flex flex-col items-center justify-center py-10">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+          <p className="text-gray-600">Generating your personalized checklist...</p>
+        </div>
+      );
+    }
+    
+    if (loadingState === "error") {
+      return (
+        <div className="border rounded-lg p-4 mb-3 bg-red-50">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="text-red-500" />
+            <div className="flex-1">
+              <p className="text-red-700 font-medium">Failed to generate checklist</p>
+              <p className="text-red-600 text-sm mt-1">Please try again later</p>
+              <Button onClick={generateAIChecklist} className="mt-2" size="sm" variant="outline">
+                Retry
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (documents[category].length === 0) {
+      return (
+        <div className="border rounded-lg p-4 mb-3 bg-gray-50">
+          <p className="text-gray-600 text-center py-4">No {category} documents required</p>
+        </div>
+      );
+    }
+    
     return documents[category].map((doc) => (
       <div key={doc.id} className="border rounded-lg p-4 mb-3">
         <div className="flex items-start gap-3">
@@ -166,8 +195,8 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
               <label htmlFor={doc.id} className="font-medium text-gray-900 block mb-1">
                 {doc.title}
               </label>
-              <span className={`text-xs px-2 py-0.5 rounded-full ${doc.required ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-                {doc.required ? 'Required' : 'Recommended'}
+              <span className={`text-xs px-2 py-0.5 rounded-full ${doc.priority === "high" ? 'bg-red-100 text-red-700' : doc.priority === "medium" ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                {doc.priority === "high" ? 'Required' : doc.priority === "medium" ? 'Important' : 'Recommended'}
               </span>
             </div>
             <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
@@ -199,7 +228,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
             </div>
             <div className="flex-1">
               <p className="text-blue-700 font-medium">
-                neXed AI has analyzed your F-1 OPT status and created a tailored compliance plan based on your specific details.
+                neXed AI has analyzed your {userData.visaType || "F-1 OPT"} status and created a tailored compliance plan based on your specific details.
               </p>
               <div className="flex items-center text-blue-600 text-sm mt-1">
                 <div className="flex space-x-1 mr-2">
@@ -214,7 +243,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
 
           {/* Student Info Section */}
           <div className="bg-blue-50 p-4 rounded-md mb-4">
-            <h3 className="text-lg font-medium text-blue-800 mb-2">F-1 Student on OPT (Post-Completion)</h3>
+            <h3 className="text-lg font-medium text-blue-800 mb-2">{userData.visaType || "F-1"} Student on OPT (Post-Completion)</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -373,7 +402,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
               Personalized Insights for Your Situation
             </h3>
             <p className="mb-3 text-green-700">
-              Based on your specific profile ({studentInfo.university} Computer Science graduate with OPT starting {studentInfo.optStartDate}, and visa expiring during OPT period), we recommend:
+              Based on your specific profile ({studentInfo.university} {studentInfo.program} with OPT starting {studentInfo.optStartDate}, and visa expiring during OPT period), we recommend:
             </p>
             <ul className="space-y-2">
               {insights.map((insight, index) => (

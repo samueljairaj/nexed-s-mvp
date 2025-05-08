@@ -6,30 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Send, Clock, FileText, AlertTriangle, Info } from "lucide-react";
-
-// Message interface
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: string;
-}
-
-// FAQ interface
-interface FAQ {
-  id: string;
-  question: string;
-  answer: string;
-  category: string;
-}
+import { MessageCircle, Send, Clock, FileText, AlertTriangle, Info, Loader2 } from "lucide-react";
+import { useAIAssistant, Message } from "@/hooks/useAIAssistant";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Assistant = () => {
+  const { currentUser } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const { sendMessage, isLoading } = useAIAssistant();
   
   // Pre-defined welcome message
   useEffect(() => {
@@ -38,12 +25,12 @@ const Assistant = () => {
         {
           id: `msg-${Date.now()}`,
           role: "assistant",
-          content: "👋 Hello! I'm your immigration assistant. How can I help you with your visa-related questions today?",
+          content: `👋 Hello${currentUser?.name ? ` ${currentUser.name}` : ''}! I'm your immigration assistant. How can I help you with your ${currentUser?.visaType || "visa"}-related questions today?`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
     }
-  }, []);
+  }, [currentUser]);
 
   // Auto scroll to bottom on new messages
   useEffect(() => {
@@ -55,10 +42,10 @@ const Assistant = () => {
   };
 
   // Handle message submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isLoading) return;
     
     // Add user message
     const userMessage: Message = {
@@ -70,56 +57,22 @@ const Assistant = () => {
     
     setMessages(prev => [...prev, userMessage]);
     setInputValue("");
-    setIsLoading(true);
     
-    // Simulate assistant response
-    setTimeout(() => {
-      const response = generateResponse(inputValue);
-      setMessages(prev => [...prev, response]);
-      setIsLoading(false);
-    }, 1500);
-  };
-
-  // Generate mock AI response
-  const generateResponse = (query: string): Message => {
-    const lowerQuery = query.toLowerCase();
-    let response = "";
-    
-    // Simple pattern matching for responses
-    if (lowerQuery.includes("sevis")) {
-      response = "SEVIS (Student and Exchange Visitor Information System) is the web-based system used to maintain information on international students and exchange visitors in the United States. Your DSO (Designated School Official) must register your information in SEVIS each semester to maintain your status. It's important to keep your information updated, especially your address, which must be updated within 10 days of any change.";
-    } else if (lowerQuery.includes("opt")) {
-      if (lowerQuery.includes("apply") || lowerQuery.includes("application")) {
-        response = "To apply for OPT (Optional Practical Training):\n\n1. Request a recommendation from your DSO (they'll update your SEVIS record)\n2. Receive a new I-20 with OPT recommendation\n3. File Form I-765 with USCIS within 30 days\n4. Include required documents (photos, I-94, previous EADs, etc.)\n5. Pay the filing fee\n6. Wait for approval (2-3 months typically)\n\nYou can apply up to 90 days before your program end date and up to 60 days after.";
-      } else if (lowerQuery.includes("stem") || lowerQuery.includes("extension")) {
-        response = "The STEM OPT extension allows F-1 students with STEM degrees to extend their OPT period by an additional 24 months. To be eligible, you must have a degree in a STEM field and be working for an employer enrolled in E-Verify. You should apply for the extension before your current OPT period expires.";
-      } else {
-        response = "Optional Practical Training (OPT) is temporary employment authorization directly related to an F-1 student's major area of study. Standard OPT can last up to 12 months, while STEM OPT can extend it by an additional 24 months for qualifying students. You must maintain status during OPT by reporting employment changes to your DSO and not exceeding 90 days of unemployment.";
-      }
-    } else if (lowerQuery.includes("i-20") && (lowerQuery.includes("renew") || lowerQuery.includes("extension"))) {
-      response = "You should renew your I-20 if:\n\n- You need more time to complete your program\n- Your funding information has changed\n- You're changing programs or degree levels\n\nContact your school's international student office at least 30 days before your I-20 expires. You'll need to provide financial documentation showing you can support yourself during the extension period.";
-    } else if (lowerQuery.includes("h1b")) {
-      response = "The H-1B is a work visa that allows U.S. employers to temporarily employ foreign workers in specialty occupations. The visa is initially valid for three years and can be extended for another three years. The application process is typically handled by employers and includes filing an LCA (Labor Condition Application) and Form I-129. There is an annual cap on H-1B visas, and they are often allocated via lottery.";
-    } else if (lowerQuery.includes("travel") || lowerQuery.includes("leaving")) {
-      response = "When traveling outside the US as an international student, make sure to:\n\n1. Have a valid passport (at least 6 months beyond your return date)\n2. Carry your valid F-1 visa (unless you're going only to Canada, Mexico, or adjacent islands for less than 30 days)\n3. Bring your current I-20 signed for travel by your DSO within the last year\n4. Carry proof of enrollment and financial documentation\n\nIf your visa is expired, you'll need to renew it at a US embassy or consulate before returning.";
-    } else if (lowerQuery.includes("grace period")) {
-      response = "F-1 students have a 60-day grace period after program completion or OPT end date. During this time, you can:\n\n- Prepare to depart the US\n- Transfer to another school\n- Change your education level (e.g., from Bachelor's to Master's)\n- Apply for a change of status\n\nYou cannot work during the grace period unless authorized under a new status. If you violate your status or are terminated from SEVIS, you may not be eligible for the full grace period.";
-    } else if (lowerQuery.includes("address") && lowerQuery.includes("change")) {
-      response = "When you change your address, you must report it within 10 days to maintain your legal status. For F-1 students, report the change to your DSO, who will update your information in SEVIS. H-1B visa holders should file Form AR-11 with USCIS within 10 days of moving.";
-    } else if (lowerQuery.includes("document") && lowerQuery.includes("require")) {
-      response = "Essential documents for international students include:\n\n- Passport (valid for at least 6 months into the future)\n- F-1 or J-1 visa\n- I-20 or DS-2019 form\n- I-94 record\n- Proof of enrollment (transcripts, enrollment verification)\n- Financial documents\n- Health insurance information\n\nFor OPT/employment: EAD card, job offer letter, and employment verification.\n\nKeep digital and physical copies of all these documents in a secure place.";
-    } else if (lowerQuery.includes("hello") || lowerQuery.includes("hi") || lowerQuery.includes("hey")) {
-      response = "Hello! I'm your immigration assistant. How can I help you with visa-related questions today? Feel free to ask about SEVIS, OPT, I-20 renewal, or any other visa compliance topics.";
-    } else {
-      response = "I understand you're asking about \"" + query + "\". While I don't have specific information on this exact query, I'd be happy to help with questions about:\n\n- F-1 student visa requirements\n- OPT application and maintenance\n- SEVIS registration\n- I-20 renewal process\n- Document requirements\n- Travel advisories\n- H-1B visa information\n\nCould you rephrase your question or ask about one of these topics?";
+    try {
+      // Send message to AI
+      const responseMessage = await sendMessage(
+        inputValue, 
+        messages.filter(m => m.role !== "system") // Don't send system messages to API
+      );
+      
+      // Add AI response to messages
+      setMessages(prev => [...prev, {
+        ...responseMessage,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    } catch (error) {
+      console.error("Error sending message to AI:", error);
     }
-    
-    return {
-      id: `msg-${Date.now()}`,
-      role: "assistant",
-      content: response,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
   };
 
   // Suggest a question
@@ -222,7 +175,7 @@ const Assistant = () => {
                     disabled={!inputValue.trim() || isLoading}
                     className="nexed-gradient"
                   >
-                    <Send className="h-4 w-4" />
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   </Button>
                 </form>
               </div>
@@ -354,7 +307,12 @@ const Assistant = () => {
 };
 
 // Mock FAQ data
-const faqs: FAQ[] = [
+const faqs: {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+}[] = [
   {
     id: "faq-1",
     question: "What is a SEVIS report?",

@@ -15,14 +15,17 @@ import {
   AlertTriangle,
   Calendar,
   Search,
+  RefreshCw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TimelineView } from "@/components/compliance/TimelineView";
 import { TaskList } from "@/components/compliance/TaskList";
 import { generateMockTasks } from "@/utils/mockTasks";
+import { useAICompliance, AITask } from "@/hooks/useAICompliance";
 
 // Task interface
 interface Task {
@@ -42,6 +45,8 @@ const Compliance = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { generateCompliance, isGenerating } = useAICompliance();
+  const [showAiLoading, setShowAiLoading] = useState(false);
 
   useEffect(() => {
     // Simulate API call to get tasks
@@ -117,6 +122,26 @@ const Compliance = () => {
         ? prev.filter(f => f !== filter)
         : [...prev, filter]
     );
+  };
+
+  // Generate tasks using AI
+  const generateTasksWithAI = async () => {
+    setShowAiLoading(true);
+    
+    try {
+      const aiTasks = await generateCompliance();
+      
+      if (aiTasks && aiTasks.length > 0) {
+        setTasks(aiTasks);
+        setFilteredTasks(aiTasks);
+        toast.success("AI-generated compliance tasks created successfully");
+      }
+    } catch (error) {
+      console.error("Error generating AI tasks:", error);
+      toast.error("Failed to generate AI tasks");
+    } finally {
+      setShowAiLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -201,7 +226,7 @@ const Compliance = () => {
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge 
             variant={selectedFilters.includes("immigration") ? "default" : "outline"} 
             className="cursor-pointer"
@@ -230,6 +255,18 @@ const Compliance = () => {
           >
             Personal
           </Badge>
+          
+          {/* AI Task Generation Button */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={generateTasksWithAI}
+            disabled={isGenerating || showAiLoading}
+            className="ml-2"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${(isGenerating || showAiLoading) ? "animate-spin" : ""}`} />
+            Generate with AI
+          </Button>
         </div>
       </div>
 

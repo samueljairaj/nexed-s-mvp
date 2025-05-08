@@ -1,1 +1,8 @@
+
 project_id = "dmmyriqbltjrtvvpllmz"
+
+[functions.generate-compliance]
+verify_jwt = false
+
+[functions.ai-assistant]
+verify_jwt = false
