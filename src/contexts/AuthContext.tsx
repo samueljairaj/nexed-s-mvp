@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -110,6 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           usEntryDate: data.us_entry_date ? new Date(data.us_entry_date) : undefined,
           employmentStartDate: data.employment_start_date ? new Date(data.employment_start_date) : undefined,
           onboardingComplete: data.onboarding_complete || false,
+          // Handle the additional user profile fields if they exist in the database
           dateOfBirth: data.date_of_birth || undefined,
           passportExpiryDate: data.passport_expiry_date || undefined,
           phone: data.phone || undefined,
@@ -267,6 +269,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             ? data.passportExpiryDate 
             : formatDateToString(data.passportExpiryDate);
           delete dbData.passportExpiryDate;
+        }
+
+        // Map personal info fields
+        if (data.phone !== undefined) {
+          dbData.phone = data.phone;
+          delete dbData.phone;
+        }
+
+        if (data.passportNumber !== undefined) {
+          dbData.passport_number = data.passportNumber;
+          delete dbData.passportNumber;
+        }
+
+        if (data.address !== undefined) {
+          dbData.address = data.address;
+          delete dbData.address;
         }
         
         // Remove undefined fields
