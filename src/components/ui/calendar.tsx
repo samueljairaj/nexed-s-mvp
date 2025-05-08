@@ -32,7 +32,7 @@ function Calendar({
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
-        head_cell: "text-nexed-600 rounded-md w-10 font-medium text-[0.9rem] py-1.5",
+        head_cell: "text-muted-foreground rounded-md w-10 font-normal text-[0.8rem] py-1.5",
         row: "flex w-full mt-1",
         cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 pointer-events-auto",
         day: cn(
@@ -41,8 +41,8 @@ function Calendar({
         ),
         day_range_end: "day-range-end",
         day_selected:
-          "bg-nexed-500 text-primary-foreground hover:bg-nexed-600 hover:text-primary-foreground focus:bg-nexed-500 focus:text-primary-foreground rounded-full",
-        day_today: "bg-accent text-accent-foreground border border-nexed-300 font-semibold",
+          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-full",
+        day_today: "bg-accent text-accent-foreground border border-input font-semibold",
         day_outside:
           "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
         day_disabled: "text-muted-foreground opacity-50",
@@ -51,14 +51,14 @@ function Calendar({
         day_hidden: "invisible",
         caption_dropdowns: "flex gap-1 justify-center items-center",
         dropdown: "relative inline-flex cursor-pointer rounded-md bg-background p-1 text-sm font-medium text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        dropdown_month: "flex items-center gap-1 text-base font-medium text-nexed-600",
-        dropdown_year: "flex items-center gap-1 text-base font-medium text-nexed-600",
+        dropdown_month: "flex items-center gap-1 text-base font-medium text-foreground",
+        dropdown_year: "flex items-center gap-1 text-base font-medium text-foreground",
         dropdown_icon: "h-4 w-4 opacity-50",
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-5 w-5 pointer-events-auto text-nexed-500" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-5 w-5 pointer-events-auto text-nexed-500" />,
+        IconLeft: ({ ..._props }) => <ChevronLeft className="h-5 w-5 pointer-events-auto text-muted-foreground" />,
+        IconRight: ({ ..._props }) => <ChevronRight className="h-5 w-5 pointer-events-auto text-muted-foreground" />,
       }}
       captionLayout="dropdown-buttons"
       fromYear={1920}
