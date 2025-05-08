@@ -118,18 +118,12 @@ export const getDocumentComplianceIssues = (
   return issues;
 };
 
-// Notify users of compliance issues
+// Notify users of compliance issues - Fixed to use plain text instead of JSX
 export const notifyComplianceIssues = (issues: string[]): void => {
   if (issues.length > 0) {
     toast({
       title: "Document compliance issues detected",
-      description: (
-        <ul className="list-disc pl-4 mt-2">
-          {issues.map((issue, index) => (
-            <li key={index}>{issue}</li>
-          ))}
-        </ul>
-      ),
+      description: issues.join('\n'),
       duration: 7000,
     });
   }
