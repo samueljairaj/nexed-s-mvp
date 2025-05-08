@@ -27,6 +27,7 @@ import { DocumentGrid } from "@/components/document-vault/DocumentGrid";
 import { DocumentList } from "@/components/document-vault/DocumentList";
 import { DocumentSidebar } from "@/components/document-vault/DocumentSidebar";
 import { DocumentPacketModal } from "@/components/document-vault/DocumentPacketModal";
+import { FolderCreationDialog } from "@/components/document-vault/FolderCreationDialog";
 
 // Mock categories and their descriptions
 const categories = [
@@ -70,6 +71,7 @@ const categories = [
 const Documents = () => {
   const {
     documents,
+    folders,
     packets,
     filteredDocuments,
     searchQuery,
@@ -83,6 +85,7 @@ const Documents = () => {
     setSelectedDocuments,
     toggleDocumentSelection,
     handleAddDocument,
+    handleCreateFolder,
     handleDeleteDocument,
     handleRenameDocument,
     handleToggleRequired,
@@ -94,6 +97,7 @@ const Documents = () => {
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [isPacketDialogOpen, setIsPacketDialogOpen] = useState(false);
   const [isUpdateExpiryDialogOpen, setIsUpdateExpiryDialogOpen] = useState(false);
@@ -106,6 +110,15 @@ const Documents = () => {
   // Handle document upload
   const handleUpload = (files: FileList, category: DocumentCategory, expiryDate?: string) => {
     handleAddDocument(files, category, expiryDate);
+  };
+
+  // Handle folder creation
+  const handleOpenFolderDialog = () => {
+    setIsFolderDialogOpen(true);
+  };
+
+  const handleFolderCreation = (name: string, category: DocumentCategory) => {
+    handleCreateFolder(name, category);
   };
 
   // Handle document rename
@@ -240,6 +253,7 @@ const Documents = () => {
                 <Button 
                   variant="outline"
                   className="flex items-center gap-2"
+                  onClick={handleOpenFolderDialog}
                 >
                   <FolderPlus size={16} />
                   New Folder
@@ -399,6 +413,14 @@ const Documents = () => {
         isOpen={isUploadDialogOpen}
         onClose={() => setIsUploadDialogOpen(false)}
         onUpload={handleUpload}
+        defaultCategory={activeCategory || undefined}
+      />
+
+      {/* Folder Creation Dialog */}
+      <FolderCreationDialog
+        isOpen={isFolderDialogOpen}
+        onClose={() => setIsFolderDialogOpen(false)}
+        onCreateFolder={handleFolderCreation}
         defaultCategory={activeCategory || undefined}
       />
 

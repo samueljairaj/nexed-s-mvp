@@ -1,11 +1,13 @@
+
 import { useState, useEffect } from "react";
-import { Document, DocumentCategory, DocumentStatus, DocumentPacket } from "@/types/document";
+import { Document, DocumentCategory, DocumentStatus, DocumentPacket, DocumentFolder } from "@/types/document";
 import { toast } from "sonner";
 import { getDocumentStatus } from "@/utils/documentUtils";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function useDocumentVault() {
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [folders, setFolders] = useState<DocumentFolder[]>([]);
   const [packets, setPackets] = useState<DocumentPacket[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<DocumentCategory | null>(null);
@@ -36,6 +38,7 @@ export function useDocumentVault() {
             status: doc.expiryDate ? getDocumentStatus(doc.expiryDate) : undefined
           }));
           setDocuments(mockDocs);
+          setFolders(mockFolders);
           setIsLoading(false);
         }, 1000);
       } catch (error) {
@@ -89,9 +92,21 @@ export function useDocumentVault() {
       return newDocs;
     } catch (error) {
       console.error("Error uploading documents:", error);
-      toast("Failed to upload documents");
+      toast.error("Failed to upload documents");
       return [];
     }
+  };
+
+  const handleCreateFolder = (name: string, category: DocumentCategory) => {
+    const newFolder: DocumentFolder = {
+      id: `folder-${Date.now()}`,
+      name,
+      category
+    };
+    
+    setFolders(prev => [newFolder, ...prev]);
+    toast.success("Folder created successfully");
+    return newFolder;
   };
 
   const handleDeleteDocument = (id: string) => {
@@ -120,7 +135,7 @@ export function useDocumentVault() {
       )
     );
     
-    toast(`Renamed to "${newName}"`);
+    toast.success(`Renamed to "${newName}"`);
   };
 
   const handleToggleRequired = (id: string) => {
@@ -145,7 +160,7 @@ export function useDocumentVault() {
     const doc = documents.find(d => d.id === id);
     const newStatus = !doc?.required;
     
-    toast(newStatus ? "Marked as Required" : "Marked as Optional", {
+    toast.success(newStatus ? "Marked as Required" : "Marked as Optional", {
       description: doc?.name
     });
   };
@@ -230,6 +245,7 @@ export function useDocumentVault() {
 
   return {
     documents,
+    folders,
     packets,
     filteredDocuments,
     searchQuery,
@@ -243,6 +259,7 @@ export function useDocumentVault() {
     setSelectedDocuments,
     toggleDocumentSelection,
     handleAddDocument,
+    handleCreateFolder,
     handleDeleteDocument,
     handleRenameDocument,
     handleToggleRequired,
@@ -382,5 +399,24 @@ const mockDocuments: Document[] = [
     size: "1.2 MB",
     required: false,
     fileUrl: "/placeholder.svg"
+  }
+];
+
+// Mock folders
+const mockFolders: DocumentFolder[] = [
+  {
+    id: "folder-1",
+    name: "Important Documents",
+    category: "immigration"
+  },
+  {
+    id: "folder-2",
+    name: "School Records",
+    category: "education"
+  },
+  {
+    id: "folder-3",
+    name: "Work Documents",
+    category: "employment"
   }
 ];
