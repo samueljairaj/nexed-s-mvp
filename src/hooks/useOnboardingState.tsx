@@ -122,10 +122,13 @@ export function useOnboardingState() {
         country: data.country,
       };
       
-      // Only include dateOfBirth if it exists and convert to ISO string for the database
-      if (data.dateOfBirth) {
+      // Check if dateOfBirth exists and is a Date object before calling toISOString
+      if (data.dateOfBirth && data.dateOfBirth instanceof Date) {
         // Store as string in the database since usEntryDate is a string in the database
         updateData.usEntryDate = data.dateOfBirth.toISOString();
+      } else if (data.dateOfBirth && typeof data.dateOfBirth === 'string') {
+        // If it's already a string, use it directly
+        updateData.usEntryDate = data.dateOfBirth;
       }
       
       await updateProfile(updateData);
@@ -150,12 +153,16 @@ export function useOnboardingState() {
       };
       
       // Only include dates if they exist and convert to ISO strings for the database
-      if (data.entryDate) {
+      if (data.entryDate && data.entryDate instanceof Date) {
         formattedData.usEntryDate = data.entryDate.toISOString();
+      } else if (data.entryDate && typeof data.entryDate === 'string') {
+        formattedData.usEntryDate = data.entryDate;
       }
       
-      if (data.programStartDate) {
+      if (data.programStartDate && data.programStartDate instanceof Date) {
         formattedData.courseStartDate = data.programStartDate.toISOString();
+      } else if (data.programStartDate && typeof data.programStartDate === 'string') {
+        formattedData.courseStartDate = data.programStartDate;
       }
       
       console.log("Attempting to update profile with visa data:", formattedData);
@@ -198,8 +205,10 @@ export function useOnboardingState() {
       };
       
       // Only include programStartDate if it exists and convert to ISO string
-      if (data.programStartDate) {
+      if (data.programStartDate && data.programStartDate instanceof Date) {
         updateData.courseStartDate = data.programStartDate.toISOString();
+      } else if (data.programStartDate && typeof data.programStartDate === 'string') {
+        updateData.courseStartDate = data.programStartDate;
       }
       
       await updateProfile(updateData);
@@ -221,8 +230,10 @@ export function useOnboardingState() {
       const updateData: any = {};
       
       // Only include employmentStartDate if it exists and convert to ISO string
-      if (data.employmentStartDate) {
+      if (data.employmentStartDate && data.employmentStartDate instanceof Date) {
         updateData.employmentStartDate = data.employmentStartDate.toISOString();
+      } else if (data.employmentStartDate && typeof data.employmentStartDate === 'string') {
+        updateData.employmentStartDate = data.employmentStartDate;
       }
       
       await updateProfile(updateData);
