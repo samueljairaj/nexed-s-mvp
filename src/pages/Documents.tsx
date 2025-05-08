@@ -252,13 +252,6 @@ const Documents = () => {
                   <Share size={16} />
                   Select Files
                 </Button>
-                <Button
-                  className="nexed-gradient flex items-center gap-2"
-                  onClick={() => setIsUploadDialogOpen(true)}
-                >
-                  <Upload size={16} />
-                  Upload Documents
-                </Button>
               </>
             )}
           </div>
