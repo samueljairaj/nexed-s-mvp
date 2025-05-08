@@ -19,26 +19,22 @@ export function usePersonalInfo() {
     setIsSubmitting(true);
     
     try {
-      // Map the form fields to database fields correctly
-      const updateData: any = {
+      // Create a plain object with string values only - no Date objects
+      const updateData: Record<string, any> = {
         country: data.country,
         phone: data.phone,
         passportNumber: data.passportNumber,
         address: data.address
       };
       
-      // Handle date fields as strings from the beginning
+      // Format dates as YYYY-MM-DD strings
       if (data.dateOfBirth) {
-        // Format as YYYY-MM-DD string directly
-        updateData.usEntryDate = data.dateOfBirth instanceof Date 
-          ? data.dateOfBirth.toISOString().split('T')[0]  // Convert to YYYY-MM-DD format
-          : data.dateOfBirth; // If it's already a string
+        // Convert to string format directly without using toISOString
+        updateData.usEntryDate = formatDateToString(data.dateOfBirth);
       }
 
       if (data.passportExpiryDate) {
-        updateData.passportExpiryDate = data.passportExpiryDate instanceof Date
-          ? data.passportExpiryDate.toISOString().split('T')[0]
-          : data.passportExpiryDate;
+        updateData.passportExpiryDate = formatDateToString(data.passportExpiryDate);
       }
 
       // Log the data we're about to send for debugging
@@ -52,6 +48,27 @@ export function usePersonalInfo() {
       return false;
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Helper function to safely format dates
+  const formatDateToString = (date: Date | string): string => {
+    if (typeof date === 'string') {
+      return date;
+    }
+    
+    try {
+      // Format as YYYY-MM-DD manually to avoid any toISOString issues
+      const year = date.getFullYear();
+      // Add leading zeros if needed
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      // Return today's date as fallback
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
   };
 

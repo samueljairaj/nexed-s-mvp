@@ -19,23 +19,18 @@ export function useVisaStatus() {
     
     try {
       // Ensure we're using the correct property names that match the database schema
-      const formattedData: any = {
+      const formattedData: Record<string, any> = {
         visaType: data.visaType as VisaType,
         currentStatus: data.currentStatus,
       };
       
-      // Always format dates as YYYY-MM-DD strings directly
+      // Format dates as YYYY-MM-DD strings
       if (data.entryDate) {
-        // Use direct string format to avoid toISOString issues
-        formattedData.usEntryDate = data.entryDate instanceof Date 
-          ? data.entryDate.toISOString().split('T')[0]
-          : data.entryDate;
+        formattedData.usEntryDate = formatDateToString(data.entryDate);
       }
       
       if (data.programStartDate) {
-        formattedData.courseStartDate = data.programStartDate instanceof Date 
-          ? data.programStartDate.toISOString().split('T')[0]
-          : data.programStartDate;
+        formattedData.courseStartDate = formatDateToString(data.programStartDate);
       }
       
       console.log("Attempting to update profile with visa data:", formattedData);
@@ -61,6 +56,26 @@ export function useVisaStatus() {
       ...prev, 
       visaType: visaType as "F1" | "J1" | "H1B" | "Other"
     }));
+  };
+
+  // Helper function to safely format dates
+  const formatDateToString = (date: Date | string): string => {
+    if (typeof date === 'string') {
+      return date;
+    }
+    
+    try {
+      // Format as YYYY-MM-DD manually
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      // Return today's date as fallback
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    }
   };
 
   return {

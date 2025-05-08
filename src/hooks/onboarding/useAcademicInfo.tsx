@@ -20,19 +20,16 @@ export function useAcademicInfo() {
     
     try {
       // Only include properties that exist in the database schema
-      const updateData: any = {
+      const updateData: Record<string, any> = {
         university: data.university,
         degreeLevel: data.degreeLevel,
         fieldOfStudy: data.fieldOfStudy,
         isSTEM: data.isSTEM
       };
       
-      // Always handle dates as strings
+      // Format program start date as YYYY-MM-DD string
       if (data.programStartDate) {
-        // Save as YYYY-MM-DD format string
-        updateData.courseStartDate = data.programStartDate instanceof Date 
-          ? data.programStartDate.toISOString().split('T')[0] 
-          : data.programStartDate;
+        updateData.courseStartDate = formatDateToString(data.programStartDate);
       }
 
       console.log("Updating profile with academic data:", updateData);
@@ -45,6 +42,26 @@ export function useAcademicInfo() {
       return false;
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Helper function to safely format dates
+  const formatDateToString = (date: Date | string): string => {
+    if (typeof date === 'string') {
+      return date;
+    }
+    
+    try {
+      // Format as YYYY-MM-DD manually
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      // Return today's date as fallback
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
   };
 
