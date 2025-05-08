@@ -46,8 +46,11 @@ const Onboarding = () => {
   useEffect(() => {
     if (isAuthenticated && currentUser?.onboardingComplete) {
       navigate("/app/dashboard");
+    } else if (isAuthenticated && currentStep === 0) {
+      // If user is already authenticated, skip the account creation step
+      setCurrentStep(1);
     }
-  }, [isAuthenticated, currentUser, navigate]);
+  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep]);
 
   // If loading, show a loading indicator
   if (isLoading) {

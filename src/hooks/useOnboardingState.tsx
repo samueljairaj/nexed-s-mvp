@@ -242,7 +242,8 @@ export function useOnboardingState() {
 
   // Determine if step is the first step
   const isFirstStep = () => {
-    return currentStep === 0;
+    // If authenticated, first visible step is step 1 (Personal Info)
+    return isAuthenticated ? currentStep === 1 : currentStep === 0;
   };
 
   // Determine if step is the last step
@@ -252,8 +253,11 @@ export function useOnboardingState() {
 
   // Calculate the progress percentage
   const calculateProgress = () => {
-    // We have 5 steps (0-indexed)
-    return ((currentStep + 1) / 5) * 100;
+    // If authenticated, we skip step 0, so we have 4 steps (1-4)
+    // Otherwise, we have 5 steps (0-4)
+    const totalSteps = isAuthenticated ? 4 : 5;
+    const effectiveStep = isAuthenticated ? currentStep : currentStep + 1;
+    return (effectiveStep / totalSteps) * 100;
   };
 
   return {
