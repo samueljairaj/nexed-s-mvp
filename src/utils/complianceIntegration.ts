@@ -1,3 +1,4 @@
+
 import { AITask } from "@/hooks/useAICompliance";
 import { Document, DocumentStatus } from "@/types/document";
 import { toast } from "sonner";
@@ -121,8 +122,7 @@ export const getDocumentComplianceIssues = (
 // Notify users of compliance issues - Fixed to use plain text instead of JSX
 export const notifyComplianceIssues = (issues: string[]): void => {
   if (issues.length > 0) {
-    toast({
-      title: "Document compliance issues detected",
+    toast("Document compliance issues detected", {
       description: issues.join('\n'),
       duration: 7000,
     });

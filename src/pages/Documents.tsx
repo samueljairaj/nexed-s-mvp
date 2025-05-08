@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { DocumentCategory } from "@/types/document";
+import { DocumentCategory, Document as DocType } from "@/types/document";
 import { useDocumentVault } from "@/hooks/useDocumentVault";
 import { useAICompliance } from "@/hooks/useAICompliance";
 
@@ -110,7 +109,7 @@ const Documents = () => {
   };
 
   // Handle document rename
-  const handleRenameDialogOpen = (doc: Document) => {
+  const handleRenameDialogOpen = (doc: DocType) => {
     setSelectedDocument(doc);
     setNewFileName(doc.name);
     setIsRenameDialogOpen(true);
@@ -350,7 +349,7 @@ const Documents = () => {
               <TabsContent value="grid" className="m-0 flex-1 overflow-hidden">
                 <DocumentGrid
                   documents={sortedDocuments}
-                  onSelectDocument={(doc) => {
+                  onSelectDocument={(doc: DocType) => {
                     if (selectionMode) {
                       toggleDocumentSelection(doc);
                     } else {
@@ -368,7 +367,7 @@ const Documents = () => {
               <TabsContent value="list" className="m-0 flex-1 overflow-hidden">
                 <DocumentList
                   documents={sortedDocuments}
-                  onSelectDocument={(doc) => {
+                  onSelectDocument={(doc: DocType) => {
                     if (selectionMode) {
                       toggleDocumentSelection(doc);
                     } else {

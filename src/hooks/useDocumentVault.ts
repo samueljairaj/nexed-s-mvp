@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Document, DocumentCategory, DocumentStatus, DocumentPacket } from "@/types/document";
 import { toast } from "sonner";
@@ -83,15 +82,14 @@ export function useDocumentVault() {
       
       if (expiringDocs.length > 0) {
         toast(`${expiringDocs.length} document${expiringDocs.length !== 1 ? 's' : ''} need${expiringDocs.length === 1 ? 's' : ''} attention.`, {
-          description: "Some documents are expired or will expire soon.",
-          duration: 5000,
+          description: "Some documents are expired or will expire soon."
         });
       }
       
       return newDocs;
     } catch (error) {
       console.error("Error uploading documents:", error);
-      toast.error("Failed to upload documents");
+      toast("Failed to upload documents");
       return [];
     }
   };
@@ -122,7 +120,7 @@ export function useDocumentVault() {
       )
     );
     
-    toast.success(`Renamed to "${newName}"`);
+    toast(`Renamed to "${newName}"`);
   };
 
   const handleToggleRequired = (id: string) => {
@@ -147,9 +145,8 @@ export function useDocumentVault() {
     const doc = documents.find(d => d.id === id);
     const newStatus = !doc?.required;
     
-    toast({
-      title: newStatus ? "Marked as Required" : "Marked as Optional",
-      description: doc?.name,
+    toast(newStatus ? "Marked as Required" : "Marked as Optional", {
+      description: doc?.name
     });
   };
 
