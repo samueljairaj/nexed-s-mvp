@@ -4,7 +4,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
-import { DocumentCategory } from "@/types/document";
 import { Task } from "@/hooks/useComplianceTasks";
 
 interface TaskItemProps {

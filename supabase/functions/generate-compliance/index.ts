@@ -1,6 +1,9 @@
 
+// @ts-ignore: Deno-specific imports
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+// @ts-ignore: Deno-specific imports
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// @ts-ignore: Deno-specific imports
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -9,7 +12,7 @@ const corsHeaders = {
 };
 
 type VisaType = "F1" | "J1" | "H1B" | "Other";
-// Updated to match the client-side DocumentCategory type
+// Use the same DocumentCategory type that matches the type in /src/types/document.ts
 type DocumentCategory = "immigration" | "education" | "employment" | "personal" | "financial" | "other" | "academic";
 
 interface UserData {
@@ -40,6 +43,7 @@ interface AITask {
   phase?: string;
 }
 
+// @ts-ignore: Deno-specific function
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -48,6 +52,7 @@ serve(async (req) => {
 
   try {
     const { userData, baselineTasks } = await req.json();
+    // @ts-ignore: Deno-specific API
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     
     if (!openAIApiKey) {
@@ -85,6 +90,7 @@ serve(async (req) => {
 });
 
 // Use AI to enhance the baseline checklist
+// @ts-ignore: Async function in Deno
 async function enhanceChecklistWithAI(baselineTasks: AITask[], userData: UserData, openAIApiKey: string): Promise<AITask[]> {
   try {
     console.log("Using AI to enhance baseline checklist");
