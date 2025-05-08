@@ -21,7 +21,7 @@ export function FolderCreationDialog({
   const [folderName, setFolderName] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>(defaultCategory);
   
-  const categories: DocumentCategory[] = ["immigration", "education", "employment", "personal", "financial"];
+  const categories: DocumentCategory[] = ["immigration", "education", "employment", "personal", "financial", "other"];
 
   const handleCreateFolder = () => {
     if (!folderName.trim()) return;

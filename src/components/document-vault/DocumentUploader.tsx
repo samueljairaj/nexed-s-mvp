@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
@@ -21,7 +20,7 @@ export function DocumentUploader({ isOpen, onClose, onUpload, defaultCategory }:
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>(defaultCategory || "personal");
   const [expiryDate, setExpiryDate] = useState<string>("");
 
-  const categories: DocumentCategory[] = ["immigration", "education", "employment", "personal", "financial"];
+  const categories: DocumentCategory[] = ["immigration", "education", "employment", "personal", "financial", "other"];
 
   const handleFileUpload = (files: FileList | null) => {
     if (!files) return;

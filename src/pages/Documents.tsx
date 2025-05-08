@@ -66,6 +66,13 @@ const categories = [
     icon: <FileText className="h-5 w-5 text-purple-500" />,
     color: "bg-purple-50 border-purple-200" 
   },
+  { 
+    id: "other" as DocumentCategory, 
+    name: "Other", 
+    description: "Miscellaneous documents that don't fit other categories",
+    icon: <FileText className="h-5 w-5 text-gray-500" />,
+    color: "bg-gray-50 border-gray-200" 
+  },
 ];
 
 const Documents = () => {
