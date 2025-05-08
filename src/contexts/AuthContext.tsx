@@ -17,6 +17,11 @@ export interface UserProfile {
   usEntryDate?: Date;
   employmentStartDate?: Date;
   onboardingComplete: boolean;
+  dateOfBirth?: Date | string;
+  passportExpiryDate?: Date | string;
+  phone?: string;
+  passportNumber?: string;
+  address?: string;
 }
 
 interface AuthContextType {
@@ -104,7 +109,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           courseStartDate: data.course_start_date ? new Date(data.course_start_date) : undefined,
           usEntryDate: data.us_entry_date ? new Date(data.us_entry_date) : undefined,
           employmentStartDate: data.employment_start_date ? new Date(data.employment_start_date) : undefined,
-          onboardingComplete: data.onboarding_complete || false
+          onboardingComplete: data.onboarding_complete || false,
+          dateOfBirth: data.date_of_birth || undefined,
+          passportExpiryDate: data.passport_expiry_date || undefined,
+          phone: data.phone || undefined,
+          passportNumber: data.passport_number || undefined,
+          address: data.address || undefined
         });
       } else {
         // Profile not found, create one
@@ -124,7 +134,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: user.email || '',
           country: '',
           visaType: null,
-          onboardingComplete: false
+          onboardingComplete: false,
+          dateOfBirth: undefined,
+          passportExpiryDate: undefined,
+          phone: undefined,
+          passportNumber: undefined,
+          address: undefined
         });
       }
     } catch (error) {
