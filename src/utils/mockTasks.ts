@@ -1,20 +1,10 @@
 
 import { DocumentCategory } from "@/types/document";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  category: DocumentCategory;
-  completed: boolean;
-  priority: "low" | "medium" | "high";
-  phase?: string;
-}
+import { AITask } from "@/hooks/useAICompliance";
 
 // Generate mock tasks based on visa type
-export const generateMockTasks = (visaType: string): Task[] => {
-  const commonTasks: Task[] = [
+export const generateMockTasks = (visaType: string): AITask[] => {
+  const commonTasks: AITask[] = [
     {
       id: "task-1",
       title: "Update Local Address in SEVIS",
@@ -54,7 +44,7 @@ export const generateMockTasks = (visaType: string): Task[] => {
   ];
 
   // Visa-specific tasks
-  let specificTasks: Task[] = [];
+  let specificTasks: AITask[] = [];
 
   if (visaType === "F1") {
     specificTasks = [

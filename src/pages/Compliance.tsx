@@ -28,7 +28,7 @@ import { generateMockTasks } from "@/utils/mockTasks";
 import { useAICompliance, AITask } from "@/hooks/useAICompliance";
 import { DocumentCategory } from "@/types/document";
 
-// Define Task as AITask to ensure consistent types
+// Ensure Task uses the same DocumentCategory type as AITask
 type Task = AITask;
 
 const Compliance = () => {
@@ -143,12 +143,12 @@ const Compliance = () => {
       const aiTasks: AITask[] = await generateCompliance();
       
       if (aiTasks && aiTasks.length > 0) {
-        // Ensure type compatibility
+        // Ensure type compatibility - AITask and Task are now the same type
         setTasks(aiTasks);
         setFilteredTasks(aiTasks);
         
         // Group tasks by phase
-        const groupedByPhase = aiTasks.reduce((groups: {[key: string]: AITask[]}, task) => {
+        const groupedByPhase = aiTasks.reduce((groups: {[key: string]: Task[]}, task) => {
           const phase = task.phase || "general";
           if (!groups[phase]) {
             groups[phase] = [];
@@ -162,7 +162,7 @@ const Compliance = () => {
         toast.success("AI-generated compliance tasks created successfully");
       } else {
         // Fallback to mock tasks if AI fails or returns empty
-        const mockTasks = generateMockTasks(currentUser?.visaType || "F1") as unknown as AITask[];
+        const mockTasks = generateMockTasks(currentUser?.visaType || "F1");
         setTasks(mockTasks);
         setFilteredTasks(mockTasks);
         
@@ -177,7 +177,7 @@ const Compliance = () => {
       toast.error("Failed to generate AI tasks, using mock data instead");
       
       // Fallback to mock tasks
-      const mockTasks = generateMockTasks(currentUser?.visaType || "F1") as unknown as AITask[];
+      const mockTasks = generateMockTasks(currentUser?.visaType || "F1");
       setTasks(mockTasks);
       setFilteredTasks(mockTasks);
     } finally {
