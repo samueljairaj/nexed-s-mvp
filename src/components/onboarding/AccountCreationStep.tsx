@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -16,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const accountCreationSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -50,6 +50,7 @@ export function AccountCreationStep({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
   
   const form = useForm<AccountCreationFormData>({
     resolver: zodResolver(accountCreationSchema),
@@ -65,8 +66,10 @@ export function AccountCreationStep({
   });
 
   const handleBackToLogin = () => {
-    // Navigate directly to the root path which contains the login form
-    navigate("/");
+    // First logout the user if they are authenticated
+    logout();
+    // Then navigate to the root page which contains the login form
+    navigate("/", { replace: true });
   };
 
   return (
