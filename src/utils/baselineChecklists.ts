@@ -1,5 +1,4 @@
-
-import { AITask } from "@/hooks/useAICompliance";
+import { Task } from "@/hooks/useComplianceTasks";
 import { DocumentCategory } from "@/types/document";
 
 // Define a type for our baseline checklist items
@@ -250,8 +249,8 @@ export function getBaselineChecklist(visaType: string | null | undefined, phase?
   return result;
 }
 
-// Function to convert baseline items to AITask format
-export function baselineItemsToAITasks(items: BaselineChecklistItem[]): AITask[] {
+// Function to convert baseline items to Task format
+export function baselineItemsToAITasks(items: BaselineChecklistItem[]): Task[] {
   return items.map(item => ({
     id: item.id,
     title: item.title,

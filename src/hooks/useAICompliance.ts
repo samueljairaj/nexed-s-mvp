@@ -4,17 +4,10 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { DocumentCategory } from "@/types/document";
 import { getBaselineChecklist, baselineItemsToAITasks } from "@/utils/baselineChecklists";
+import { Task } from "@/hooks/useComplianceTasks";
 
-export interface AITask {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  category: DocumentCategory; // Updated to use DocumentCategory type
-  completed: boolean;
-  priority: "low" | "medium" | "high";
-  phase?: string;
-}
+// Use the same Task type as imported from useComplianceTasks
+export type AITask = Task;
 
 // Define a comprehensive interface for user profile data
 interface EnhancedUserData {

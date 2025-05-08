@@ -2,11 +2,21 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useAICompliance, AITask } from "@/hooks/useAICompliance";
+import { useAICompliance } from "@/hooks/useAICompliance";
 import { generateMockTasks } from "@/utils/mockTasks";
 import { DocumentCategory } from "@/types/document";
 
-export type Task = AITask;
+// Export the Task type that matches AITask
+export type Task = {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  category: DocumentCategory;
+  completed: boolean;
+  priority: "low" | "medium" | "high";
+  phase?: string;
+};
 
 export const useComplianceTasks = () => {
   const { currentUser } = useAuth();
@@ -106,11 +116,11 @@ export const useComplianceTasks = () => {
       const aiTasks = await generateCompliance();
       
       if (aiTasks && aiTasks.length > 0) {
-        setTasks(aiTasks);
-        setFilteredTasks(aiTasks);
+        setTasks(aiTasks as Task[]);
+        setFilteredTasks(aiTasks as Task[]);
         
         // Group tasks by phase
-        const groupedByPhase = aiTasks.reduce((groups: {[key: string]: Task[]}, task) => {
+        const groupedByPhase = (aiTasks as Task[]).reduce((groups: {[key: string]: Task[]}, task) => {
           const phase = task.phase || "general";
           if (!groups[phase]) {
             groups[phase] = [];

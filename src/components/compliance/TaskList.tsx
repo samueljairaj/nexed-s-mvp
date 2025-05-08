@@ -1,7 +1,6 @@
 
 import React from "react";
 import { TaskItem } from "./TaskItem";
-import { DocumentCategory } from "@/types/document";
 import { Task } from "@/hooks/useComplianceTasks";
 
 interface TaskListProps {
