@@ -22,14 +22,23 @@ export function usePersonalInfo() {
       // Map the form fields to database fields correctly
       const updateData: any = {
         country: data.country,
+        phone: data.phone,
+        passportNumber: data.passportNumber,
+        address: data.address
       };
       
-      // Handle date fields properly - don't call toISOString directly
+      // Handle date fields as strings from the beginning
       if (data.dateOfBirth) {
-        // Store the raw date string instead of calling toISOString
+        // Format as YYYY-MM-DD string directly
         updateData.usEntryDate = data.dateOfBirth instanceof Date 
           ? data.dateOfBirth.toISOString().split('T')[0]  // Convert to YYYY-MM-DD format
           : data.dateOfBirth; // If it's already a string
+      }
+
+      if (data.passportExpiryDate) {
+        updateData.passportExpiryDate = data.passportExpiryDate instanceof Date
+          ? data.passportExpiryDate.toISOString().split('T')[0]
+          : data.passportExpiryDate;
       }
 
       // Log the data we're about to send for debugging

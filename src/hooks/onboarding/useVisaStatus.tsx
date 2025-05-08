@@ -21,19 +21,21 @@ export function useVisaStatus() {
       // Ensure we're using the correct property names that match the database schema
       const formattedData: any = {
         visaType: data.visaType as VisaType,
+        currentStatus: data.currentStatus,
       };
       
-      // Only include dates if they exist and ensure proper string conversion
+      // Always format dates as YYYY-MM-DD strings directly
       if (data.entryDate) {
+        // Use direct string format to avoid toISOString issues
         formattedData.usEntryDate = data.entryDate instanceof Date 
-          ? data.entryDate.toISOString().split('T')[0] // Convert to YYYY-MM-DD format
-          : data.entryDate;  // If it's already a string
+          ? data.entryDate.toISOString().split('T')[0]
+          : data.entryDate;
       }
       
       if (data.programStartDate) {
         formattedData.courseStartDate = data.programStartDate instanceof Date 
-          ? data.programStartDate.toISOString().split('T')[0] // Convert to YYYY-MM-DD format
-          : data.programStartDate;  // If it's already a string
+          ? data.programStartDate.toISOString().split('T')[0]
+          : data.programStartDate;
       }
       
       console.log("Attempting to update profile with visa data:", formattedData);

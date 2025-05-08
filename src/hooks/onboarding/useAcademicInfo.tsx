@@ -22,13 +22,17 @@ export function useAcademicInfo() {
       // Only include properties that exist in the database schema
       const updateData: any = {
         university: data.university,
+        degreeLevel: data.degreeLevel,
+        fieldOfStudy: data.fieldOfStudy,
+        isSTEM: data.isSTEM
       };
       
-      // Safely handle programStartDate with proper string conversion
+      // Always handle dates as strings
       if (data.programStartDate) {
+        // Save as YYYY-MM-DD format string
         updateData.courseStartDate = data.programStartDate instanceof Date 
-          ? data.programStartDate.toISOString().split('T')[0] // Convert to YYYY-MM-DD format
-          : data.programStartDate;  // If it's already a string
+          ? data.programStartDate.toISOString().split('T')[0] 
+          : data.programStartDate;
       }
 
       console.log("Updating profile with academic data:", updateData);
