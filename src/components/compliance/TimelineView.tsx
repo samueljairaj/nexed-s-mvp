@@ -1,19 +1,9 @@
-
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format, differenceInDays, isValid } from "date-fns";
 import { CheckCircle2 } from "lucide-react";
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  category: "immigration" | "academic" | "employment" | "personal";
-  completed: boolean;
-  priority: "low" | "medium" | "high";
-}
+import { Task } from "@/hooks/useComplianceTasks";
 
 interface TimelineViewProps {
   tasks: Task[];
