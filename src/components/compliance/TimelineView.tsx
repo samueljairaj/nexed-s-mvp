@@ -2,7 +2,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, isValid } from "date-fns";
 import { CheckCircle2 } from "lucide-react";
 
 interface Task {
@@ -27,8 +27,20 @@ export function TimelineView({ tasks }: TimelineViewProps) {
       if (a.completed && !b.completed) return 1;
       if (!a.completed && b.completed) return -1;
       
-      // Sort by due date
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      // Sort by due date - safely handle potentially invalid dates
+      try {
+        const dateA = new Date(a.dueDate);
+        const dateB = new Date(b.dueDate);
+        
+        if (!isValid(dateA) && !isValid(dateB)) return 0;
+        if (!isValid(dateA)) return 1;
+        if (!isValid(dateB)) return -1;
+        
+        return dateA.getTime() - dateB.getTime();
+      } catch (e) {
+        console.error("Error comparing dates:", e);
+        return 0;
+      }
     });
   }, [tasks]);
 
@@ -66,19 +78,32 @@ export function TimelineView({ tasks }: TimelineViewProps) {
             let statusColor = "bg-green-500";
             
             if (!task.completed) {
-              const today = new Date();
-              const dueDate = new Date(task.dueDate);
-              const daysLeft = differenceInDays(dueDate, today);
-              
-              daysText = daysLeft > 0 ? `${daysLeft} days left` : 
-                        daysLeft === 0 ? "Due today" : 
-                        `${Math.abs(daysLeft)} days overdue`;
-              
-              // Set status color based on days left
-              statusColor = daysLeft > 30 ? "bg-blue-500" : 
-                          daysLeft > 14 ? "bg-yellow-400" : 
-                          daysLeft >= 0 ? "bg-red-500" : 
-                          "bg-red-600";
+              try {
+                const today = new Date();
+                const dueDate = new Date(task.dueDate);
+                
+                // Check if the due date is valid before proceeding
+                if (isValid(dueDate)) {
+                  const daysLeft = differenceInDays(dueDate, today);
+                  
+                  daysText = daysLeft > 0 ? `${daysLeft} days left` : 
+                            daysLeft === 0 ? "Due today" : 
+                            `${Math.abs(daysLeft)} days overdue`;
+                  
+                  // Set status color based on days left
+                  statusColor = daysLeft > 30 ? "bg-blue-500" : 
+                              daysLeft > 14 ? "bg-yellow-400" : 
+                              daysLeft >= 0 ? "bg-red-500" : 
+                              "bg-red-600";
+                } else {
+                  daysText = "Invalid date";
+                  statusColor = "bg-gray-400";
+                }
+              } catch (e) {
+                console.error("Error calculating days left:", e);
+                daysText = "Date error";
+                statusColor = "bg-gray-400";
+              }
             }
 
             return (
@@ -94,11 +119,33 @@ export function TimelineView({ tasks }: TimelineViewProps) {
                     {task.completed ? (
                       <div className="text-green-600 flex items-center gap-1 mb-1">
                         <CheckCircle2 size={14} /> 
-                        <span>{format(new Date(task.dueDate), "MMMM d, yyyy")} - Completed</span>
+                        <span>
+                          {(() => {
+                            try {
+                              const dueDate = new Date(task.dueDate);
+                              return isValid(dueDate) 
+                                ? format(dueDate, "MMMM d, yyyy") 
+                                : "Invalid date";
+                            } catch (e) {
+                              console.error("Error formatting date:", e);
+                              return "Invalid date";
+                            }
+                          })()} - Completed
+                        </span>
                       </div>
                     ) : (
                       <div className="text-gray-600 mb-1">
-                        {format(new Date(task.dueDate), "MMMM d, yyyy")} - <span className="text-red-500 font-medium">{daysText}</span>
+                        {(() => {
+                          try {
+                            const dueDate = new Date(task.dueDate);
+                            return isValid(dueDate) 
+                              ? format(dueDate, "MMMM d, yyyy") 
+                              : "Invalid date";
+                          } catch (e) {
+                            console.error("Error formatting date:", e);
+                            return "Invalid date";
+                          }
+                        })()} - <span className="text-red-500 font-medium">{daysText}</span>
                       </div>
                     )}
                   </div>
