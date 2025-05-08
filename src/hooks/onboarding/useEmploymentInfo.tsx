@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -28,12 +27,18 @@ export function useEmploymentInfo() {
       // Only include properties that exist in the database schema
       const updateData: any = {};
       
-      // Only include employmentStartDate if it exists and convert to ISO string
-      if (data.employmentStartDate && data.employmentStartDate instanceof Date) {
-        updateData.employmentStartDate = data.employmentStartDate.toISOString();
-      } else if (data.employmentStartDate && typeof data.employmentStartDate === 'string') {
-        updateData.employmentStartDate = data.employmentStartDate;
+      // Safely handle employmentStartDate with additional type checking
+      if (data.employmentStartDate) {
+        if (data.employmentStartDate instanceof Date) {
+          updateData.employmentStartDate = data.employmentStartDate.toISOString();
+        } else if (typeof data.employmentStartDate === 'string') {
+          updateData.employmentStartDate = data.employmentStartDate;
+        } else {
+          console.log("employmentStartDate is neither a Date nor a string:", data.employmentStartDate);
+        }
       }
+
+      console.log("Updating profile with employment data:", updateData);
       
       await updateProfile(updateData);
       return true;

@@ -24,14 +24,18 @@ export function useAcademicInfo() {
         university: data.university,
       };
       
-      // Safely handle programStartDate
+      // Safely handle programStartDate with extra logging
       if (data.programStartDate) {
         if (data.programStartDate instanceof Date) {
           updateData.courseStartDate = data.programStartDate.toISOString();
         } else if (typeof data.programStartDate === 'string') {
           updateData.courseStartDate = data.programStartDate;
+        } else {
+          console.log("programStartDate is neither a Date nor a string:", data.programStartDate);
         }
       }
+
+      console.log("Updating profile with academic data:", updateData);
       
       await updateProfile(updateData);
       return true;

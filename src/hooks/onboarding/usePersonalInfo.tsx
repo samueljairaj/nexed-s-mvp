@@ -24,16 +24,20 @@ export function usePersonalInfo() {
         country: data.country,
       };
       
-      // Safely handle dateOfBirth - ensure it's passed as a string to the database
+      // Handle dateOfBirth field with extra null and type checks
       if (data.dateOfBirth) {
-        // Check if it's a Date object before calling toISOString
+        // Make sure we only try to call toISOString on actual Date objects
         if (data.dateOfBirth instanceof Date) {
           updateData.usEntryDate = data.dateOfBirth.toISOString();
         } else if (typeof data.dateOfBirth === 'string') {
-          // If it's already a string, use it directly
           updateData.usEntryDate = data.dateOfBirth;
+        } else {
+          console.log("dateOfBirth is neither a Date nor a string:", data.dateOfBirth);
         }
       }
+
+      // Log the data we're about to send for debugging
+      console.log("Updating profile with data:", updateData);
       
       await updateProfile(updateData);
       return true;
