@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,21 +20,25 @@ interface ComplianceChecklistProps {
   };
 }
 
+interface GroupedDocuments {
+  immigration: AITask[];
+  employment: AITask[];
+  educational: AITask[];
+  personal: AITask[];
+}
+
 export function ComplianceChecklist({ open, onOpenChange, userData }: ComplianceChecklistProps) {
   const navigate = useNavigate();
   const [tab, setTab] = useState("all-documents");
   const { generateCompliance, isGenerating } = useAICompliance();
-  const [documents, setDocuments] = useState<{
-    immigration: AITask[];
-    employment: AITask[];
-    educational: AITask[];
-    personal: AITask[];
-  }>({
+  const [documents, setDocuments] = useState<GroupedDocuments>({
     immigration: [],
     employment: [],
     educational: [],
     personal: []
   });
+  // New state for phase-based grouping
+  const [phaseGroups, setPhaseGroups] = useState<{[key: string]: AITask[]}>({});
   const [loadingState, setLoadingState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [studentInfo, setStudentInfo] = useState({
     university: userData.university || "Stanford University",
@@ -46,7 +51,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     employer: userData.employer || "Tech Company Inc.",
   });
   
-  // Generate AI compliance checklist when the component mounts
+  // Generate checklist when the component mounts
   useEffect(() => {
     if (open) {
       generateAIChecklist();
@@ -61,7 +66,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     try {
       const tasks = await generateCompliance(userData);
       
-      // Categorize tasks
+      // Categorize tasks by traditional categories
       const categorizedTasks = {
         immigration: tasks.filter(task => task.category === "immigration"),
         employment: tasks.filter(task => task.category === "employment"),
@@ -69,10 +74,21 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
         personal: tasks.filter(task => task.category === "personal")
       };
       
+      // Also group tasks by visa phase
+      const groupedByPhase = tasks.reduce((groups, task) => {
+        const phase = task.phase || "general";
+        if (!groups[phase]) {
+          groups[phase] = [];
+        }
+        groups[phase].push(task);
+        return groups;
+      }, {} as {[key: string]: AITask[]});
+      
       setDocuments(categorizedTasks);
+      setPhaseGroups(groupedByPhase);
       setLoadingState("success");
       
-      // Update some student info based on AI-generated tasks
+      // Update some student info based on generated tasks
       if (tasks.length > 0) {
         // Look for visa expiration in tasks
         const visaTask = tasks.find(t => 
@@ -91,7 +107,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
         }
       }
     } catch (error) {
-      console.error("Error generating AI checklist:", error);
+      console.error("Error generating checklist:", error);
       setLoadingState("error");
     }
   };
@@ -107,7 +123,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     0
   );
 
-  // AI-generated insights based on tasks
+  // Generate insights based on tasks
   const generateInsights = () => {
     const allTasks = [
       ...documents.immigration,
@@ -149,7 +165,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
 
   const insights = generateInsights();
 
-  const renderDocumentList = (category: keyof typeof documents) => {
+  const renderDocumentList = (category: keyof GroupedDocuments) => {
     if (loadingState === "loading") {
       return (
         <div className="flex flex-col items-center justify-center py-10">
@@ -206,6 +222,90 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
             </Button>
           </div>
         </div>
+      </div>
+    ));
+  };
+
+  // New function to render documents grouped by phase
+  const renderPhaseDocuments = () => {
+    if (loadingState === "loading") {
+      return (
+        <div className="flex flex-col items-center justify-center py-10">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+          <p className="text-gray-600">Generating your personalized checklist...</p>
+        </div>
+      );
+    }
+    
+    if (loadingState === "error") {
+      return (
+        <div className="border rounded-lg p-4 mb-3 bg-red-50">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="text-red-500" />
+            <div className="flex-1">
+              <p className="text-red-700 font-medium">Failed to generate checklist</p>
+              <p className="text-red-600 text-sm mt-1">Please try again later</p>
+              <Button onClick={generateAIChecklist} className="mt-2" size="sm" variant="outline">
+                Retry
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (Object.keys(phaseGroups).length === 0) {
+      return (
+        <div className="border rounded-lg p-4 mb-3 bg-gray-50">
+          <p className="text-gray-600 text-center py-4">No documents found</p>
+        </div>
+      );
+    }
+    
+    // Order the phases in a logical sequence
+    const orderedPhases = ["F1", "J1", "CPT", "OPT", "STEM OPT", "H1B", "general"];
+    
+    // Sort the phase keys based on the ordered phases
+    const sortedPhaseKeys = Object.keys(phaseGroups).sort((a, b) => {
+      const indexA = orderedPhases.indexOf(a) !== -1 ? orderedPhases.indexOf(a) : 999;
+      const indexB = orderedPhases.indexOf(b) !== -1 ? orderedPhases.indexOf(b) : 999;
+      return indexA - indexB;
+    });
+    
+    return sortedPhaseKeys.map(phase => (
+      <div key={phase} className="mb-6">
+        <h3 className="flex items-center text-lg font-medium mb-3">
+          <FileCheck className="mr-2 text-blue-600" size={20} />
+          {phase === "general" ? "General Documents" : `${phase} Documents`}
+          <span className="ml-2 text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+            {phaseGroups[phase].length} documents
+          </span>
+        </h3>
+        
+        {phaseGroups[phase].map((doc) => (
+          <div key={doc.id} className="border rounded-lg p-4 mb-3">
+            <div className="flex items-start gap-3">
+              <div className="pt-0.5">
+                <Checkbox id={doc.id} />
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <label htmlFor={doc.id} className="font-medium text-gray-900 block mb-1">
+                    {doc.title}
+                  </label>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${doc.priority === "high" ? 'bg-red-100 text-red-700' : doc.priority === "medium" ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {doc.priority === "high" ? 'Required' : doc.priority === "medium" ? 'Important' : 'Recommended'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
+                <Button variant="default" size="sm" className="gap-1">
+                  <Upload size={16} />
+                  Upload
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     ));
   };
@@ -296,8 +396,9 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
 
           {/* Document Tabs */}
           <Tabs defaultValue="all-documents" className="w-full" value={tab} onValueChange={setTab}>
-            <TabsList className="grid grid-cols-5 mb-4">
+            <TabsList className="grid grid-cols-6 mb-4">
               <TabsTrigger value="all-documents">All Documents</TabsTrigger>
+              <TabsTrigger value="by-phase">By Visa Phase</TabsTrigger>
               <TabsTrigger value="immigration">Immigration</TabsTrigger>
               <TabsTrigger value="employment">Employment</TabsTrigger>
               <TabsTrigger value="educational">Educational</TabsTrigger>
@@ -348,6 +449,10 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
                 </h3>
                 {renderDocumentList('personal')}
               </div>
+            </TabsContent>
+            
+            <TabsContent value="by-phase">
+              {renderPhaseDocuments()}
             </TabsContent>
             
             <TabsContent value="immigration">

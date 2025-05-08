@@ -116,12 +116,11 @@ export function useOnboardingState() {
     setIsSubmitting(true);
     
     try {
-      // Only include properties that exist in the UserProfile type
+      // Map the form fields to database fields correctly
       await updateProfile({
         country: data.country,
-        // Map dateOfBirth to us_entry_date field if present
-        // Use the correct property name based on the database schema
-        us_entry_date: data.dateOfBirth ? data.dateOfBirth.toISOString() : undefined,
+        // Map dateOfBirth to usEntryDate field if present
+        usEntryDate: data.dateOfBirth ? data.dateOfBirth.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -141,18 +140,9 @@ export function useOnboardingState() {
       // Ensure we're using the correct property names that match the database schema
       const formattedData = {
         visaType: data.visaType as VisaType,
-        // These fields below don't appear to be in the database schema
-        // Let's keep only what's in the actual profiles table
-        // visaStatus: data.currentStatus,
-        // sevisId: data.sevisId,
-        // i797Number: data.i797Number,
-        
         // Use the correct field names that match the database schema
-        us_entry_date: data.entryDate ? data.entryDate.toISOString() : undefined,
-        // visaExpirationDate and i94ExpirationDate don't seem to be in the database schema
-        
-        // Map program dates to course_start_date
-        course_start_date: data.programStartDate ? data.programStartDate.toISOString() : undefined,
+        usEntryDate: data.entryDate ? data.entryDate.toISOString() : undefined,
+        courseStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
       };
       
       console.log("Attempting to update profile with visa data:", formattedData);
@@ -193,7 +183,7 @@ export function useOnboardingState() {
       await updateProfile({
         university: data.university,
         // Use the correct property name for course start date
-        course_start_date: data.programStartDate ? data.programStartDate.toISOString() : undefined,
+        courseStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -212,8 +202,7 @@ export function useOnboardingState() {
       // Only include properties that exist in the database schema
       await updateProfile({
         // Only include fields that are in the actual database schema
-        // Looking at the errors, jobTitle doesn't exist in the schema
-        employment_start_date: data.employmentStartDate ? data.employmentStartDate.toISOString() : undefined,
+        employmentStartDate: data.employmentStartDate ? data.employmentStartDate.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {

@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -33,6 +32,7 @@ interface RequiredDocument {
   description: string;
   priority: "low" | "medium" | "high";
   exclude?: boolean;
+  phase?: string;
 }
 
 interface ComplianceRule {
@@ -72,7 +72,7 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     
-    // Fetch compliance rules from the database
+    // Fetch compliance rules from the database - this is now our source of truth
     const { data: rules, error: rulesError } = await supabase
       .from('compliance_rules')
       .select('*')
@@ -85,17 +85,20 @@ serve(async (req) => {
     
     console.log(`Fetched ${rules?.length || 0} compliance rules`);
     
-    // Process rules against user data
-    const tasks: any[] = [];
+    // Process rules against user data to build the checklist
+    const rawTasks: RequiredDocument[] = [];
+    const processedIds = new Set<string>();
     const excludedTaskIds = new Set<string>();
     
     // First pass: identify excluded tasks
     rules?.forEach((rule: ComplianceRule) => {
       if (matchesConditions(userData, rule.condition_logic)) {
         const documents = rule.required_documents;
-        for (const doc of documents) {
-          if (doc.exclude === true) {
-            excludedTaskIds.add(doc.id);
+        if (documents && Array.isArray(documents)) {
+          for (const doc of documents) {
+            if (doc.exclude === true) {
+              excludedTaskIds.add(doc.id);
+            }
           }
         }
       }
@@ -107,47 +110,67 @@ serve(async (req) => {
     rules?.forEach((rule: ComplianceRule) => {
       if (matchesConditions(userData, rule.condition_logic)) {
         const documents = rule.required_documents;
-        
-        for (const doc of documents) {
-          // Skip excluded and already added tasks
-          if (doc.exclude === true || excludedTaskIds.has(doc.id)) {
-            continue;
+        if (documents && Array.isArray(documents)) {
+          for (const doc of documents) {
+            // Skip excluded and already added tasks
+            if (doc.exclude === true || excludedTaskIds.has(doc.id) || processedIds.has(doc.id)) {
+              continue;
+            }
+            
+            // Add this document to our checklist
+            rawTasks.push({
+              ...doc,
+              phase: determinePhase(userData, rule.group_name)
+            });
+            processedIds.add(doc.id);
           }
-          
-          // Skip if this task is already in our list
-          if (tasks.some(task => task.id === doc.id)) {
-            continue;
-          }
-          
-          // Calculate due date based on document priority
-          const dueDate = calculateDueDate(doc.priority, userData);
-          
-          tasks.push({
-            id: doc.id,
-            title: doc.title,
-            description: doc.description,
-            dueDate: dueDate,
-            category: mapGroupToCategory(rule.group_name),
-            completed: false,
-            priority: doc.priority
-          });
         }
       }
     });
     
-    console.log(`Generated ${tasks.length} compliance tasks`);
+    console.log(`Generated ${rawTasks.length} raw compliance tasks`);
     
-    // If we have no tasks from rules but have OpenAI API key, fall back to OpenAI
-    if (tasks.length === 0 && openAIApiKey) {
-      console.log("No tasks matched from rules engine, falling back to OpenAI");
-      
-      const aiTasks = await generateTasksWithAI(userData, openAIApiKey);
-      return new Response(JSON.stringify({ tasks: aiTasks }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    // If we have raw tasks, use OpenAI to refine and explain them (but not to add or remove)
+    let enhancedTasks = [];
+    
+    if (rawTasks.length > 0 && openAIApiKey) {
+      enhancedTasks = await refineTasksWithAI(rawTasks, userData, openAIApiKey);
+    } else {
+      // If no OpenAI, use the raw tasks but calculate due dates
+      enhancedTasks = rawTasks.map(doc => {
+        const dueDate = calculateDueDate(doc.priority, userData);
+        return {
+          id: doc.id,
+          title: doc.title,
+          description: doc.description,
+          dueDate: dueDate,
+          category: mapGroupToCategory(doc.phase || "immigration"),
+          completed: false,
+          priority: doc.priority,
+          phase: doc.phase || "general"
+        };
       });
     }
     
-    return new Response(JSON.stringify({ tasks }), {
+    // If we still have no tasks but have OpenAI API key, create a fallback message
+    if (enhancedTasks.length === 0 && openAIApiKey) {
+      console.log("No tasks matched from rules engine, creating fallback message");
+      
+      const fallbackTask = {
+        id: "fallback-1",
+        title: "Update your profile for personalized checklist",
+        description: "We couldn't generate a personalized checklist with your current profile information. Please update your profile with more details about your visa status, academic information, and employment status.",
+        dueDate: calculateDueDate("high", userData),
+        category: "personal",
+        completed: false,
+        priority: "high",
+        phase: "general"
+      };
+      
+      enhancedTasks.push(fallbackTask);
+    }
+    
+    return new Response(JSON.stringify({ tasks: enhancedTasks }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
@@ -246,6 +269,31 @@ function mapGroupToCategory(groupName: string): "immigration" | "academic" | "em
   return "personal";
 }
 
+// Determine the visa phase based on user data and rule group
+function determinePhase(userData: UserData, groupName: string): string {
+  // If the group name already indicates a phase, use it
+  const lowerGroup = groupName.toLowerCase();
+  if (lowerGroup.includes('cpt')) return 'CPT';
+  if (lowerGroup.includes('opt') && lowerGroup.includes('stem')) return 'STEM OPT';
+  if (lowerGroup.includes('opt')) return 'OPT';
+  if (lowerGroup.includes('h1b')) return 'H1B';
+  
+  // Otherwise determine from user data
+  if (userData.employmentStatus) {
+    const status = userData.employmentStatus.toLowerCase();
+    if (status.includes('stem')) return 'STEM OPT';
+    if (status.includes('opt')) return 'OPT';
+    if (status.includes('cpt')) return 'CPT';
+    if (status.includes('h1b')) return 'H1B';
+  }
+  
+  if (userData.visaType === 'H1B') return 'H1B';
+  if (userData.visaType === 'F1') return 'F1';
+  if (userData.visaType === 'J1') return 'J1';
+  
+  return 'general';
+}
+
 // Calculate due date based on priority and user data
 function calculateDueDate(priority: string, userData: UserData): string {
   const today = new Date();
@@ -271,9 +319,11 @@ function calculateDueDate(priority: string, userData: UserData): string {
   return dueDate.toISOString().split('T')[0];
 }
 
-// Fallback function to generate tasks using OpenAI if no rules match
-async function generateTasksWithAI(userData: UserData, openAIApiKey: string): Promise<any[]> {
+// Use AI only to refine and explain existing tasks, not to generate new ones
+async function refineTasksWithAI(rawTasks: RequiredDocument[], userData: UserData, openAIApiKey: string): Promise<any[]> {
   try {
+    console.log("Using AI to refine task descriptions");
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -281,30 +331,30 @@ async function generateTasksWithAI(userData: UserData, openAIApiKey: string): Pr
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are a specialized immigration compliance assistant for international students and professionals.
-            You help generate personalized compliance checklists based on visa types, academic status, and important dates.
-            Provide structured, actionable compliance tasks with due dates, descriptions, and categorize them appropriately.
-            Focus on visa requirements, deadlines, document renewals, and reporting obligations.`
+            content: `You are a specialized immigration compliance assistant. Your role is to ONLY enhance and explain the existing checklist items, not to add or remove any. DO NOT CREATE NEW TASKS.
+            
+            For each item in the provided checklist:
+            1. Keep the original title exactly as is
+            2. Enhance the description to make it more clear and helpful
+            3. Add a brief explanation of why this document is important
+            4. DO NOT add new checklist items
+            5. DO NOT remove any existing checklist items
+            
+            Return the enhanced checklist in the same JSON format as provided.`
           },
           {
             role: 'user',
-            content: `Generate a comprehensive compliance checklist for a user with the following information:
+            content: `Here is information about a user:
             ${JSON.stringify(userData, null, 2)}
             
-            Return the response as a JSON array of tasks with these properties:
-            - id: string (unique identifier)
-            - title: string (clear, concise task name)
-            - description: string (detailed explanation)
-            - dueDate: string (ISO date string)
-            - category: string (one of: "immigration", "academic", "employment", "personal")
-            - priority: string (one of: "low", "medium", "high")
-            - completed: boolean (default to false)
+            And here is their compliance checklist that needs enhancement:
+            ${JSON.stringify(rawTasks, null, 2)}
             
-            Base the tasks on their visa type, academic status, and important dates. Include both immediate tasks and future obligations.`
+            Please enhance the descriptions of these existing items only. Do not add or remove any items.`
           }
         ],
         temperature: 0.5,
@@ -314,26 +364,76 @@ async function generateTasksWithAI(userData: UserData, openAIApiKey: string): Pr
     const data = await response.json();
     
     if (!data.choices || data.choices.length === 0) {
-      throw new Error('Failed to generate compliance checklist');
+      throw new Error('Failed to enhance compliance checklist with AI');
     }
 
-    // Parse the response from OpenAI
+    // Parse the enhanced tasks
+    const responseContent = data.choices[0].message.content;
+    let enhancedTasks;
+    
     try {
-      const responseContent = data.choices[0].message.content;
-      // Try to extract JSON if it's wrapped in markdown code blocks
+      // Look for a JSON block in the response
       const jsonMatch = responseContent.match(/```json\n([\s\S]*?)\n```/) || 
                         responseContent.match(/```\n([\s\S]*?)\n```/);
       
-      const tasksJson = jsonMatch ? jsonMatch[1] : responseContent;
-      const tasks = JSON.parse(tasksJson);
-      
-      return tasks;
+      if (jsonMatch) {
+        enhancedTasks = JSON.parse(jsonMatch[1]);
+      } else {
+        // If no JSON block found, try to parse the entire response
+        enhancedTasks = JSON.parse(responseContent);
+      }
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
-      throw new Error('Failed to parse AI response');
+      // Fall back to raw tasks if AI enhancement fails
+      enhancedTasks = rawTasks;
     }
+    
+    // Make sure we have an array
+    if (!Array.isArray(enhancedTasks)) {
+      // If AI returned an object with a tasks property
+      if (enhancedTasks && Array.isArray(enhancedTasks.tasks)) {
+        enhancedTasks = enhancedTasks.tasks;
+      } else {
+        // Fall back to raw tasks
+        enhancedTasks = rawTasks;
+      }
+    }
+    
+    // Format the tasks with standard fields
+    return enhancedTasks.map((task: any) => {
+      // Find the original task to get priority if it wasn't preserved
+      const originalTask = rawTasks.find(r => r.id === task.id) || 
+                          rawTasks.find(r => r.title === task.title);
+      
+      const priority = task.priority || (originalTask ? originalTask.priority : "medium");
+      const phase = task.phase || (originalTask ? originalTask.phase : "general");
+      
+      return {
+        id: task.id || `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        title: task.title,
+        description: task.description || (originalTask ? originalTask.description : ""),
+        dueDate: calculateDueDate(priority, userData),
+        category: task.category || mapGroupToCategory(phase),
+        completed: false,
+        priority: priority,
+        phase: phase
+      };
+    });
   } catch (error) {
-    console.error('Error calling OpenAI:', error);
-    throw new Error('Failed to generate AI compliance checklist');
+    console.error('Error refining tasks with AI:', error);
+    
+    // Fall back to raw tasks with basic formatting if AI fails
+    return rawTasks.map(doc => {
+      return {
+        id: doc.id,
+        title: doc.title,
+        description: doc.description,
+        dueDate: calculateDueDate(doc.priority, userData),
+        category: mapGroupToCategory(doc.phase || "immigration"),
+        completed: false,
+        priority: doc.priority,
+        phase: doc.phase || "general"
+      };
+    });
   }
 }

@@ -12,6 +12,7 @@ export interface AITask {
   category: "immigration" | "academic" | "employment" | "personal";
   completed: boolean;
   priority: "low" | "medium" | "high";
+  phase?: string;
 }
 
 // Define a comprehensive interface for user profile data
@@ -68,7 +69,7 @@ export function useAICompliance() {
         graduationDate: userProfile.graduationDate ? new Date(userProfile.graduationDate).toISOString() : null
       };
 
-      // Call the Supabase Edge Function
+      // Call the Supabase Edge Function - all checklist generation is now happening in the backend
       const { data, error } = await supabase.functions.invoke('generate-compliance', {
         body: { userData: enhancedUserData }
       });
@@ -78,13 +79,13 @@ export function useAICompliance() {
       }
 
       if (!data || !data.tasks || !Array.isArray(data.tasks)) {
-        throw new Error('Invalid response from AI service');
+        throw new Error('Invalid response from compliance service');
       }
 
       toast.success("Personalized compliance checklist generated");
       return data.tasks as AITask[];
     } catch (error) {
-      console.error('Error generating AI compliance checklist:', error);
+      console.error('Error generating compliance checklist:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to generate compliance checklist');
       return [];
     } finally {
