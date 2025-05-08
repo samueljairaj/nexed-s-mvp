@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth, VisaType } from "../contexts/AuthContext";
 import { toast } from "sonner";
@@ -117,11 +118,17 @@ export function useOnboardingState() {
     
     try {
       // Map the form fields to database fields correctly
-      await updateProfile({
+      const updateData: any = {
         country: data.country,
-        // Map dateOfBirth to usEntryDate field if present
-        usEntryDate: data.dateOfBirth ? data.dateOfBirth.toISOString() : undefined,
-      });
+      };
+      
+      // Only include dateOfBirth if it exists and convert to ISO string for the database
+      if (data.dateOfBirth) {
+        // Store as string in the database since usEntryDate is a string in the database
+        updateData.usEntryDate = data.dateOfBirth.toISOString();
+      }
+      
+      await updateProfile(updateData);
       setCurrentStep(currentStep + 1);
     } catch (error) {
       toast.error("Failed to save personal information");
@@ -138,12 +145,18 @@ export function useOnboardingState() {
     
     try {
       // Ensure we're using the correct property names that match the database schema
-      const formattedData = {
+      const formattedData: any = {
         visaType: data.visaType as VisaType,
-        // Use the correct field names that match the database schema
-        usEntryDate: data.entryDate ? data.entryDate.toISOString() : undefined,
-        courseStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
       };
+      
+      // Only include dates if they exist and convert to ISO strings for the database
+      if (data.entryDate) {
+        formattedData.usEntryDate = data.entryDate.toISOString();
+      }
+      
+      if (data.programStartDate) {
+        formattedData.courseStartDate = data.programStartDate.toISOString();
+      }
       
       console.log("Attempting to update profile with visa data:", formattedData);
       
@@ -180,11 +193,16 @@ export function useOnboardingState() {
     
     try {
       // Only include properties that exist in the database schema
-      await updateProfile({
+      const updateData: any = {
         university: data.university,
-        // Use the correct property name for course start date
-        courseStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
-      });
+      };
+      
+      // Only include programStartDate if it exists and convert to ISO string
+      if (data.programStartDate) {
+        updateData.courseStartDate = data.programStartDate.toISOString();
+      }
+      
+      await updateProfile(updateData);
       setCurrentStep(currentStep + 1);
     } catch (error) {
       toast.error("Failed to save academic information");
@@ -200,10 +218,14 @@ export function useOnboardingState() {
     
     try {
       // Only include properties that exist in the database schema
-      await updateProfile({
-        // Only include fields that are in the actual database schema
-        employmentStartDate: data.employmentStartDate ? data.employmentStartDate.toISOString() : undefined,
-      });
+      const updateData: any = {};
+      
+      // Only include employmentStartDate if it exists and convert to ISO string
+      if (data.employmentStartDate) {
+        updateData.employmentStartDate = data.employmentStartDate.toISOString();
+      }
+      
+      await updateProfile(updateData);
       setCurrentStep(currentStep + 1);
     } catch (error) {
       toast.error("Failed to save employment information");
