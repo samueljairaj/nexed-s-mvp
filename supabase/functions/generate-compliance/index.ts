@@ -23,6 +23,8 @@ interface UserData {
   hasTransferred?: boolean;
   fieldOfStudy?: string;
   employer?: string;
+  optType?: string;
+  graduationDate?: string;
 }
 
 interface RequiredDocument {
@@ -196,7 +198,12 @@ function evaluateConditions(userData: UserData, conditions: any): boolean {
       return false; // If the field doesn't exist in userData, condition fails
     }
     
-    if (userData[key] !== value) {
+    if (typeof value === 'string' && typeof userData[key] === 'string') {
+      // Case-insensitive string comparison
+      if ((userData[key] as string).toLowerCase() !== (value as string).toLowerCase()) {
+        return false;
+      }
+    } else if (userData[key] !== value) {
       return false;
     }
   }
@@ -215,7 +222,9 @@ function mapGroupToCategory(groupName: string): "immigration" | "academic" | "em
       lowerGroup === 'h1b' ||
       lowerGroup === 'opt' ||
       lowerGroup === 'cpt' ||
-      lowerGroup === 'stem opt') {
+      lowerGroup === 'stem opt' ||
+      lowerGroup.includes('immigration') ||
+      lowerGroup.includes('exclusions')) {
     return "immigration";
   }
   

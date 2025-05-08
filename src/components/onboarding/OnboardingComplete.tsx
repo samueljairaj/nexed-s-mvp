@@ -14,6 +14,14 @@ interface OnboardingCompleteProps {
     university?: string;
     fieldOfStudy?: string;
     employer?: string;
+    courseStartDate?: string;
+    graduationDate?: string;
+    employmentStatus?: string;
+    optType?: string;
+    previousUniversity?: string;
+    hasTransferred?: boolean;
+    employmentStartDate?: string;
+    usEntryDate?: string;
   };
 }
 

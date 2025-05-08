@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AccountCreationStep } from "@/components/onboarding/AccountCreationStep";
 import { PersonalInfoStep } from "@/components/onboarding/PersonalInfoStep";

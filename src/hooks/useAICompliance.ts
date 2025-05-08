@@ -14,11 +14,32 @@ export interface AITask {
   priority: "low" | "medium" | "high";
 }
 
+// Define a comprehensive interface for user profile data
+interface EnhancedUserData {
+  name?: string;
+  email?: string;
+  country?: string;
+  visaType?: string;
+  university?: string;
+  courseStartDate?: string | null;
+  usEntryDate?: string | null;
+  employmentStartDate?: string | null;
+  employmentStatus?: string;
+  hasTransferred?: boolean;
+  previousUniversity?: string;
+  transferDate?: string;
+  fieldOfStudy?: string;
+  employer?: string;
+  employerName?: string;
+  optType?: string;
+  graduationDate?: string;
+}
+
 export function useAICompliance() {
   const [isGenerating, setIsGenerating] = useState(false);
   const { currentUser } = useAuth();
 
-  const generateCompliance = async (userData?: Record<string, any>) => {
+  const generateCompliance = async (userData?: EnhancedUserData) => {
     setIsGenerating(true);
     
     try {
@@ -42,7 +63,9 @@ export function useAICompliance() {
         employmentStatus: mapEmploymentStatus(userProfile),
         hasTransferred: Boolean(userProfile.previousUniversity || userProfile.transferDate),
         fieldOfStudy: userProfile.fieldOfStudy || "",
-        employer: userProfile.employer || userProfile.employerName || ""
+        employer: userProfile.employer || userProfile.employerName || "",
+        optType: userProfile.optType || "",
+        graduationDate: userProfile.graduationDate ? new Date(userProfile.graduationDate).toISOString() : null
       };
 
       // Call the Supabase Edge Function
