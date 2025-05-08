@@ -40,17 +40,20 @@ export function DatePicker({
         <Button
           variant={"outline"}
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "w-full justify-start text-left font-normal border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
             !date && "text-muted-foreground",
             buttonClassName
           )}
           disabled={disabled}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
           {date ? dateUtils.formatDate(date) : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align={align}>
+      <PopoverContent 
+        className="w-auto p-0 bg-popover shadow-md border border-border rounded-md" 
+        align={align}
+      >
         <Calendar
           mode="single"
           selected={date}

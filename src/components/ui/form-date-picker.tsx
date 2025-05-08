@@ -59,7 +59,7 @@ export function FormDatePicker({
                 <Button
                   variant={"outline"}
                   className={cn(
-                    "w-full pl-3 text-left font-normal",
+                    "w-full pl-3 text-left font-normal border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
                     !field.value && "text-muted-foreground",
                     buttonClassName
                   )}
@@ -70,11 +70,11 @@ export function FormDatePicker({
                   ) : (
                     <span>{placeholder}</span>
                   )}
-                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-70" />
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0 bg-popover shadow-md border border-border rounded-md" align="start">
               <Calendar
                 mode="single"
                 selected={field.value}

@@ -15,11 +15,25 @@ export const dateUtils = {
   },
   
   /**
+   * Format a date in a short format (e.g., May 12, 2023)
+   */
+  formatShort: (date: Date | number): string => {
+    return format(date, "MMM d, yyyy");
+  },
+  
+  /**
+   * Format a date in a compact format (e.g., 05/12/2023)
+   */
+  formatCompact: (date: Date | number): string => {
+    return format(date, "MM/dd/yyyy");
+  },
+  
+  /**
    * Parse a date string in various formats
    */
   parseDate: (dateString: string): Date | null => {
     // Try common formats
-    const formats = ["MM/dd/yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM-dd-yyyy", "yyyy/MM/dd"];
+    const formats = ["MM/dd/yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM-dd-yyyy", "yyyy/MM/dd", "MMM d, yyyy"];
     
     for (const dateFormat of formats) {
       const parsedDate = parse(dateString, dateFormat, new Date());
@@ -61,5 +75,25 @@ export const dateUtils = {
       (isAfter(date, range.from) || isSameDay(date, range.from)) && 
       (isBefore(date, range.to) || isSameDay(date, range.to))
     );
+  },
+  
+  /**
+   * Get month name from month number (0-11)
+   */
+  getMonthName: (month: number): string => {
+    const date = new Date();
+    date.setMonth(month);
+    return format(date, "MMMM");
+  },
+  
+  /**
+   * Get an array of short month names
+   */
+  getMonthNames: (): string[] => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(i);
+      return format(date, "MMM");
+    });
   }
 };
