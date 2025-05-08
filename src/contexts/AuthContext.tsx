@@ -13,6 +13,9 @@ export interface UserProfile {
   country: string;
   visaType: VisaType;
   university?: string;
+  degreeLevel?: string;     // Added field
+  fieldOfStudy?: string;    // Added field
+  isSTEM?: boolean;         // Added field
   courseStartDate?: Date;
   usEntryDate?: Date;
   employmentStartDate?: Date;
@@ -106,6 +109,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           country: data.country || '',
           visaType: data.visa_type as VisaType,
           university: data.university || undefined,
+          degreeLevel: data.degree_level || undefined,  // Map from DB column
+          fieldOfStudy: data.field_of_study || undefined,  // Map from DB column
+          isSTEM: data.is_stem || false,  // Map from DB column
           courseStartDate: data.course_start_date ? new Date(data.course_start_date) : undefined,
           usEntryDate: data.us_entry_date ? new Date(data.us_entry_date) : undefined,
           employmentStartDate: data.employment_start_date ? new Date(data.employment_start_date) : undefined,
@@ -284,19 +290,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         // Handle academic fields
-        if (data.degree_level !== undefined) {
-          // These fields are already in snake_case from useAcademicInfo
-          // No need to transform them
+        if (data.degreeLevel !== undefined) {
+          dbData.degree_level = data.degreeLevel;
+          delete dbData.degreeLevel;
         }
         
-        if (data.field_of_study !== undefined) {
-          // These fields are already in snake_case from useAcademicInfo
-          // No need to transform them
+        if (data.fieldOfStudy !== undefined) {
+          dbData.field_of_study = data.fieldOfStudy;
+          delete dbData.fieldOfStudy;
         }
         
-        if (data.is_stem !== undefined) {
-          // These fields are already in snake_case from useAcademicInfo
-          // No need to transform them
+        if (data.isSTEM !== undefined) {
+          dbData.is_stem = data.isSTEM;
+          delete dbData.isSTEM;
         }
         
         // Remove undefined fields
