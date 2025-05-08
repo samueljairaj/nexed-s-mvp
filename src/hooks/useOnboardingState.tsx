@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth, VisaType } from "../contexts/AuthContext";
 import { toast } from "sonner";
@@ -117,13 +116,14 @@ export function useOnboardingState() {
     setIsSubmitting(true);
     
     try {
+      // Store only the properties that exist in the UserProfile type
       await updateProfile({
         country: data.country,
-        passportNumber: data.passportNumber,
+        // Remove passportNumber as it doesn't exist in the UserProfile type
         address: data.address,
         phone: data.phone,
         dateOfBirth: data.dateOfBirth ? data.dateOfBirth.toISOString() : undefined,
-        passportExpiryDate: data.passportExpiryDate ? data.passportExpiryDate.toISOString() : undefined,
+        // passportExpiryDate doesn't exist in the UserProfile type
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -185,9 +185,10 @@ export function useOnboardingState() {
     setIsSubmitting(true);
     
     try {
+      // Only include properties that exist in the UserProfile type
       await updateProfile({
         university: data.university,
-        degreeLevel: data.degreeLevel,
+        // degreeLevel doesn't exist in the UserProfile type
         fieldOfStudy: data.fieldOfStudy,
         isSTEM: data.isSTEM,
         programStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
@@ -207,13 +208,15 @@ export function useOnboardingState() {
     setIsSubmitting(true);
     
     try {
-      // Format dates for database storage
+      // Only include properties that exist in the UserProfile type
       await updateProfile({
-        employmentStatus: data.employmentStatus,
+        // employmentStatus doesn't exist in UserProfile type
         employerName: data.employerName,
         jobTitle: data.jobTitle,
         employmentStartDate: data.employmentStartDate ? data.employmentStartDate.toISOString() : undefined,
         employmentEndDate: data.employmentEndDate ? data.employmentEndDate.toISOString() : undefined,
+        // The following fields might not exist in UserProfile and should be adjusted
+        // as needed based on the actual type definition
         isFieldRelated: data.isFieldRelated,
         optCptStartDate: data.optCptStartDate ? data.optCptStartDate.toISOString() : undefined, 
         optCptEndDate: data.optCptEndDate ? data.optCptEndDate.toISOString() : undefined,

@@ -51,6 +51,7 @@ interface EmploymentInfoStepProps {
   isEmployed: () => boolean;
   isOptOrCpt: () => boolean;
   isStemOpt: () => boolean;
+  isSubmitting?: boolean;
 }
 
 export function EmploymentInfoStep({ 
@@ -61,7 +62,8 @@ export function EmploymentInfoStep({
   isF1OrJ1,
   isEmployed,
   isOptOrCpt,
-  isStemOpt
+  isStemOpt,
+  isSubmitting = false
 }: EmploymentInfoStepProps) {
   const form = useForm({
     resolver: zodResolver(employmentInfoSchema),
@@ -88,7 +90,7 @@ export function EmploymentInfoStep({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Employment Status selection - keep existing code */}
+        
         <FormField
           control={form.control}
           name="employmentStatus"
@@ -121,9 +123,10 @@ export function EmploymentInfoStep({
           )}
         />
         
+        
         {isEmployed() && (
           <>
-            {/* Employer info - keep existing code but fix controlled inputs */}
+            
             <FormField
               control={form.control}
               name="employerName"
@@ -160,7 +163,7 @@ export function EmploymentInfoStep({
               )}
             />
             
-            {/* Employment dates - fixing date handling */}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -243,9 +246,9 @@ export function EmploymentInfoStep({
           </>
         )}
         
+        
         {isOptOrCpt() && (
           <>
-            {/* Field of study relation - keep existing code */}
             <FormField
               control={form.control}
               name="isFieldRelated"
@@ -269,7 +272,7 @@ export function EmploymentInfoStep({
               )}
             />
             
-            {/* OPT/CPT dates - fixing date handling */}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -358,7 +361,6 @@ export function EmploymentInfoStep({
               />
             </div>
             
-            {/* EAD Card for OPT/STEM OPT - keep existing code but fix controlled input */}
             {(form.watch("employmentStatus") === "OPT" || form.watch("employmentStatus") === "STEM OPT Extension") && (
               <FormField
                 control={form.control}
@@ -381,9 +383,9 @@ export function EmploymentInfoStep({
           </>
         )}
         
+        
         {isStemOpt() && (
           <>
-            {/* STEM OPT specific fields - keep existing code but fix controlled input */}
             <FormField
               control={form.control}
               name="stemEVerify"
@@ -402,7 +404,7 @@ export function EmploymentInfoStep({
               )}
             />
             
-            {/* I-983 date - fixing date handling */}
+            
             <FormField
               control={form.control}
               name="stemI983Date"

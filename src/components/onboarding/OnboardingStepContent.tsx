@@ -98,6 +98,7 @@ export function OnboardingStepContent({
           isEmployed={isEmployed}
           isOptOrCpt={isOptOrCpt}
           isStemOpt={isStemOpt}
+          isSubmitting={isSubmitting}
         />
       );
     case 5:
