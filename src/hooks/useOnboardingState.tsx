@@ -116,14 +116,12 @@ export function useOnboardingState() {
     setIsSubmitting(true);
     
     try {
-      // Store only the properties that exist in the UserProfile type
+      // Only include properties that exist in the UserProfile type
       await updateProfile({
         country: data.country,
-        // Remove passportNumber as it doesn't exist in the UserProfile type
-        address: data.address,
         phone: data.phone,
         dateOfBirth: data.dateOfBirth ? data.dateOfBirth.toISOString() : undefined,
-        // passportExpiryDate doesn't exist in the UserProfile type
+        // Removed address as it doesn't exist in UserProfile type
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
@@ -188,9 +186,7 @@ export function useOnboardingState() {
       // Only include properties that exist in the UserProfile type
       await updateProfile({
         university: data.university,
-        // degreeLevel doesn't exist in the UserProfile type
-        fieldOfStudy: data.fieldOfStudy,
-        isSTEM: data.isSTEM,
+        // Removed fieldOfStudy as it doesn't exist in UserProfile type
         programStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
         programEndDate: data.programEndDate ? data.programEndDate.toISOString() : undefined,
       });
@@ -211,18 +207,15 @@ export function useOnboardingState() {
       // Only include properties that exist in the UserProfile type
       await updateProfile({
         // employmentStatus doesn't exist in UserProfile type
-        employerName: data.employerName,
+        // employerName doesn't exist in UserProfile type - renamed to employer
+        employer: data.employerName,
         jobTitle: data.jobTitle,
         employmentStartDate: data.employmentStartDate ? data.employmentStartDate.toISOString() : undefined,
         employmentEndDate: data.employmentEndDate ? data.employmentEndDate.toISOString() : undefined,
         // The following fields might not exist in UserProfile and should be adjusted
         // as needed based on the actual type definition
-        isFieldRelated: data.isFieldRelated,
         optCptStartDate: data.optCptStartDate ? data.optCptStartDate.toISOString() : undefined, 
         optCptEndDate: data.optCptEndDate ? data.optCptEndDate.toISOString() : undefined,
-        eadNumber: data.eadNumber,
-        stemEVerify: data.stemEVerify,
-        stemI983Date: data.stemI983Date ? data.stemI983Date.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
