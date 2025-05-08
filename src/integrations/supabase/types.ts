@@ -152,42 +152,57 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           country: string | null
           course_start_date: string | null
           created_at: string | null
+          date_of_birth: string | null
           email: string | null
           employment_start_date: string | null
           id: string
           name: string | null
           onboarding_complete: boolean | null
+          passport_expiry_date: string | null
+          passport_number: string | null
+          phone: string | null
           university: string | null
           updated_at: string | null
           us_entry_date: string | null
           visa_type: Database["public"]["Enums"]["visa_type"] | null
         }
         Insert: {
+          address?: string | null
           country?: string | null
           course_start_date?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           email?: string | null
           employment_start_date?: string | null
           id: string
           name?: string | null
           onboarding_complete?: boolean | null
+          passport_expiry_date?: string | null
+          passport_number?: string | null
+          phone?: string | null
           university?: string | null
           updated_at?: string | null
           us_entry_date?: string | null
           visa_type?: Database["public"]["Enums"]["visa_type"] | null
         }
         Update: {
+          address?: string | null
           country?: string | null
           course_start_date?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           email?: string | null
           employment_start_date?: string | null
           id?: string
           name?: string | null
           onboarding_complete?: boolean | null
+          passport_expiry_date?: string | null
+          passport_number?: string | null
+          phone?: string | null
           university?: string | null
           updated_at?: string | null
           us_entry_date?: string | null
