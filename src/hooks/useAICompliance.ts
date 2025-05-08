@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { DocumentCategory } from "@/types/document";
+import { getBaselineChecklist, baselineItemsToAITasks } from "@/utils/baselineChecklists";
 
 export interface AITask {
   id: string;

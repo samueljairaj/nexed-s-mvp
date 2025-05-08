@@ -1,5 +1,5 @@
 
-export type DocumentCategory = "immigration" | "education" | "employment" | "personal" | "financial" | "other";
+export type DocumentCategory = "immigration" | "education" | "employment" | "personal" | "financial" | "other" | "academic";
 
 export type DocumentStatus = "valid" | "expiring" | "expired";
 

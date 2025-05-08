@@ -1,3 +1,4 @@
+
 import { AITask } from "@/hooks/useAICompliance";
 import { DocumentCategory } from "@/types/document";
 

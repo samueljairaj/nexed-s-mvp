@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AlertTriangle, FileCheck, Upload, User, Briefcase, GraduationCap, Info, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAICompliance, AITask } from "@/hooks/useAICompliance";
+import { DocumentCategory } from "@/types/document";
 
 interface ComplianceChecklistProps {
   open: boolean;
@@ -69,7 +70,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
       const categorizedTasks = {
         immigration: tasks.filter(task => task.category === "immigration"),
         employment: tasks.filter(task => task.category === "employment"),
-        educational: tasks.filter(task => task.category === "academic"),
+        educational: tasks.filter(task => task.category === "education" || task.category === "academic"),
         personal: tasks.filter(task => task.category === "personal")
       };
       

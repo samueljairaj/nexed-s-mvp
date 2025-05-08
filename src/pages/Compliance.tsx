@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { 
@@ -27,7 +28,7 @@ import { generateMockTasks } from "@/utils/mockTasks";
 import { useAICompliance, AITask } from "@/hooks/useAICompliance";
 import { DocumentCategory } from "@/types/document";
 
-// Task interface (using AITask now)
+// Use AITask as the Task type
 type Task = AITask;
 
 const Compliance = () => {
@@ -35,7 +36,7 @@ const Compliance = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [selectedFilters, setSelectedFilters] = useState<DocumentCategory[]>([]);
   const [selectedPhase, setSelectedPhase] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const { generateCompliance, isGenerating } = useAICompliance();
@@ -101,7 +102,7 @@ const Compliance = () => {
     filterTasks(searchQuery, selectedFilters, selectedPhase);
   }, [searchQuery, selectedFilters, selectedPhase, tasks]);
 
-  const filterTasks = (query: string, filters: string[], phase: string) => {
+  const filterTasks = (query: string, filters: DocumentCategory[], phase: string) => {
     let result = [...tasks];
     
     // Apply search query
@@ -125,7 +126,7 @@ const Compliance = () => {
     setFilteredTasks(result);
   };
 
-  const toggleFilter = (filter: string) => {
+  const toggleFilter = (filter: DocumentCategory) => {
     setSelectedFilters(prev => 
       prev.includes(filter) 
         ? prev.filter(f => f !== filter)
