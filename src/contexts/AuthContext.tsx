@@ -253,7 +253,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           delete dbData.visaType;
         }
         
-        // Handle date of birth
+        // Handle personal info fields
         if (data.dateOfBirth) {
           dbData.date_of_birth = typeof data.dateOfBirth === 'string' 
             ? data.dateOfBirth 
@@ -261,7 +261,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           delete dbData.dateOfBirth;
         }
         
-        // Handle passport expiry
         if (data.passportExpiryDate) {
           dbData.passport_expiry_date = typeof data.passportExpiryDate === 'string' 
             ? data.passportExpiryDate 
@@ -269,7 +268,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           delete dbData.passportExpiryDate;
         }
 
-        // Map personal info fields
         if (data.phone !== undefined) {
           dbData.phone = data.phone;
           delete dbData.phone;
@@ -283,6 +281,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (data.address !== undefined) {
           dbData.address = data.address;
           delete dbData.address;
+        }
+        
+        // Handle academic fields
+        if (data.degree_level !== undefined) {
+          // These fields are already in snake_case from useAcademicInfo
+          // No need to transform them
+        }
+        
+        if (data.field_of_study !== undefined) {
+          // These fields are already in snake_case from useAcademicInfo
+          // No need to transform them
+        }
+        
+        if (data.is_stem !== undefined) {
+          // These fields are already in snake_case from useAcademicInfo
+          // No need to transform them
         }
         
         // Remove undefined fields

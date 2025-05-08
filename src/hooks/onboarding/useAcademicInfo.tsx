@@ -19,12 +19,12 @@ export function useAcademicInfo() {
     setIsSubmitting(true);
     
     try {
-      // Only include properties that exist in the database schema
+      // Map the form field names to match the database column names
       const updateData: Record<string, any> = {
         university: data.university,
-        degreeLevel: data.degreeLevel,
-        fieldOfStudy: data.fieldOfStudy,
-        isSTEM: data.isSTEM
+        degree_level: data.degreeLevel,  // Use snake_case for database columns
+        field_of_study: data.fieldOfStudy,  // Use snake_case for database columns
+        is_stem: data.isSTEM  // Use snake_case for database columns
       };
       
       // Format program start date as YYYY-MM-DD string

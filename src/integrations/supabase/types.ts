@@ -157,9 +157,12 @@ export type Database = {
           course_start_date: string | null
           created_at: string | null
           date_of_birth: string | null
+          degree_level: string | null
           email: string | null
           employment_start_date: string | null
+          field_of_study: string | null
           id: string
+          is_stem: boolean | null
           name: string | null
           onboarding_complete: boolean | null
           passport_expiry_date: string | null
@@ -176,9 +179,12 @@ export type Database = {
           course_start_date?: string | null
           created_at?: string | null
           date_of_birth?: string | null
+          degree_level?: string | null
           email?: string | null
           employment_start_date?: string | null
+          field_of_study?: string | null
           id: string
+          is_stem?: boolean | null
           name?: string | null
           onboarding_complete?: boolean | null
           passport_expiry_date?: string | null
@@ -195,9 +201,12 @@ export type Database = {
           course_start_date?: string | null
           created_at?: string | null
           date_of_birth?: string | null
+          degree_level?: string | null
           email?: string | null
           employment_start_date?: string | null
+          field_of_study?: string | null
           id?: string
+          is_stem?: boolean | null
           name?: string | null
           onboarding_complete?: boolean | null
           passport_expiry_date?: string | null
