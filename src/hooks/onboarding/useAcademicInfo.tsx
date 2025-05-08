@@ -24,15 +24,11 @@ export function useAcademicInfo() {
         university: data.university,
       };
       
-      // Safely handle programStartDate with extra logging
+      // Safely handle programStartDate with proper string conversion
       if (data.programStartDate) {
-        if (data.programStartDate instanceof Date) {
-          updateData.courseStartDate = data.programStartDate.toISOString();
-        } else if (typeof data.programStartDate === 'string') {
-          updateData.courseStartDate = data.programStartDate;
-        } else {
-          console.log("programStartDate is neither a Date nor a string:", data.programStartDate);
-        }
+        updateData.courseStartDate = data.programStartDate instanceof Date 
+          ? data.programStartDate.toISOString().split('T')[0] // Convert to YYYY-MM-DD format
+          : data.programStartDate;  // If it's already a string
       }
 
       console.log("Updating profile with academic data:", updateData);

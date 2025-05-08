@@ -24,16 +24,12 @@ export function usePersonalInfo() {
         country: data.country,
       };
       
-      // Handle dateOfBirth field with extra null and type checks
+      // Handle date fields properly - don't call toISOString directly
       if (data.dateOfBirth) {
-        // Make sure we only try to call toISOString on actual Date objects
-        if (data.dateOfBirth instanceof Date) {
-          updateData.usEntryDate = data.dateOfBirth.toISOString();
-        } else if (typeof data.dateOfBirth === 'string') {
-          updateData.usEntryDate = data.dateOfBirth;
-        } else {
-          console.log("dateOfBirth is neither a Date nor a string:", data.dateOfBirth);
-        }
+        // Store the raw date string instead of calling toISOString
+        updateData.usEntryDate = data.dateOfBirth instanceof Date 
+          ? data.dateOfBirth.toISOString().split('T')[0]  // Convert to YYYY-MM-DD format
+          : data.dateOfBirth; // If it's already a string
       }
 
       // Log the data we're about to send for debugging

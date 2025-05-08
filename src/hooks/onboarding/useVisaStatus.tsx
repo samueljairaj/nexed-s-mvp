@@ -23,25 +23,17 @@ export function useVisaStatus() {
         visaType: data.visaType as VisaType,
       };
       
-      // Only include dates if they exist and ensure proper conversion
+      // Only include dates if they exist and ensure proper string conversion
       if (data.entryDate) {
-        if (data.entryDate instanceof Date) {
-          formattedData.usEntryDate = data.entryDate.toISOString();
-        } else if (typeof data.entryDate === 'string') {
-          formattedData.usEntryDate = data.entryDate;
-        } else {
-          console.log("entryDate is neither a Date nor a string:", data.entryDate);
-        }
+        formattedData.usEntryDate = data.entryDate instanceof Date 
+          ? data.entryDate.toISOString().split('T')[0] // Convert to YYYY-MM-DD format
+          : data.entryDate;  // If it's already a string
       }
       
       if (data.programStartDate) {
-        if (data.programStartDate instanceof Date) {
-          formattedData.courseStartDate = data.programStartDate.toISOString();
-        } else if (typeof data.programStartDate === 'string') {
-          formattedData.courseStartDate = data.programStartDate;
-        } else {
-          console.log("programStartDate is neither a Date nor a string:", data.programStartDate);
-        }
+        formattedData.courseStartDate = data.programStartDate instanceof Date 
+          ? data.programStartDate.toISOString().split('T')[0] // Convert to YYYY-MM-DD format
+          : data.programStartDate;  // If it's already a string
       }
       
       console.log("Attempting to update profile with visa data:", formattedData);
