@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth, VisaType } from "../contexts/AuthContext";
 import { toast } from "sonner";
@@ -118,25 +119,45 @@ export function useOnboardingState() {
     try {
       await updateProfile({
         country: data.country,
-        // Save other personal data as needed
+        passportNumber: data.passportNumber,
+        address: data.address,
+        phone: data.phone,
+        dateOfBirth: data.dateOfBirth ? data.dateOfBirth.toISOString() : undefined,
+        passportExpiryDate: data.passportExpiryDate ? data.passportExpiryDate.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
       toast.error("Failed to save personal information");
+      console.error("Personal info update error:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleVisaStatus = async (data: VisaStatusFormData) => {
+    // Store the full data in the component state
     setVisaData(data);
     setIsSubmitting(true);
     
     try {
-      await updateProfile({
+      // Ensure dates are properly formatted for database storage
+      const formattedData = {
         visaType: data.visaType as VisaType,
-        // Save other visa data as needed
-      });
+        visaStatus: data.currentStatus,
+        sevisId: data.sevisId,
+        i797Number: data.i797Number,
+        entryDate: data.entryDate ? data.entryDate.toISOString() : undefined,
+        visaExpirationDate: data.visaExpirationDate ? data.visaExpirationDate.toISOString() : undefined,
+        i94ExpirationDate: data.i94ExpirationDate ? data.i94ExpirationDate.toISOString() : undefined,
+        programStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
+        programEndDate: data.programEndDate ? data.programEndDate.toISOString() : undefined,
+      };
+      
+      // Update the user profile with the visa status information
+      await updateProfile(formattedData);
+      
+      // Log what was saved to help with debugging
+      console.log("Saved visa data:", formattedData);
       
       // Skip to employment step for non-student visas
       if (data.visaType !== "F1" && data.visaType !== "J1") {
@@ -146,6 +167,7 @@ export function useOnboardingState() {
       }
     } catch (error) {
       toast.error("Failed to save visa information");
+      console.error("Visa update error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -165,11 +187,16 @@ export function useOnboardingState() {
     try {
       await updateProfile({
         university: data.university,
-        // Save other academic data as needed
+        degreeLevel: data.degreeLevel,
+        fieldOfStudy: data.fieldOfStudy,
+        isSTEM: data.isSTEM,
+        programStartDate: data.programStartDate ? data.programStartDate.toISOString() : undefined,
+        programEndDate: data.programEndDate ? data.programEndDate.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
       toast.error("Failed to save academic information");
+      console.error("Academic info update error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -180,13 +207,24 @@ export function useOnboardingState() {
     setIsSubmitting(true);
     
     try {
-      // Only include fields that are defined in UserProfile
+      // Format dates for database storage
       await updateProfile({
-        // employmentStatus would be saved here if it was in UserProfile
+        employmentStatus: data.employmentStatus,
+        employerName: data.employerName,
+        jobTitle: data.jobTitle,
+        employmentStartDate: data.employmentStartDate ? data.employmentStartDate.toISOString() : undefined,
+        employmentEndDate: data.employmentEndDate ? data.employmentEndDate.toISOString() : undefined,
+        isFieldRelated: data.isFieldRelated,
+        optCptStartDate: data.optCptStartDate ? data.optCptStartDate.toISOString() : undefined, 
+        optCptEndDate: data.optCptEndDate ? data.optCptEndDate.toISOString() : undefined,
+        eadNumber: data.eadNumber,
+        stemEVerify: data.stemEVerify,
+        stemI983Date: data.stemI983Date ? data.stemI983Date.toISOString() : undefined,
       });
       setCurrentStep(currentStep + 1);
     } catch (error) {
       toast.error("Failed to save employment information");
+      console.error("Employment info update error:", error);
     } finally {
       setIsSubmitting(false);
     }

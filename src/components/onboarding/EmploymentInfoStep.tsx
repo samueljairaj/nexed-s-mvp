@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -66,12 +65,30 @@ export function EmploymentInfoStep({
 }: EmploymentInfoStepProps) {
   const form = useForm({
     resolver: zodResolver(employmentInfoSchema),
-    defaultValues,
+    defaultValues: {
+      employmentStatus: defaultValues.employmentStatus || "Not Employed",
+      employerName: defaultValues.employerName || "",
+      jobTitle: defaultValues.jobTitle || "",
+      employmentStartDate: defaultValues.employmentStartDate || null,
+      employmentEndDate: defaultValues.employmentEndDate || null,
+      isFieldRelated: defaultValues.isFieldRelated || false,
+      optCptStartDate: defaultValues.optCptStartDate || null,
+      optCptEndDate: defaultValues.optCptEndDate || null,
+      eadNumber: defaultValues.eadNumber || "",
+      stemEVerify: defaultValues.stemEVerify || "",
+      stemI983Date: defaultValues.stemI983Date || null,
+    },
   });
+
+  // Function to format date for display
+  const formatDate = (date: Date | null | undefined) => {
+    return date ? format(date, "PPP") : "Select date";
+  };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Employment Status selection - keep existing code */}
         <FormField
           control={form.control}
           name="employmentStatus"
@@ -106,6 +123,7 @@ export function EmploymentInfoStep({
         
         {isEmployed() && (
           <>
+            {/* Employer info - keep existing code but fix controlled inputs */}
             <FormField
               control={form.control}
               name="employerName"
@@ -113,7 +131,11 @@ export function EmploymentInfoStep({
                 <FormItem>
                   <FormLabel>Employer Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your employer name" {...field} />
+                    <Input 
+                      placeholder="Enter your employer name" 
+                      {...field} 
+                      value={field.value || ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -127,13 +149,18 @@ export function EmploymentInfoStep({
                 <FormItem>
                   <FormLabel>Position/Job Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your job title" {...field} />
+                    <Input 
+                      placeholder="Enter your job title" 
+                      {...field} 
+                      value={field.value || ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
+            {/* Employment dates - fixing date handling */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -145,17 +172,14 @@ export function EmploymentInfoStep({
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
+                            type="button"
                             variant={"outline"}
                             className={cn(
                               "w-full pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
+                            {formatDate(field.value)}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -166,7 +190,7 @@ export function EmploymentInfoStep({
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
-                          className={cn("p-3 pointer-events-auto")}
+                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -185,17 +209,14 @@ export function EmploymentInfoStep({
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
+                            type="button"
                             variant={"outline"}
                             className={cn(
                               "w-full pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
+                            {formatDate(field.value)}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -210,7 +231,7 @@ export function EmploymentInfoStep({
                             date <= form.watch("employmentStartDate")
                           }
                           initialFocus
-                          className={cn("p-3 pointer-events-auto")}
+                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -224,6 +245,7 @@ export function EmploymentInfoStep({
         
         {isOptOrCpt() && (
           <>
+            {/* Field of study relation - keep existing code */}
             <FormField
               control={form.control}
               name="isFieldRelated"
@@ -247,6 +269,7 @@ export function EmploymentInfoStep({
               )}
             />
             
+            {/* OPT/CPT dates - fixing date handling */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -262,17 +285,14 @@ export function EmploymentInfoStep({
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
+                            type="button"
                             variant={"outline"}
                             className={cn(
                               "w-full pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
+                            {formatDate(field.value)}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -283,7 +303,7 @@ export function EmploymentInfoStep({
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
-                          className={cn("p-3 pointer-events-auto")}
+                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -306,17 +326,14 @@ export function EmploymentInfoStep({
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
+                            type="button"
                             variant={"outline"}
                             className={cn(
                               "w-full pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
+                            {formatDate(field.value)}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -331,7 +348,7 @@ export function EmploymentInfoStep({
                             date <= form.watch("optCptStartDate")
                           }
                           initialFocus
-                          className={cn("p-3 pointer-events-auto")}
+                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -341,6 +358,7 @@ export function EmploymentInfoStep({
               />
             </div>
             
+            {/* EAD Card for OPT/STEM OPT - keep existing code but fix controlled input */}
             {(form.watch("employmentStatus") === "OPT" || form.watch("employmentStatus") === "STEM OPT Extension") && (
               <FormField
                 control={form.control}
@@ -349,7 +367,11 @@ export function EmploymentInfoStep({
                   <FormItem>
                     <FormLabel>EAD Card Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your EAD card number" {...field} />
+                      <Input 
+                        placeholder="Enter your EAD card number" 
+                        {...field} 
+                        value={field.value || ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -361,6 +383,7 @@ export function EmploymentInfoStep({
         
         {isStemOpt() && (
           <>
+            {/* STEM OPT specific fields - keep existing code but fix controlled input */}
             <FormField
               control={form.control}
               name="stemEVerify"
@@ -368,13 +391,18 @@ export function EmploymentInfoStep({
                 <FormItem>
                   <FormLabel>Employer E-Verify Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter employer's E-Verify number" {...field} />
+                    <Input 
+                      placeholder="Enter employer's E-Verify number" 
+                      {...field} 
+                      value={field.value || ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
+            {/* I-983 date - fixing date handling */}
             <FormField
               control={form.control}
               name="stemI983Date"
@@ -385,17 +413,14 @@ export function EmploymentInfoStep({
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
+                          type="button"
                           variant={"outline"}
                           className={cn(
                             "w-full pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
+                          {formatDate(field.value)}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
@@ -407,7 +432,7 @@ export function EmploymentInfoStep({
                         onSelect={field.onChange}
                         disabled={(date) => date > new Date()}
                         initialFocus
-                        className={cn("p-3 pointer-events-auto")}
+                        className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -419,7 +444,14 @@ export function EmploymentInfoStep({
         )}
         
         <Button type="submit" className="w-full">
-          Continue
+          {isSubmitting ? (
+            <>
+              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
+              Saving...
+            </>
+          ) : (
+            "Continue"
+          )}
         </Button>
       </form>
     </Form>

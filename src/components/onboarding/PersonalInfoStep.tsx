@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,17 +63,23 @@ export function PersonalInfoStep({
   onSubmit,
   isSubmitting = false 
 }: PersonalInfoStepProps) {
-  const [passportExpiryInputValue, setPassportExpiryInputValue] = useState("");
-  const [dateOfBirthInputValue, setDateOfBirthInputValue] = useState("");
+  // Initialize state with defaultValues if available
+  const [passportExpiryInputValue, setPassportExpiryInputValue] = useState(
+    defaultValues.passportExpiryDate ? format(defaultValues.passportExpiryDate, "MM/dd/yyyy") : ""
+  );
+  const [dateOfBirthInputValue, setDateOfBirthInputValue] = useState(
+    defaultValues.dateOfBirth ? format(defaultValues.dateOfBirth, "MM/dd/yyyy") : ""
+  );
   
   const form = useForm<PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
-      country: "",
-      phone: "",
-      passportNumber: "",
-      address: "",
-      ...defaultValues
+      country: defaultValues.country || "",
+      phone: defaultValues.phone || "",
+      passportNumber: defaultValues.passportNumber || "",
+      address: defaultValues.address || "",
+      passportExpiryDate: defaultValues.passportExpiryDate,
+      dateOfBirth: defaultValues.dateOfBirth,
     }
   });
 
@@ -98,6 +103,19 @@ export function PersonalInfoStep({
     }
   };
 
+  // Update input values when form values change
+  useEffect(() => {
+    const passportDate = form.watch("passportExpiryDate");
+    if (passportDate && isValid(passportDate)) {
+      setPassportExpiryInputValue(format(passportDate, "MM/dd/yyyy"));
+    }
+    
+    const birthDate = form.watch("dateOfBirth");
+    if (birthDate && isValid(birthDate)) {
+      setDateOfBirthInputValue(format(birthDate, "MM/dd/yyyy"));
+    }
+  }, [form.watch("passportExpiryDate"), form.watch("dateOfBirth")]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -107,6 +125,7 @@ export function PersonalInfoStep({
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Country selection - keep existing code */}
           <FormField
             control={form.control}
             name="country"
@@ -115,7 +134,7 @@ export function PersonalInfoStep({
                 <FormLabel>Country of Citizenship</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
-                  defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <div className="relative">
@@ -136,6 +155,7 @@ export function PersonalInfoStep({
             )}
           />
           
+          {/* Phone number - keep existing code but fix controlled input */}
           <FormField
             control={form.control}
             name="phone"
@@ -148,6 +168,7 @@ export function PersonalInfoStep({
                       placeholder="+1 (555) 123-4567" 
                       className="pl-10" 
                       {...field} 
+                      value={field.value || ""}
                     />
                     <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   </div>
@@ -157,6 +178,7 @@ export function PersonalInfoStep({
             )}
           />
           
+          {/* Passport number - keep existing code but fix controlled input */}
           <FormField
             control={form.control}
             name="passportNumber"
@@ -169,6 +191,7 @@ export function PersonalInfoStep({
                       placeholder="Enter your passport number" 
                       className="pl-10" 
                       {...field} 
+                      value={field.value || ""}
                     />
                     <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   </div>
@@ -182,6 +205,7 @@ export function PersonalInfoStep({
           />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Passport expiry date - fixing date handling */}
             <FormField
               control={form.control}
               name="passportExpiryDate"
@@ -191,7 +215,7 @@ export function PersonalInfoStep({
                   <div className="flex gap-2">
                     <Input
                       placeholder="MM/DD/YYYY"
-                      value={passportExpiryInputValue || (field.value ? format(field.value, "MM/dd/yyyy") : "")}
+                      value={passportExpiryInputValue}
                       onChange={(e) => handleManualDateInput(e.target.value, "passportExpiryDate")}
                       className="flex-1"
                     />
@@ -213,7 +237,7 @@ export function PersonalInfoStep({
                           }}
                           disabled={(date) => date < new Date()}
                           initialFocus
-                          className="p-3"
+                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -223,6 +247,7 @@ export function PersonalInfoStep({
               )}
             />
             
+            {/* Date of birth - fixing date handling */}
             <FormField
               control={form.control}
               name="dateOfBirth"
@@ -232,7 +257,7 @@ export function PersonalInfoStep({
                   <div className="flex gap-2">
                     <Input
                       placeholder="MM/DD/YYYY"
-                      value={dateOfBirthInputValue || (field.value ? format(field.value, "MM/dd/yyyy") : "")}
+                      value={dateOfBirthInputValue}
                       onChange={(e) => handleManualDateInput(e.target.value, "dateOfBirth")}
                       className="flex-1"
                     />
@@ -254,7 +279,7 @@ export function PersonalInfoStep({
                           }}
                           disabled={(date) => date > new Date()}
                           initialFocus
-                          className="p-3"
+                          className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
@@ -265,6 +290,7 @@ export function PersonalInfoStep({
             />
           </div>
           
+          {/* Address - keep existing code but fix controlled input */}
           <FormField
             control={form.control}
             name="address"
@@ -277,6 +303,7 @@ export function PersonalInfoStep({
                       placeholder="Enter your full U.S. address" 
                       className="pl-10" 
                       {...field} 
+                      value={field.value || ""}
                     />
                     <Home className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   </div>
@@ -289,6 +316,7 @@ export function PersonalInfoStep({
             )}
           />
           
+          {/* Submit button - keep existing code */}
           <Button 
             type="submit" 
             className="w-full mt-6"

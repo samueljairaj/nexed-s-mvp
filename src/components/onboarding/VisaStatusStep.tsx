@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,9 +58,15 @@ export function VisaStatusStep({
   const form = useForm<VisaStatusFormData>({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
-      visaType: "F1",
-      currentStatus: "",
-      ...defaultValues
+      visaType: defaultValues.visaType || "F1",
+      currentStatus: defaultValues.currentStatus || "",
+      sevisId: defaultValues.sevisId || "",
+      i797Number: defaultValues.i797Number || "",
+      entryDate: defaultValues.entryDate || undefined,
+      visaExpirationDate: defaultValues.visaExpirationDate || undefined,
+      i94ExpirationDate: defaultValues.i94ExpirationDate || undefined,
+      programStartDate: defaultValues.programStartDate || undefined,
+      programEndDate: defaultValues.programEndDate || undefined,
     }
   });
 
@@ -107,6 +112,11 @@ export function VisaStatusStep({
   const handleVisaTypeChange = (value: string) => {
     form.setValue("currentStatus", "");
     onVisaTypeChange(value);
+  };
+
+  // Function to format date for display in the button
+  const formatDate = (date: Date | undefined) => {
+    return date ? format(date, "PPP") : "Select date";
   };
 
   return (
@@ -216,6 +226,7 @@ export function VisaStatusStep({
                 <Select 
                   onValueChange={field.onChange} 
                   defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -233,6 +244,7 @@ export function VisaStatusStep({
             )}
           />
           
+          {/* SEVIS ID for F1/J1 - fixing controlled component issue */}
           {(visaType === "F1" || visaType === "J1") && (
             <FormField
               control={form.control}
@@ -246,6 +258,7 @@ export function VisaStatusStep({
                         placeholder="N00xxxxxxxx" 
                         className="pl-10" 
                         {...field} 
+                        value={field.value || ""}
                       />
                       <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     </div>
@@ -256,6 +269,7 @@ export function VisaStatusStep({
             />
           )}
           
+          {/* I-797 Number for H1B - fixing controlled component issue */}
           {visaType === "H1B" && (
             <FormField
               control={form.control}
@@ -269,6 +283,7 @@ export function VisaStatusStep({
                         placeholder="WAC-XX-XXX-XXXXX" 
                         className="pl-10" 
                         {...field} 
+                        value={field.value || ""}
                       />
                       <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     </div>
@@ -279,6 +294,7 @@ export function VisaStatusStep({
             />
           )}
           
+          {/* Date fields - fixing controlled component issue */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -292,11 +308,12 @@ export function VisaStatusStep({
                         <Button
                           variant="outline"
                           className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                          type="button"
                         >
                           <div className="relative w-full">
                             <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
                             <span className="pl-2">
-                              {field.value ? format(field.value, "PPP") : "Select entry date"}
+                              {formatDate(field.value)}
                             </span>
                           </div>
                         </Button>
@@ -330,11 +347,12 @@ export function VisaStatusStep({
                         <Button
                           variant="outline"
                           className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                          type="button"
                         >
                           <div className="relative w-full">
                             <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
                             <span className="pl-2">
-                              {field.value ? format(field.value, "PPP") : "Select expiration date"}
+                              {formatDate(field.value)}
                             </span>
                           </div>
                         </Button>
@@ -356,43 +374,46 @@ export function VisaStatusStep({
             />
           </div>
           
+          {/* I-94 Expiration Date - fixing controlled component issue */}
           <FormField
-              control={form.control}
-              name="i94ExpirationDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>I-94 Expiration Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                        >
-                          <div className="relative w-full">
-                            <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                            <span className="pl-2">
-                              {field.value ? format(field.value, "PPP") : "Select I-94 expiration date"}
-                            </span>
-                          </div>
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            control={form.control}
+            name="i94ExpirationDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>I-94 Expiration Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                        type="button"
+                      >
+                        <div className="relative w-full">
+                          <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
+                          <span className="pl-2">
+                            {formatDate(field.value)}
+                          </span>
+                        </div>
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
+          {/* Program Start/End Dates for F1/J1 - fixing controlled component issue */}
           {(visaType === "F1" || visaType === "J1") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -407,11 +428,12 @@ export function VisaStatusStep({
                           <Button
                             variant="outline"
                             className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                            type="button"
                           >
                             <div className="relative w-full">
                               <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
                               <span className="pl-2">
-                                {field.value ? format(field.value, "PPP") : "Select start date"}
+                                {formatDate(field.value)}
                               </span>
                             </div>
                           </Button>
@@ -444,11 +466,12 @@ export function VisaStatusStep({
                           <Button
                             variant="outline"
                             className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                            type="button"
                           >
                             <div className="relative w-full">
                               <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
                               <span className="pl-2">
-                                {field.value ? format(field.value, "PPP") : "Select end date"}
+                                {formatDate(field.value)}
                               </span>
                             </div>
                           </Button>
@@ -471,6 +494,7 @@ export function VisaStatusStep({
             </div>
           )}
           
+          {/* Submit button - keep existing code */}
           <Button 
             type="submit" 
             className="w-full mt-6"
