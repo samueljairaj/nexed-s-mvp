@@ -18,10 +18,10 @@ export function useVisaStatus() {
     setIsSubmitting(true);
     
     try {
-      // Ensure we're using the correct property names that match the database schema
+      // Ensure we're only sending fields that match the database schema
       const formattedData: Record<string, any> = {
         visaType: data.visaType as VisaType,
-        currentStatus: data.currentStatus,
+        // Remove currentStatus as it doesn't exist in the profiles table
       };
       
       // Format dates as YYYY-MM-DD strings
