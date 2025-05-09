@@ -1,14 +1,25 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, isDSO, isLoading } = useAuth();
   
   useEffect(() => {
-    // Direct users to student landing page from the root
-    navigate('/student', { replace: true });
-  }, [navigate]);
+    if (isLoading) {
+      return; // Wait for authentication to load
+    }
+    
+    if (isAuthenticated) {
+      // If authenticated, redirect based on role
+      navigate(isDSO ? '/university' : '/student', { replace: true });
+    } else {
+      // If not authenticated, redirect to student landing by default
+      navigate('/student', { replace: true });
+    }
+  }, [navigate, isAuthenticated, isDSO, isLoading]);
 
   return (
     <div className="min-h-screen flex justify-center items-center">

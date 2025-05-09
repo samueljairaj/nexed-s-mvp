@@ -66,3 +66,16 @@ export function isDSOUser(profile: any): boolean {
   if (!profile) return false;
   return profile.role === 'dso';
 }
+
+/**
+ * Debug function to log the user profile and authentication state
+ * @param profile The user profile object
+ */
+export function debugAuthState(profile: any): void {
+  console.log("DEBUG - Auth State:", {
+    profile: profile,
+    role: profile?.role,
+    isDSO: profile?.role === 'dso',
+    onboardingComplete: profile?.onboarding_complete
+  });
+}

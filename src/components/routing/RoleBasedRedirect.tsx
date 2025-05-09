@@ -45,33 +45,21 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         }
         return;
       }
-      
-      // Handle onboarding for DSOs - redirect to DSO-specific onboarding
-      if (isDSO && !onboardingComplete && !currentPath.includes("/dso-onboarding")) {
-        console.log("RoleBasedRedirect: DSO needs to complete onboarding");
-        navigate('/dso-onboarding', { replace: true });
-        return;
+
+      // Critical fix: Handle onboarding paths strictly based on role, regardless of path
+      if (!onboardingComplete) {
+        if (isDSO && currentPath !== '/dso-onboarding') {
+          console.log("RoleBasedRedirect: DSO needs to complete DSO onboarding, redirecting");
+          navigate('/dso-onboarding', { replace: true });
+          return;
+        } else if (!isDSO && currentPath !== '/onboarding') {
+          console.log("RoleBasedRedirect: Student needs to complete student onboarding, redirecting");
+          navigate('/onboarding', { replace: true });
+          return;
+        }
       }
       
-      // Handle onboarding for students - redirect to student onboarding
-      if (!isDSO && !onboardingComplete && !currentPath.includes("/onboarding")) {
-        console.log("RoleBasedRedirect: Student needs to complete onboarding");
-        navigate('/onboarding', { replace: true });
-        return;
-      }
-      
-      // Redirect to appropriate onboarding based on role if on wrong onboarding page
-      if (isDSO && currentPath === '/onboarding') {
-        console.log("RoleBasedRedirect: DSO on student onboarding page, redirecting");
-        navigate('/dso-onboarding', { replace: true });
-        return;
-      } else if (!isDSO && currentPath === '/dso-onboarding') {
-        console.log("RoleBasedRedirect: Student on DSO onboarding page, redirecting");
-        navigate('/onboarding', { replace: true });
-        return;
-      }
-      
-      // Redirect based on user role and protected dashboard paths
+      // Redirect to appropriate dashboard based on role and protected dashboard paths
       if (isDSO && currentPath === '/app/dashboard') {
         console.log("RoleBasedRedirect: DSO on student dashboard, redirecting to DSO dashboard");
         navigate('/app/dso-dashboard', { replace: true });
