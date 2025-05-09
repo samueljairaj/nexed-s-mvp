@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,7 +41,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { UniversityFormData } from "@/hooks/onboarding/useUniversityInfo";
+// Use the correct interface name from useUniversityInfo
+export interface UniversityInfoFormData {
+  action: "create" | "join";
+  name: string;
+  location: string;
+  sevisId: string;
+  existingUniversityId?: string;
+}
 
 const universityInfoSchema = z.object({
   action: z.enum(["create", "join"]),
@@ -61,8 +67,8 @@ const universityInfoSchema = z.object({
 });
 
 interface UniversityInfoStepProps {
-  defaultValues: Partial<UniversityFormData>;
-  onSubmit: (data: UniversityFormData) => Promise<boolean>;
+  defaultValues: Partial<UniversityInfoFormData>;
+  onSubmit: (data: UniversityInfoFormData) => Promise<boolean>;
   isSubmitting: boolean;
 }
 

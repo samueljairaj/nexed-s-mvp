@@ -2,7 +2,15 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { AccountCreationFormData } from "@/components/onboarding/AccountCreationStep";
+
+export interface AccountCreationFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  acceptTerms: boolean;
+}
 
 export function useAccountCreation() {
   const { isAuthenticated, updateProfile, signUp } = useAuth();

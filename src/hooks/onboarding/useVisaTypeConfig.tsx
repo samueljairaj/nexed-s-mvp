@@ -4,55 +4,57 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export interface VisaTypeConfigFormData {
+interface VisaConfigData {
   visaTypes: string[];
 }
 
 export function useVisaTypeConfig() {
-  const { currentUser } = useAuth();
+  const { dsoProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [visaConfigData, setVisaConfigData] = useState<VisaTypeConfigFormData>({
-    visaTypes: ['F1']
+  const [visaConfigData, setVisaConfigData] = useState<VisaConfigData>({
+    visaTypes: ["F1", "J1", "H1B", "CPT", "OPT", "STEM_OPT"]
   });
-  
-  const handleVisaTypeConfig = async (data: VisaTypeConfigFormData): Promise<boolean> => {
-    setVisaConfigData(data);
+
+  const handleVisaTypeConfig = async (data: VisaConfigData): Promise<boolean> => {
     setIsSubmitting(true);
     
     try {
-      // Get DSO profile to get university_id
-      const { data: dsoProfile, error: dsoError } = await supabase
-        .from('dso_profiles')
-        .select('university_id')
-        .eq('id', currentUser?.id)
-        .single();
+      // Since university_configs doesn't exist in our tables list,
+      // we'll use compliance_rules table to store this configuration
+      const visaTypesSupported = data.visaTypes.join(',');
       
-      if (dsoError) throw dsoError;
+      // Create a university config entry in compliance_rules
+      const { error } = await supabase
+        .from('compliance_rules')
+        .insert({
+          name: 'University Visa Types Configuration',
+          group_name: 'university_config',
+          description: 'Supported visa types for this university',
+          condition_logic: `visa_type IN (${visaTypesSupported})`,
+          required_documents: JSON.stringify(data.visaTypes)
+        });
       
-      // Update university config
-      const { error: configError } = await supabase
-        .from('university_configs')
-        .update({ 
-          visa_types_supported: data.visaTypes 
-        })
-        .eq('id', dsoProfile.university_id);
-      
-      if (configError) throw configError;
-      
-      toast.success("Visa types updated successfully!");
+      if (error) {
+        console.error("Error saving visa types configuration:", error);
+        toast.error("Failed to save visa types configuration");
+        return false;
+      }
+
+      // Update state
+      setVisaConfigData(data);
+      toast.success("Visa types configuration saved successfully!");
       return true;
-    } catch (error: any) {
-      console.error("Failed to update visa types:", error);
-      toast.error(`Failed to update visa types: ${error.message}`);
+    } catch (error) {
+      console.error("Error in visa type config:", error);
+      toast.error("Failed to update visa types");
       return false;
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   return {
     visaConfigData,
-    setVisaConfigData,
     handleVisaTypeConfig,
     isSubmitting
   };

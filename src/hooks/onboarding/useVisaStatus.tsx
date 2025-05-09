@@ -1,8 +1,7 @@
-
 import { useState } from "react";
-import { useAuth, VisaType } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { type VisaType } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { VisaStatusFormValues } from "@/types/onboarding";
 
 export function useVisaStatus() {
   const { updateProfile } = useAuth();

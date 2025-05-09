@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,6 +7,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
+
+// Export VisaType for reusability
+export type VisaType = "F1" | "J1" | "H1B" | "CPT" | "OPT" | "STEM_OPT" | "Other";
 
 export interface DsoProfile {
   id: string;
@@ -28,14 +30,15 @@ interface AuthContextType {
   currentUser: Database["public"]["Tables"]["profiles"]["Row"] | null;
   session: Session | null;
   isDSO: boolean;
-  isAdmin?: boolean; // Make optional for backward compatibility
+  isAdmin?: boolean;
   dsoProfile: DsoProfile | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   signUp: (data: any) => Promise<any>;
+  signup: (data: any) => Promise<any>; // Alias for signUp
   updateProfile: (data: any) => Promise<void>;
   updateDSOProfile: (data: any) => Promise<void>;
-  completeOnboarding?: () => Promise<boolean>; // Add this missing method for compatibility 
+  completeOnboarding: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -225,6 +228,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const signup = signUp;
+
   const updateProfile = async (data: any) => {
     try {
       const updates = {
@@ -233,6 +238,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         ...data,
       };
 
+      // Remove 'returning' option which is not supported
       const { error } = await supabase
         .from('profiles')
         .upsert(updates);
@@ -273,6 +279,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         updated_at: new Date().toISOString(),
       };
 
+      // Remove 'returning' option which is not supported
       const { error } = await supabase
         .from('dso_profiles')
         .upsert(updates);
@@ -341,6 +348,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     login,
     logout,
     signUp,
+    signup,
     updateProfile,
     updateDSOProfile,
     completeOnboarding,

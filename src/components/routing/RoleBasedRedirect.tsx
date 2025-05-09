@@ -8,7 +8,7 @@ interface RoleBasedRedirectProps {
 }
 
 export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
-  const { currentUser, isLoading, isDSO } = useAuth();
+  const { currentUser, isLoading, isDSO, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

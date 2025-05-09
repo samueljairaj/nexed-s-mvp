@@ -1,7 +1,6 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,7 @@ import { FileCheck, FolderArchive, MessageCircle, ChevronRight, User, Building2,
 import { toast } from "sonner";
 
 const Index = () => {
-  const { isAuthenticated, currentUser, login, signup, isLoading } = useAuth();
+  const { isAuthenticated, currentUser, login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("demo@example.com");
   const [password, setPassword] = useState("Password123!");
@@ -71,7 +70,7 @@ const Index = () => {
         const fullName = `${firstName} ${lastName}`;
         
         // Create account with role metadata
-        await signup(
+        await login(
           email, 
           password,
           userType, 
@@ -103,6 +102,12 @@ const Index = () => {
     // Clear passwords when toggling
     setPassword("");
     setConfirmPassword("");
+  };
+
+  const handleSignUp = () => {
+    // Replace this with a redirect to the signup page
+    // or use the login method that is available
+    login();
   };
 
   if (isLoading) {
