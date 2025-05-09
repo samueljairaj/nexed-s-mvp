@@ -85,6 +85,7 @@ const AuthContext = createContext<AuthContextType>({
   updateDSOProfile: async () => {},
   completeOnboarding: async () => {},
   session: null,
+  dsoProfile: undefined,
 });
 
 // Export useAuth hook
@@ -340,12 +341,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           degree_level: data.degreeLevel !== undefined ? data.degreeLevel : currentUser.degreeLevel,
           field_of_study: data.fieldOfStudy !== undefined ? data.fieldOfStudy : currentUser.fieldOfStudy,
           is_stem: data.isSTEM !== undefined ? data.isSTEM : currentUser.isSTEM,
-          course_start_date: data.courseStartDate ? data.courseStartDate.toISOString() : currentUser.courseStartDate,
-          us_entry_date: data.usEntryDate ? data.usEntryDate.toISOString() : currentUser.usEntryDate,
-          employment_start_date: data.employmentStartDate ? data.employmentStartDate.toISOString() : currentUser.employmentStartDate,
-          date_of_birth: data.dateOfBirth ? data.dateOfBirth.toISOString() : currentUser.dateOfBirth,
+          course_start_date: data.courseStartDate ? data.courseStartDate.toISOString() : currentUser.courseStartDate?.toISOString(),
+          us_entry_date: data.usEntryDate ? data.usEntryDate.toISOString() : currentUser.usEntryDate?.toISOString(),
+          employment_start_date: data.employmentStartDate ? data.employmentStartDate.toISOString() : currentUser.employmentStartDate?.toISOString(),
+          date_of_birth: data.dateOfBirth ? data.dateOfBirth.toISOString() : currentUser.dateOfBirth?.toISOString(),
           passport_number: data.passportNumber !== undefined ? data.passportNumber : currentUser.passportNumber,
-          passport_expiry_date: data.passportExpiryDate ? data.passportExpiryDate.toISOString() : currentUser.passportExpiryDate
+          passport_expiry_date: data.passportExpiryDate ? data.passportExpiryDate.toISOString() : currentUser.passportExpiryDate?.toISOString()
         })
         .eq("id", currentUser.id);
 
@@ -445,14 +446,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     currentUser,
     isAuthenticated: !!currentUser,
     isLoading,
-    isDSO,
-    isAdmin,
-    login,
-    signup,
-    logout,
+    isDSO: Boolean(currentUser?.role === "dso"),
+    isAdmin: Boolean(currentUser?.role === "admin"),
+    login: async () => null,
+    signup: async () => null, 
+    logout: async () => {},
     updateProfile,
-    updateDSOProfile,
-    completeOnboarding,
+    updateDSOProfile: async () => {},
+    completeOnboarding: async () => {},
     session,
     dsoProfile,
   };

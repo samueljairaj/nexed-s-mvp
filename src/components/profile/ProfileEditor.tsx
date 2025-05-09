@@ -21,6 +21,9 @@ import { useForm } from "react-hook-form";
 import { countries } from "@/types/onboarding";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Database } from "@/integrations/supabase/types";
+
+type VisaType = Database["public"]["Enums"]["visa_type"];
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -28,7 +31,7 @@ const profileSchema = z.object({
   country: z.string().min(1, "Country is required"),
   address: z.string().optional(),
   phone: z.string().optional(),
-  visaType: z.enum(["F1", "J1", "H1B", "Other"]).nullable().optional(),
+  visaType: z.enum(["F1", "J1", "H1B", "CPT", "OPT", "STEM_OPT", "Other"]).nullable().optional(),
   university: z.string().optional(),
   degreeLevel: z.string().optional(),
   fieldOfStudy: z.string().optional(),
@@ -75,9 +78,9 @@ export const ProfileEditor = () => {
       courseStartDate: currentUser?.courseStartDate || null,
       usEntryDate: currentUser?.usEntryDate || null,
       employmentStartDate: currentUser?.employmentStartDate || null,
-      dateOfBirth: currentUser?.dateOfBirth ? new Date(currentUser.dateOfBirth) : null,
+      dateOfBirth: currentUser?.dateOfBirth || null,
       passportNumber: currentUser?.passportNumber || "",
-      passportExpiryDate: currentUser?.passportExpiryDate ? new Date(currentUser.passportExpiryDate) : null,
+      passportExpiryDate: currentUser?.passportExpiryDate || null,
     },
   });
 

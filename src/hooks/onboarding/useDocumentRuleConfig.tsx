@@ -104,11 +104,13 @@ export function useDocumentRuleConfig() {
       }, {});
       
       // Check if rule exists first
-      const { data: existingRules } = await supabase
+      const { data: existingRules, error: queryError } = await supabase
         .from('university_document_rules')
         .select('id')
         .eq('university_id', dsoProfile.university_id)
         .eq('visa_type', data.visaType);
+      
+      if (queryError) throw queryError;
       
       if (existingRules && existingRules.length > 0) {
         // Update existing rule
