@@ -60,7 +60,7 @@ export function CalendarView({ tasks, onDateClick }: CalendarViewProps) {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center pointer-events-none">
               <div className="flex gap-0.5 mb-0.5">
                 {highPriorityTasks.length > 0 && (
                   <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
@@ -122,13 +122,16 @@ export function CalendarView({ tasks, onDateClick }: CalendarViewProps) {
           onDayClick={handleDayClick}
           month={selectedMonth}
           onMonthChange={setSelectedMonth}
-          className="rounded-md border"
+          className="rounded-md border pointer-events-auto"
           components={{
             Day: ({ date, ...props }) => (
-              <div className="relative h-9 w-9 p-0 font-normal">
-                <div className="flex h-full w-full items-center justify-center">
+              <div className="relative h-9 w-9 p-0 font-normal pointer-events-auto">
+                <button 
+                  className="absolute inset-0 flex items-center justify-center w-full h-full cursor-pointer hover:bg-gray-100 rounded-full"
+                  onClick={() => handleDayClick(date)}
+                >
                   {date.getDate()}
-                </div>
+                </button>
                 {renderDay(date)}
               </div>
             ),
