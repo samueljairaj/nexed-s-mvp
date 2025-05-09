@@ -80,33 +80,42 @@ export type Database = {
       }
       compliance_tasks: {
         Row: {
+          category: string | null
           created_at: string | null
           description: string | null
           due_date: string | null
           id: string
           is_completed: boolean | null
+          phase: string | null
+          priority: string | null
           title: string
           updated_at: string | null
           user_id: string
           visa_type: Database["public"]["Enums"]["visa_type"] | null
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
           is_completed?: boolean | null
+          phase?: string | null
+          priority?: string | null
           title: string
           updated_at?: string | null
           user_id: string
           visa_type?: Database["public"]["Enums"]["visa_type"] | null
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
           is_completed?: boolean | null
+          phase?: string | null
+          priority?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string

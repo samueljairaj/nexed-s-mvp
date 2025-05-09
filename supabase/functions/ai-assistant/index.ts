@@ -161,6 +161,8 @@ async function createReminder(userId: string, reminderDetails: any, supabaseUrl:
       phase: "general"
     };
 
+    console.log('Creating reminder task with data:', JSON.stringify(taskData));
+
     // Call Supabase to create a compliance task
     const response = await fetch(`${supabaseUrl}/rest/v1/compliance_tasks`, {
       method: 'POST',
