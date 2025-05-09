@@ -1,39 +1,73 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format, differenceInDays, isValid } from "date-fns";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Filter } from "lucide-react";
 import { Task } from "@/hooks/useComplianceTasks";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TimelineViewProps {
   tasks: Task[];
 }
 
 export function TimelineView({ tasks }: TimelineViewProps) {
+  const [sortType, setSortType] = useState<"due-date" | "priority">("due-date");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "completed">("all");
+
   // Sort tasks by due date (completed at the end)
   const sortedTasks = React.useMemo(() => {
-    return [...tasks].sort((a, b) => {
-      // Put completed tasks at the end
-      if (a.completed && !b.completed) return 1;
-      if (!a.completed && b.completed) return -1;
-      
-      // Sort by due date - safely handle potentially invalid dates
-      try {
-        const dateA = new Date(a.dueDate);
-        const dateB = new Date(b.dueDate);
+    return [...tasks]
+      .filter(task => {
+        if (statusFilter === "all") return true;
+        if (statusFilter === "pending") return !task.completed;
+        if (statusFilter === "completed") return task.completed;
+        return true;
+      })
+      .sort((a, b) => {
+        // Custom sort based on selected sortType
+        if (sortType === "priority") {
+          const priorityOrder = { high: 0, medium: 1, low: 2 };
+          const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 1;
+          const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 1;
+          
+          if (priorityA !== priorityB) return priorityA - priorityB;
+        }
         
-        if (!isValid(dateA) && !isValid(dateB)) return 0;
-        if (!isValid(dateA)) return 1;
-        if (!isValid(dateB)) return -1;
+        // Put completed tasks at the end
+        if (a.completed && !b.completed) return 1;
+        if (!a.completed && b.completed) return -1;
         
-        return dateA.getTime() - dateB.getTime();
-      } catch (e) {
-        console.error("Error comparing dates:", e);
-        return 0;
-      }
-    });
-  }, [tasks]);
+        // Sort by due date - safely handle potentially invalid dates
+        try {
+          const dateA = new Date(a.dueDate);
+          const dateB = new Date(b.dueDate);
+          
+          if (!isValid(dateA) && !isValid(dateB)) return 0;
+          if (!isValid(dateA)) return 1;
+          if (!isValid(dateB)) return -1;
+          
+          return dateA.getTime() - dateB.getTime();
+        } catch (e) {
+          console.error("Error comparing dates:", e);
+          return 0;
+        }
+      });
+  }, [tasks, sortType, statusFilter]);
 
   // If no tasks, show empty state
   if (!tasks || tasks.length === 0) {
@@ -50,11 +84,43 @@ export function TimelineView({ tasks }: TimelineViewProps) {
 
   return (
     <div className="pt-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-xl font-bold">Upcoming Requirements</h2>
-        <Button variant="outline" size="sm" className="text-blue-600">
-          Export Timeline
-        </Button>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          {/* Status filter */}
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(value as "all" | "pending" | "completed")}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tasks</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {/* Sort dropdown */}
+          <Select
+            value={sortType}
+            onValueChange={(value) => setSortType(value as "due-date" | "priority")}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="due-date">Due Date</SelectItem>
+              <SelectItem value="priority">Priority</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button variant="outline" size="sm" className="text-blue-600">
+            Export Timeline
+          </Button>
+        </div>
       </div>
 
       <div className="relative">
