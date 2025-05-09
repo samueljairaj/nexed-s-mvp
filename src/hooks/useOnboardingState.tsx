@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useAccountCreation } from "./onboarding/useAccountCreation";
@@ -34,8 +35,9 @@ export function useOnboardingState() {
         personalInfo.setPersonalData(prev => ({ ...prev, country: currentUser.country || "" }));
       }
       
-      if (getProfileProperty(currentUser, 'visa_type')) {
-        visaStatus.setVisaData(prev => ({ ...prev, visaType: getProfileProperty(currentUser, 'visa_type') }));
+      const visaType = getProfileProperty(currentUser, 'visa_type');
+      if (visaType) {
+        visaStatus.setVisaData(prev => ({ ...prev, visaType }));
       }
       
       if (currentUser.university) {

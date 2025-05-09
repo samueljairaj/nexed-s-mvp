@@ -25,6 +25,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
       if (isDSO && !onboardingComplete && !window.location.pathname.includes("/dso-onboarding")) {
         navigate('/dso-onboarding');
+        return;
       }
       
       // Handle onboarding for students
@@ -32,13 +33,16 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
           !window.location.pathname.includes("/onboarding") && 
           window.location.pathname !== '/') {
         navigate('/onboarding');
+        return;
       }
       
       // Redirect to appropriate onboarding based on role if on wrong onboarding page
       if (isDSO && window.location.pathname === '/onboarding') {
         navigate('/dso-onboarding');
+        return;
       } else if (!isDSO && window.location.pathname === '/dso-onboarding') {
         navigate('/onboarding');
+        return;
       }
       
       // Prevent access to DSO-specific routes for non-DSO users
@@ -47,6 +51,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         window.location.pathname === '/app/dso-profile'
       )) {
         navigate('/app/dashboard');
+        return;
       }
     }
   }, [currentUser, isLoading, isDSO, navigate]);

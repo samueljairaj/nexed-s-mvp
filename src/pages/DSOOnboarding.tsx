@@ -74,11 +74,14 @@ const DSOOnboarding = () => {
     // Redirect non-DSO users to the student onboarding
     if (isAuthenticated && !isLoading && !isDSO) {
       navigate("/onboarding");
+      return;
     }
     
     // Redirect users who completed onboarding
-    if (isAuthenticated && currentUser && getProfileProperty(currentUser, 'onboarding_complete')) {
+    const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
+    if (isAuthenticated && currentUser && onboardingComplete) {
       navigate("/app/dso-dashboard");
+      return;
     }
   }, [isAuthenticated, currentUser, navigate, isLoading, isDSO]);
   
