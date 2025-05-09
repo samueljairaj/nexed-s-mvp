@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,7 +24,6 @@ const UniversityLanding = () => {
   const [universityName, setUniversityName] = useState("");
   const [universityCountry, setUniversityCountry] = useState("United States");
   const [sevisId, setSevisId] = useState("");
-  const [submissionTimeoutId, setSubmissionTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [submissionProgress, setSubmissionProgress] = useState(0);
   const [submissionStep, setSubmissionStep] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -49,45 +47,27 @@ const UniversityLanding = () => {
     }
   }, [isAuthenticated, currentUser, navigate, isDSO]);
   
-  // Add a safety timeout to prevent infinite loading
+  // Progress bar animation
   useEffect(() => {
-    // Clear previous timeout if exists
-    if (submissionTimeoutId) {
-      clearTimeout(submissionTimeoutId);
-    }
+    let progressInterval: NodeJS.Timeout;
     
-    // Set new timeout if currently submitting
+    // Only start the progress animation if currently submitting
     if (isSubmitting) {
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setSubmissionProgress((prev) => {
           if (prev >= 90) {
             return prev;
           }
-          return prev + 5;
+          return prev + Math.random() * 5 + 1; // Random increment for natural feel
         });
-      }, 1000);
-      
-      const timeoutId = setTimeout(() => {
-        console.log("Form submission timed out after 20 seconds");
-        setIsSubmitting(false);
-        setSubmissionProgress(0);
-        setSubmissionStep("");
-        clearInterval(progressInterval);
-        setErrorMessage("Request timed out. Please try again with a stronger internet connection or refresh the page.");
-        toast.error("Request timed out. Please try again with a stronger internet connection or refresh the page.");
-      }, 20000); // 20 second timeout for more processing time
-      
-      setSubmissionTimeoutId(timeoutId);
+      }, 800);
       
       return () => {
-        clearTimeout(timeoutId);
         clearInterval(progressInterval);
       };
     }
     
-    return () => {
-      if (submissionTimeoutId) clearTimeout(submissionTimeoutId);
-    };
+    return () => {};
   }, [isSubmitting]);
 
   const resetForm = () => {
@@ -196,17 +176,21 @@ const UniversityLanding = () => {
       } else {
         setSubmissionStep("Signing in...");
         
-        // Login with email and password
-        await login(email, password);
-        setSubmissionProgress(100);
-        
-        // If login is successful, the useEffect above will handle redirection
-        // But also have a backup timeout for manual navigation
-        setTimeout(() => {
-          if (isAuthenticated && isDSO) {
-            navigate('/app/dso-dashboard', { replace: true });
-          }
-        }, 2000);
+        try {
+          // Login with email and password
+          await login(email, password);
+          setSubmissionProgress(100);
+          
+          // Wait briefly before redirecting
+          setTimeout(() => {
+            if (isAuthenticated && isDSO) {
+              navigate('/app/dso-dashboard', { replace: true });
+            }
+          }, 1000);
+        } catch (error: any) {
+          setErrorMessage(`Login failed: ${error.message}`);
+          toast.error(`Login failed: ${error.message}`);
+        }
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
