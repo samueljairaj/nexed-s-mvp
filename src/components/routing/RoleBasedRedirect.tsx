@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getProfileProperty } from '@/utils/propertyMapping';
 
@@ -11,22 +11,29 @@ interface RoleBasedRedirectProps {
 export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
   const { currentUser, isLoading, isDSO } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Only attempt redirects if we're not currently loading authentication state
     if (!isLoading) {
+      const currentPath = window.location.pathname;
+      console.log("RoleBasedRedirect: Current path:", currentPath);
+      console.log("RoleBasedRedirect: Authentication state:", { isAuthenticated: !!currentUser, isDSO, isLoading });
+      
       // If user is authenticated (has currentUser)
       if (currentUser) {
         // Get onboarding completion status
         const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
-        const currentPath = window.location.pathname;
+        console.log("RoleBasedRedirect: Onboarding complete:", onboardingComplete);
         
         // Handle landing pages - authenticated users shouldn't be on them
         if (currentPath === '/' || currentPath === '/student' || currentPath === '/university') {
           if (onboardingComplete) {
+            console.log("RoleBasedRedirect: Redirecting to dashboard");
             navigate(isDSO ? '/app/dso-dashboard' : '/app/dashboard');
             return;
           } else {
+            console.log("RoleBasedRedirect: Redirecting to onboarding");
             navigate(isDSO ? '/dso-onboarding' : '/onboarding');
             return;
           }
@@ -72,7 +79,10 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         }
       } else {
         // User is not authenticated
-        const currentPath = window.location.pathname;
+        // Allow access to landing pages
+        if (currentPath === '/' || currentPath === '/student' || currentPath === '/university') {
+          return; // Do nothing, let them access the landing page
+        }
         
         // Protect authenticated routes
         if (currentPath.startsWith('/app/') || 
@@ -88,7 +98,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         }
       }
     }
-  }, [currentUser, isLoading, isDSO, navigate]);
+  }, [currentUser, isLoading, isDSO, navigate, location.pathname]);
 
   return <>{children}</>;
 };

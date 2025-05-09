@@ -13,12 +13,14 @@ export const UserTypeToggle = () => {
   useEffect(() => {
     if (location.pathname === '/university') {
       setUserType("university");
-    } else {
+    } else if (location.pathname === '/student' || location.pathname === '/') {
       setUserType("student");
     }
   }, [location.pathname]);
 
   const handleToggleChange = (value: string) => {
+    if (!value) return; // Don't navigate if no value (prevents errors)
+    
     if (value === "university") {
       navigate('/university');
     } else {
