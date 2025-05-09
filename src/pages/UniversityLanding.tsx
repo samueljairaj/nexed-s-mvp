@@ -25,6 +25,8 @@ const UniversityLanding = () => {
   const [universityCountry, setUniversityCountry] = useState("United States");
   const [sevisId, setSevisId] = useState("");
   const [submissionTimeoutId, setSubmissionTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [submissionProgress, setSubmissionProgress] = useState(0);
+  const [submissionStep, setSubmissionStep] = useState("");
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
@@ -54,13 +56,30 @@ const UniversityLanding = () => {
     
     // Set new timeout if currently submitting
     if (isSubmitting) {
+      const progressInterval = setInterval(() => {
+        setSubmissionProgress((prev) => {
+          if (prev >= 90) {
+            return prev;
+          }
+          return prev + 5;
+        });
+      }, 1000);
+      
       const timeoutId = setTimeout(() => {
-        console.log("Form submission timed out after 10 seconds");
+        console.log("Form submission timed out after 20 seconds");
         setIsSubmitting(false);
-        toast.error("Request timed out. Please try again or refresh the page.");
-      }, 10000); // Reduced to 10 second timeout for faster feedback
+        setSubmissionProgress(0);
+        setSubmissionStep("");
+        clearInterval(progressInterval);
+        toast.error("Request timed out. Please try again with a stronger internet connection or refresh the page.");
+      }, 20000); // Increased to 20 second timeout for more processing time
       
       setSubmissionTimeoutId(timeoutId);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        clearInterval(progressInterval);
+      };
     }
     
     return () => {
@@ -78,6 +97,7 @@ const UniversityLanding = () => {
     }
     
     setIsSubmitting(true);
+    setSubmissionProgress(10);
     
     try {
       if (isSignup) {
@@ -85,20 +105,26 @@ const UniversityLanding = () => {
         if (!email || !password || !confirmPassword || !firstName || !lastName || !universityName || !sevisId) {
           toast.error("Please fill out all required fields");
           setIsSubmitting(false);
+          setSubmissionProgress(0);
           return;
         }
         
         if (password !== confirmPassword) {
           toast.error("Passwords do not match");
           setIsSubmitting(false);
+          setSubmissionProgress(0);
           return;
         }
         
         if (password.length < 8) {
           toast.error("Password must be at least 8 characters");
           setIsSubmitting(false);
+          setSubmissionProgress(0);
           return;
         }
+        
+        setSubmissionStep("Creating DSO account...");
+        setSubmissionProgress(20);
         
         console.log("Creating DSO account with data:", {
           email,
@@ -123,6 +149,8 @@ const UniversityLanding = () => {
         });
         
         if (success) {
+          setSubmissionStep("Account created! Redirecting to onboarding...");
+          setSubmissionProgress(100);
           toast.success("DSO account created! Proceeding to onboarding...");
           
           // Manual navigation if the auth state change doesn't trigger navigation
@@ -130,16 +158,23 @@ const UniversityLanding = () => {
             console.log("Manual navigation to DSO onboarding");
             navigate('/dso-onboarding', { replace: true });
           }, 1500);
+        } else {
+          toast.error("Failed to create account. Please try again.");
+          setSubmissionProgress(0);
         }
       } else {
+        setSubmissionStep("Signing in...");
+        
         // Login with email and password
         if (!email || !password) {
           toast.error("Please enter both email and password");
           setIsSubmitting(false);
+          setSubmissionProgress(0);
           return;
         }
         
         await login(email, password);
+        setSubmissionProgress(100);
         
         // If login is successful, the useEffect above will handle redirection
         // But also have a backup timeout for manual navigation
@@ -163,6 +198,8 @@ const UniversityLanding = () => {
     // Clear passwords when toggling
     setPassword("");
     setConfirmPassword("");
+    setSubmissionProgress(0);
+    setSubmissionStep("");
   };
 
   const handleDemoLogin = () => {
@@ -315,6 +352,21 @@ const UniversityLanding = () => {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                           />
+                        </div>
+                      )}
+
+                      {/* Progress indicator */}
+                      {isSubmitting && (
+                        <div className="space-y-2">
+                          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-nexed-500 transition-all duration-300 ease-out" 
+                              style={{ width: `${submissionProgress}%` }}
+                            ></div>
+                          </div>
+                          {submissionStep && (
+                            <p className="text-sm text-center text-gray-600">{submissionStep}</p>
+                          )}
                         </div>
                       )}
                       

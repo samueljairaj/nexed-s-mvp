@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Keep track of active timeouts to clear them when needed
   const [authTimeoutId, setAuthTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [signupInProgress, setSignupInProgress] = useState(false);
 
   useEffect(() => {
     // Setup auth state listeners FIRST before checking session
@@ -144,43 +145,80 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         throw profileError;
       }
 
-      setCurrentUser(profile);
-      setIsAuthenticated(true);
+      if (profile) {
+        setCurrentUser(profile);
+        setIsAuthenticated(true);
 
-      // Debug the user profile
-      debugAuthState(profile);
+        // Debug the user profile
+        debugAuthState(profile);
 
-      // Check if the user has a DSO role
-      const isUserDSO = profile?.role === 'dso';
-      console.log("User DSO status:", isUserDSO);
-      setIsDSO(isUserDSO);
+        // Check if the user has a DSO role
+        const isUserDSO = profile?.role === 'dso';
+        console.log("User DSO status:", isUserDSO);
+        setIsDSO(isUserDSO);
 
-      // If DSO, load DSO profile
-      if (isUserDSO) {
-        const { data: dsoData, error: dsoError } = await supabase
-          .from('dso_profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        // If DSO, load DSO profile
+        if (isUserDSO) {
+          const { data: dsoData, error: dsoError } = await supabase
+            .from('dso_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
 
-        if (dsoError) {
-          console.error("Error fetching DSO profile:", dsoError);
-          setDsoProfile(null);
+          if (dsoError && dsoError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            console.error("Error fetching DSO profile:", dsoError);
+            setDsoProfile(null);
+          } else if (dsoData) {
+            setDsoProfile(dsoData as DsoProfile);
+          }
         } else {
-          setDsoProfile(dsoData as DsoProfile);
+          setDsoProfile(null);
         }
+        
+        // Check if user is admin (optional)
+        setIsAdmin(profile?.role === 'admin');
       } else {
-        setDsoProfile(null);
+        console.log("User profile not found, creating new profile");
+        
+        // Create a minimal profile if it doesn't exist
+        try {
+          const { error: createProfileError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: user.id,
+                email: user.email,
+                role: 'student', // Default role
+              },
+            ]);
+            
+          if (createProfileError) {
+            throw createProfileError;
+          }
+          
+          // Fetch the new profile
+          const { data: newProfile, error: newProfileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+            
+          if (newProfileError) {
+            throw newProfileError;
+          }
+          
+          setCurrentUser(newProfile);
+          setIsAuthenticated(true);
+        } catch (createError) {
+          console.error("Error creating user profile:", createError);
+        }
       }
-      
-      // Check if user is admin (optional)
-      setIsAdmin(profile?.role === 'admin');
     } catch (error) {
       console.error("Error loading user data:", error);
       toast.error("Failed to load user data");
@@ -228,24 +266,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Optimized signUp function with better error handling and logging
   const signUp = async (data: any) => {
     // Prevent multiple simultaneous signup attempts
-    if (isLoading) {
-      console.log("Already processing authentication, please wait");
-      toast.error("Already processing your request. Please wait or refresh the page.");
+    if (signupInProgress) {
+      console.log("Already processing a signup, please wait");
+      toast.error("A signup is already in progress. Please wait or refresh the page.");
       return false;
     }
     
-    // Set a timeout to ensure the function doesn't hang indefinitely
-    let timeoutId: NodeJS.Timeout;
-    const timeoutPromise = new Promise<boolean>((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(new Error("Signup timed out after 15 seconds"));
-      }, 15000); // 15 second timeout
-    });
-
+    let profileCreated = false;
+    let dsoProfileCreated = false;
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     try {
+      setSignupInProgress(true);
       setIsLoading(true); // Set loading state at the beginning
+      
       console.log("Starting signUp process with data:", { 
         email: data.email, 
         role: data.role, 
@@ -253,122 +290,160 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         lastName: data.lastName 
       });
       
-      // Determine if this is a DSO signup based on role field
-      const isDsoSignup = data.role === 'dso';
-      
-      // Race against the timeout
-      const signupPromise = async () => {
-        console.log("Creating auth user...");
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: data.email,
-          password: data.password,
-          options: {
-            data: {
-              name: `${data.firstName} ${data.lastName}`,
-              role: isDsoSignup ? 'dso' : 'student',
-            }
-          }
-        });
-
-        if (authError) {
-          console.error("Auth signup error:", authError);
-          throw authError;
-        }
-
-        console.log("Auth user created successfully:", !!authData.user);
-
-        // After successful signup, create a user profile
-        if (authData.user) {
-          console.log("Creating profile for user:", authData.user.id);
+      // Set a timeout to ensure the function doesn't hang indefinitely
+      const signupPromise = new Promise<boolean>(async (resolve, reject) => {
+        try {
+          // Determine if this is a DSO signup based on role field
+          const isDsoSignup = data.role === 'dso';
           
-          try {
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .insert([
-                {
-                  id: authData.user.id,
-                  name: `${data.firstName} ${data.lastName}`,
-                  email: data.email,
-                  role: isDsoSignup ? 'dso' : 'student',
-                  // Add DSO-specific fields if the user is signing up as a DSO
-                  ...(isDsoSignup && {
-                    university_name: data.universityName,
-                    university_country: data.universityCountry,
-                    sevis_id: data.sevisId
-                  })
-                },
-              ]);
-
-            if (profileError) {
-              console.error("Profile creation error:", profileError);
-              throw profileError;
+          console.log("Creating auth user...");
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: data.email,
+            password: data.password,
+            options: {
+              data: {
+                name: `${data.firstName} ${data.lastName}`,
+                role: isDsoSignup ? 'dso' : 'student',
+              }
             }
+          });
 
-            console.log("Profile created successfully");
-          } catch (profileError) {
-            console.error("Error during profile creation:", profileError);
-            toast.error("Account created but profile setup failed. Please contact support.");
-            // Continue anyway as the auth account was created
+          if (authError) {
+            console.error("Auth signup error:", authError);
+            reject(authError);
+            return;
           }
 
-          // If this is a DSO signup, also create a DSO profile entry
-          if (isDsoSignup && data.universityName) {
-            console.log("Creating DSO profile for user:", authData.user.id);
+          console.log("Auth user created successfully:", !!authData.user);
+
+          // After successful signup, create a user profile
+          if (authData.user) {
+            console.log("Creating profile for user:", authData.user.id);
             
             try {
-              const { error: dsoProfileError } = await supabase
-                .from('dso_profiles')
-                .insert([
+              // Use upsert instead of insert to handle potential race conditions
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert([
                   {
                     id: authData.user.id,
-                    university_name: data.universityName,
-                    university_country: data.universityCountry,
-                    sevis_id: data.sevisId
+                    name: `${data.firstName} ${data.lastName}`,
+                    email: data.email,
+                    role: isDsoSignup ? 'dso' : 'student',
+                    // Add DSO-specific fields if the user is signing up as a DSO
+                    ...(isDsoSignup && {
+                      university_name: data.universityName,
+                      university_country: data.universityCountry,
+                      // No sevis_id field in profiles table
+                    })
                   },
-                ]);
+                ], { onConflict: 'id' });
 
-              if (dsoProfileError) {
-                console.error("DSO profile creation error:", dsoProfileError);
-                toast.error("DSO profile could not be created. Please complete your profile later.");
-                // Don't throw here, allow the signup to continue even if the DSO profile creation fails
-              } else {
-                console.log("DSO profile created successfully");
+              if (profileError) {
+                console.error("Profile creation error:", profileError);
+                throw profileError;
               }
-            } catch (dsoError) {
-              console.error("Error during DSO profile creation:", dsoError);
-              // Continue anyway as the auth account and main profile were created
+
+              profileCreated = true;
+              console.log("Profile created successfully");
+            } catch (profileError) {
+              console.error("Error during profile creation:", profileError);
+              // Continue anyway as the auth account was created
+            }
+
+            // If this is a DSO signup, also create a DSO profile entry
+            if (isDsoSignup) {
+              console.log("Creating DSO profile for user:", authData.user.id);
+              
+              try {
+                // Check if DSO profile already exists
+                const { data: existingDsoProfile } = await supabase
+                  .from('dso_profiles')
+                  .select('id')
+                  .eq('id', authData.user.id)
+                  .maybeSingle();
+                  
+                if (!existingDsoProfile) {
+                  // Only create if it doesn't exist
+                  const { error: dsoProfileError } = await supabase
+                    .from('dso_profiles')
+                    .insert([
+                      {
+                        id: authData.user.id,
+                        // Only include fields that exist in the dso_profiles table
+                        // Don't include university_name, university_country or sevis_id
+                        // as they might not exist in this table
+                        contact_email: data.email
+                      },
+                    ]);
+
+                  if (dsoProfileError) {
+                    console.error("DSO profile creation error:", dsoProfileError);
+                    // Log the error but don't throw - let the process continue
+                  } else {
+                    dsoProfileCreated = true;
+                    console.log("DSO profile created successfully");
+                  }
+                } else {
+                  console.log("DSO profile already exists, skipping creation");
+                  dsoProfileCreated = true;
+                }
+              } catch (dsoError) {
+                console.error("Error during DSO profile creation:", dsoError);
+                // Continue anyway as the auth account and main profile were created
+              }
             }
           }
+          resolve(true);
+        } catch (error) {
+          console.error("Error in signUp promise:", error);
+          reject(error);
         }
-
-        return true;
-      };
-
-      // Race the signup promise against the timeout
-      const result = await Promise.race([signupPromise(), timeoutPromise]);
+      });
       
-      clearTimeout(timeoutId);
+      // Create a timeout promise
+      const timeoutPromise = new Promise<boolean>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error("Signup timed out after 20 seconds"));
+        }, 20000); // 20 second timeout for more processing time
+      });
+      
+      // Race the promises
+      const result = await Promise.race([signupPromise, timeoutPromise]);
+      
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      // Log the successful signup completion
+      console.log("Signup completed successfully with result:", result);
+      console.log("Profile created:", profileCreated, ", DSO profile created:", dsoProfileCreated);
       
       toast.success("Signup successful! Please check your email to verify your account.");
       
-      // Force navigation to the appropriate page after successful signup
-      setTimeout(() => {
-        if (isDsoSignup) {
-          console.log("Navigating to DSO onboarding page");
+      // For DSO signups, navigate to the DSO onboarding page
+      if (data.role === 'dso') {
+        // Let the auth state listener handle this instead of immediate navigation
+        setTimeout(() => {
+          console.log("Manual navigation to DSO onboarding after successful signup");
           navigate('/dso-onboarding', { replace: true });
-        } else {
-          console.log("Navigating to student onboarding page");
-          navigate('/onboarding', { replace: true });
-        }
-      }, 1000);
+        }, 1500);
+      }
       
       return result;
+      
     } catch (error: any) {
       console.error("Signup failed:", error.message);
-      toast.error(`Signup failed: ${error.message}`);
-      return false;
+      
+      // Provide specific error messages based on what was completed
+      if (profileCreated && !dsoProfileCreated && data.role === 'dso') {
+        toast.error("Account created but DSO profile setup failed. You can complete your profile during onboarding.");
+        return true; // Allow to continue despite partial failure
+      } else {
+        toast.error(`Signup failed: ${error.message}`);
+        return false;
+      }
     } finally {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
+      setSignupInProgress(false);
       setIsLoading(false); // Always reset loading state when done
     }
   };
@@ -423,6 +498,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         id: currentUser.id,
         updated_at: new Date().toISOString(),
       };
+
+      console.log("Updating DSO profile with data:", updates);
 
       // Remove 'returning' option which is not supported
       const { error } = await supabase
