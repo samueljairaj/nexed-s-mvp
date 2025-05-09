@@ -1,7 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { parse, addDays, format } from "https://deno.land/x/date_fns@v2.22.1/index.js";
+import { format, addDays, parse } from "https://deno.land/std@0.168.0/datetime/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -49,16 +49,20 @@ function extractReminderDetails(prompt: string) {
 
   // Check for relative date expressions
   if (/tomorrow/i.test(prompt)) {
-    dueDate = addDays(new Date(), 1);
+    dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 1);
   } else if (/next week/i.test(prompt)) {
-    dueDate = addDays(new Date(), 7);
+    dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 7);
   } else if (/next month/i.test(prompt)) {
-    dueDate = addDays(new Date(), 30);
+    dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 30);
   } else if (/(in|after)\s+(\d+)\s+(day|days)/i.test(prompt)) {
     const matches = prompt.match(/(in|after)\s+(\d+)\s+(day|days)/i);
     if (matches && matches[2]) {
       const days = parseInt(matches[2], 10);
-      dueDate = addDays(new Date(), days);
+      dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + days);
     }
   } else if (/(\d+)\s+days\s+(before|prior to)/i.test(prompt)) {
     // Handle "X days before" patterns
@@ -67,7 +71,8 @@ function extractReminderDetails(prompt: string) {
       const days = parseInt(matches[1], 10);
       // We can't determine the exact date without more context, 
       // so we'll use a future date as an approximation
-      dueDate = addDays(new Date(), 30 - days);
+      dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + (30 - days));
       title = prompt.replace(matches[0], `${matches[3]} (${days} days before)`);
     }
   } else {
@@ -114,11 +119,29 @@ function extractReminderDetails(prompt: string) {
     }
   }
 
+  // Format the date as YYYY-MM-DD
+  const formattedDate = dueDate ? formatDate(dueDate) : formatDate(addDaysToDate(new Date(), 7));
+
   return {
     title,
-    dueDate: dueDate ? format(dueDate, 'yyyy-MM-dd') : format(addDays(new Date(), 7), 'yyyy-MM-dd'),
+    dueDate: formattedDate,
     priority
   };
+}
+
+// Helper function to format date as YYYY-MM-DD
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Helper function to add days to a date
+function addDaysToDate(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(date.getDate() + days);
+  return result;
 }
 
 // Helper function to create a task from reminder details
