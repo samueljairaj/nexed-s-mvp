@@ -1,10 +1,11 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { personalInfoSchema } from "@/types/onboarding";
+import { onboardingPersonalInfoSchema } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { ArrowLeft } from "lucide-react"; // Added import
+import { ArrowLeft } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -21,6 +22,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Export the form data type
+export interface PersonalInfoFormData {
+  dateOfBirth: Date | string | null;
+  nationality: string;
+  country: string;
+  usEntryDate: Date | string | null;
+  address: string;
+  phoneNumber: string;
+}
+
 interface PersonalInfoStepProps {
   defaultValues: {
     dateOfBirth: Date | string | null;
@@ -30,16 +41,16 @@ interface PersonalInfoStepProps {
     address: string;
     phoneNumber: string;
   };
-  onSubmit: (data: any) => void;
+  onSubmit: (data: PersonalInfoFormData) => void;
   isSubmitting?: boolean;
-  handleBackToLogin?: () => void; // Added prop
+  handleBackToLogin?: () => void;
 }
 
 export function PersonalInfoStep({ 
   defaultValues, 
   onSubmit, 
   isSubmitting = false,
-  handleBackToLogin // Added prop
+  handleBackToLogin
 }: PersonalInfoStepProps) {
   // Parse date strings to Date objects if they are strings
   const initialValues = {
@@ -49,7 +60,7 @@ export function PersonalInfoStep({
   };
   
   const form = useForm({
-    resolver: zodResolver(personalInfoSchema),
+    resolver: zodResolver(onboardingPersonalInfoSchema),
     defaultValues: initialValues
   });
 
@@ -81,8 +92,7 @@ export function PersonalInfoStep({
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Birth</FormLabel>
                   <FormDatePicker
-                    name={field.name}
-                    control={form.control}
+                    name="dateOfBirth"
                     placeholder="Select date"
                   />
                   <FormMessage />
@@ -127,8 +137,7 @@ export function PersonalInfoStep({
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of First Entry to the U.S.</FormLabel>
                   <FormDatePicker
-                    name={field.name}
-                    control={form.control}
+                    name="usEntryDate"
                     placeholder="Select date"
                   />
                   <FormMessage />

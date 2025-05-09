@@ -9,8 +9,8 @@ export function usePersonalInfo() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [personalData, setPersonalData] = useState<Partial<PersonalInfoFormData>>({
     country: "",
-    phone: "",
-    passportNumber: "",
+    phoneNumber: "",
+    nationality: "",
     address: ""
   });
 
@@ -22,9 +22,9 @@ export function usePersonalInfo() {
       // Create a plain object with string values only - no Date objects
       const updateData: Record<string, any> = {
         country: data.country,
-        phone: data.phone,
-        passportNumber: data.passportNumber,
-        address: data.address
+        phone: data.phoneNumber,
+        address: data.address,
+        nationality: data.nationality
       };
       
       // Format dates as YYYY-MM-DD strings
@@ -32,8 +32,8 @@ export function usePersonalInfo() {
         updateData.dateOfBirth = formatDateToString(data.dateOfBirth);
       }
 
-      if (data.passportExpiryDate) {
-        updateData.passportExpiryDate = formatDateToString(data.passportExpiryDate);
+      if (data.usEntryDate) {
+        updateData.usEntryDate = formatDateToString(data.usEntryDate);
       }
 
       // Log the data we're about to send for debugging

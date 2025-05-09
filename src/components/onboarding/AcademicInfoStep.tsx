@@ -23,6 +23,19 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// Export the form data type
+export interface AcademicInfoFormData {
+  university: string;
+  fieldOfStudy: string;
+  degreeLevel: string;
+  courseStartDate: Date | null;
+  graduationDate: Date | null;
+  hasTransferred: boolean;
+  previousUniversity?: string;
+  isSTEM?: boolean;
+  programStartDate?: Date | null;
+}
+
 interface AcademicInfoStepProps {
   defaultValues: {
     university: string;
@@ -33,7 +46,7 @@ interface AcademicInfoStepProps {
     hasTransferred: boolean;
     previousUniversity?: string;
   };
-  onSubmit: (data: any) => void;
+  onSubmit: (data: AcademicInfoFormData) => void;
   isF1OrJ1: boolean;
   isSubmitting?: boolean;
   handleBackToLogin?: () => void; // Added prop

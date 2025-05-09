@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
-import { useFormContext, Controller } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -47,47 +47,41 @@ export function FormDatePicker({
   }
 
   return (
-    <Controller
-      control={form.control}
-      name={name}
-      render={({ field }) => (
-        <FormItem className="flex flex-col">
-          {label && <FormLabel>{label}{required && <span className="text-destructive ml-1">*</span>}</FormLabel>}
-          <Popover>
-            <PopoverTrigger asChild>
-              <FormControl>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full pl-3 text-left font-normal border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
-                    !field.value && "text-muted-foreground",
-                    buttonClassName
-                  )}
-                  disabled={disabled}
-                >
-                  {field.value ? (
-                    dateUtils.formatDate(field.value)
-                  ) : (
-                    <span>{placeholder}</span>
-                  )}
-                  <CalendarIcon className="ml-auto h-4 w-4 opacity-70" />
-                </Button>
-              </FormControl>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-popover shadow-md border border-border rounded-md" align="start">
-              <Calendar
-                mode="single"
-                selected={field.value}
-                onSelect={field.onChange}
-                disabled={disabledDates}
-                initialFocus
-                className={cn("p-3 pointer-events-auto", className)}
-              />
-            </PopoverContent>
-          </Popover>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    <FormItem className="flex flex-col">
+      {label && <FormLabel>{label}{required && <span className="text-destructive ml-1">*</span>}</FormLabel>}
+      <Popover>
+        <PopoverTrigger asChild>
+          <FormControl>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-full pl-3 text-left font-normal border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
+                !form.getValues(name) && "text-muted-foreground",
+                buttonClassName
+              )}
+              disabled={disabled}
+            >
+              {form.getValues(name) ? (
+                dateUtils.formatDate(form.getValues(name))
+              ) : (
+                <span>{placeholder}</span>
+              )}
+              <CalendarIcon className="ml-auto h-4 w-4 opacity-70" />
+            </Button>
+          </FormControl>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0 bg-popover shadow-md border border-border rounded-md" align="start">
+          <Calendar
+            mode="single"
+            selected={form.getValues(name)}
+            onSelect={date => form.setValue(name, date, { shouldValidate: true })}
+            disabled={disabledDates}
+            initialFocus
+            className={cn("p-3 pointer-events-auto", className)}
+          />
+        </PopoverContent>
+      </Popover>
+      <FormMessage />
+    </FormItem>
   );
 }

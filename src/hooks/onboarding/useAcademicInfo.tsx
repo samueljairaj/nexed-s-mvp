@@ -28,8 +28,17 @@ export function useAcademicInfo() {
       };
       
       // Format program start date as YYYY-MM-DD string
-      if (data.programStartDate) {
-        updateData.courseStartDate = formatDateToString(data.programStartDate);
+      if (data.courseStartDate) {
+        updateData.courseStartDate = formatDateToString(data.courseStartDate);
+      }
+
+      if (data.graduationDate) {
+        updateData.graduationDate = formatDateToString(data.graduationDate);
+      }
+
+      if (data.hasTransferred) {
+        updateData.previous_university = data.previousUniversity;
+        updateData.has_transferred = true;
       }
 
       console.log("Updating profile with academic data:", updateData);

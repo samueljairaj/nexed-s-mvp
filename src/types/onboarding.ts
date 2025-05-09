@@ -1,8 +1,8 @@
-
 import { z } from "zod";
 
 export type VisaType = "F1" | "J1" | "H1B" | "Other" | null;
 
+// Account Creation Schema
 export const personalInfoSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
@@ -15,6 +15,46 @@ export const personalInfoSchema = z.object({
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
+});
+
+// Personal Info Schema (for the step after account creation)
+export const onboardingPersonalInfoSchema = z.object({
+  dateOfBirth: z.date({
+    required_error: "Date of birth is required",
+  }),
+  nationality: z.string().min(1, "Nationality is required"),
+  country: z.string().min(1, "Country is required"),
+  usEntryDate: z.date({
+    required_error: "Date of entry to the US is required",
+  }),
+  address: z.string().min(1, "Address is required"),
+  phoneNumber: z.string().min(1, "Phone number is required"),
+});
+
+// Visa Status Schema
+export const visaStatusSchema = z.object({
+  visaType: z.enum(["F1", "J1", "H1B", "Other"], {
+    required_error: "Visa type is required",
+  }),
+  visaExpiryDate: z.date().optional(),
+  hasDS2019: z.boolean().optional(),
+  hasDependents: z.boolean().optional(),
+  sevisId: z.string().optional(),
+  i20ExpiryDate: z.date().optional(),
+  entryDate: z.date().optional(),
+});
+
+// Academic Info Schema
+export const academicInfoSchema = z.object({
+  university: z.string().min(1, "University name is required"),
+  fieldOfStudy: z.string().min(1, "Field of study is required"),
+  degreeLevel: z.string().min(1, "Degree level is required"),
+  courseStartDate: z.date().optional(),
+  graduationDate: z.date().optional(),
+  hasTransferred: z.boolean().optional(),
+  previousUniversity: z.string().optional(),
+  isSTEM: z.boolean().optional(),
+  programStartDate: z.date().optional(),
 });
 
 export const visaInfoSchema = z.object({

@@ -28,6 +28,19 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+// Export the form data type
+export interface VisaStatusFormData {
+  visaType: "F1" | "J1" | "H1B" | "Other";
+  visaExpiryDate?: Date | null;
+  hasDS2019?: boolean;
+  hasDependents?: boolean;
+  sevisId?: string;
+  i20ExpiryDate?: Date | null;
+  entryDate?: Date | null;
+  currentStatus?: string;
+  programStartDate?: Date | null;
+}
+
 interface VisaStatusStepProps {
   defaultValues: {
     visaType: string;
@@ -37,7 +50,7 @@ interface VisaStatusStepProps {
     sevisId?: string;
     i20ExpiryDate?: Date | null;
   };
-  onSubmit: (data: any) => void;
+  onSubmit: (data: VisaStatusFormData) => void;
   onVisaTypeChange: (visaType: string) => void;
   isSubmitting?: boolean;
   handleBackToLogin?: () => void; // Added prop
