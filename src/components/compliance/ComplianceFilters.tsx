@@ -19,7 +19,6 @@ interface ComplianceFiltersProps {
   phaseGroups: {[key: string]: any[]};
   selectedPhase: string;
   setSelectedPhase: (phase: string) => void;
-  // Add this prop to fix the error
   setSelectedFilters: (filters: DocumentCategory[]) => void;
 }
 
@@ -33,7 +32,6 @@ export function ComplianceFilters({
   phaseGroups,
   selectedPhase,
   setSelectedPhase,
-  // Add the new prop here
   setSelectedFilters,
 }: ComplianceFiltersProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -82,7 +80,7 @@ export function ComplianceFilters({
               <SelectValue placeholder="Filter by phase" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Phases</SelectItem>
+              <SelectItem value="all_phases">All Phases</SelectItem>
               {phases.map((phase) => (
                 <SelectItem key={phase} value={phase}>
                   {phase === "general" ? "General" : phase}

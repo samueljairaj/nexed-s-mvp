@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DocumentCategory } from '@/types/document';
@@ -29,7 +28,7 @@ export const useComplianceTasks = () => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFilters, setSelectedFilters] = useState<DocumentCategory[]>([]);
-  const [selectedPhase, setSelectedPhase] = useState<string>('');
+  const [selectedPhase, setSelectedPhase] = useState<string>('all_phases');
   const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
 
   // Load tasks on component mount
@@ -227,7 +226,7 @@ export const useComplianceTasks = () => {
     const matchesCategory = selectedFilters.length === 0 || 
       selectedFilters.includes(task.category);
     
-    const matchesPhase = selectedPhase === '' || 
+    const matchesPhase = selectedPhase === 'all_phases' || 
       task.phase === selectedPhase;
     
     return matchesSearch && matchesCategory && matchesPhase;
@@ -260,7 +259,7 @@ export const useComplianceTasks = () => {
     searchQuery,
     setSearchQuery,
     selectedFilters,
-    setSelectedFilters,  // Export this
+    setSelectedFilters,
     toggleFilter,
     selectedPhase,
     setSelectedPhase,

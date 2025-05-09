@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Tabs,
@@ -74,7 +73,7 @@ const Compliance = () => {
         phaseGroups={phaseGroups}
         selectedPhase={selectedPhase}
         setSelectedPhase={setSelectedPhase}
-        setSelectedFilters={setSelectedFilters} // Pass this prop to fix the error
+        setSelectedFilters={setSelectedFilters}
       />
 
       {/* Initial AI Generation Prompt - show if no tasks are available */}
