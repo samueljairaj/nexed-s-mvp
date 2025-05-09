@@ -1,3 +1,4 @@
+
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
@@ -13,13 +14,12 @@ import {
   X,
   LogOut,
   Settings,
-  GraduationCap,
-  Building2
+  GraduationCap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const AppLayout = () => {
-  const { currentUser, logout, isAuthenticated, isDSO, isAdmin } = useAuth();
+  const { currentUser, logout, isAuthenticated } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -30,44 +30,23 @@ export const AppLayout = () => {
     }
 
     if (currentUser && !getProfileProperty(currentUser, 'onboarding_complete')) {
-      navigate(isDSO ? "/dso-onboarding" : "/onboarding");
+      navigate("/onboarding");
       return;
     }
-  }, [isAuthenticated, currentUser, navigate, isDSO]);
+  }, [isAuthenticated, currentUser, navigate]);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
-  // Define navigation items based on user role
-  const getNavItems = () => {
-    // Items common to all users
-    const commonItems = [
-      { to: "/app/profile", label: "Profile", icon: <User size={20} /> },
-      { to: "/app/settings", label: "Settings", icon: <Settings size={20} /> },
-    ];
-
-    // DSO-specific items
-    if (isDSO) {
-      return [
-        { to: "/app/dso-dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
-        { to: "/app/dso-profile", label: "DSO Profile", icon: <Building2 size={20} /> },
-        { to: "/app/compliance", label: "Compliance", icon: <FileCheck size={20} /> },
-        { to: "/app/documents", label: "Documents", icon: <FolderArchive size={20} /> },
-        ...commonItems
-      ];
-    }
-
-    // Student-specific items
-    return [
-      { to: "/app/dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
-      { to: "/app/compliance", label: "Compliance", icon: <FileCheck size={20} /> },
-      { to: "/app/documents", label: "Documents", icon: <FolderArchive size={20} /> },
-      { to: "/app/assistant", label: "Assistant", icon: <MessageCircle size={20} /> },
-      ...commonItems
-    ];
-  };
-
-  const navItems = getNavItems();
+  // Define navigation items
+  const navItems = [
+    { to: "/app/dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
+    { to: "/app/compliance", label: "Compliance", icon: <FileCheck size={20} /> },
+    { to: "/app/documents", label: "Documents", icon: <FolderArchive size={20} /> },
+    { to: "/app/assistant", label: "Assistant", icon: <MessageCircle size={20} /> },
+    { to: "/app/profile", label: "Profile", icon: <User size={20} /> },
+    { to: "/app/settings", label: "Settings", icon: <Settings size={20} /> },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -75,14 +54,9 @@ export const AppLayout = () => {
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center">
-            <NavLink to={isDSO ? "/app/dso-dashboard" : "/app/dashboard"} className="flex items-center space-x-2">
+            <NavLink to="/app/dashboard" className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-md nexed-gradient" />
               <span className="text-xl font-bold text-nexed-900">neXed</span>
-              {isDSO && (
-                <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">
-                  DSO Portal
-                </span>
-              )}
             </NavLink>
           </div>
           
@@ -104,55 +78,78 @@ export const AppLayout = () => {
                 to={item.to}
                 className={({ isActive }) => cn(
                   "flex items-center space-x-1 text-sm py-2",
-                  isActive 
-                    ? "text-nexed-700 font-medium border-b-2 border-nexed-500" 
-                    : "text-gray-600 hover:text-nexed-600"
+                  isActive ? "text-primary font-medium" : "text-gray-600 hover:text-gray-900"
                 )}
               >
-                {item.icon}
+                <span className="hidden xl:block">{item.icon}</span>
                 <span>{item.label}</span>
               </NavLink>
             ))}
-            <Button variant="ghost" size="sm" onClick={logout}>
-              <LogOut size={18} className="mr-2" />
-              <span>Log out</span>
+            
+            <Button
+              variant="ghost"
+              className="text-gray-600 hover:text-gray-900"
+              onClick={logout}
+            >
+              <LogOut size={20} className="mr-2" />
+              <span>Logout</span>
             </Button>
           </nav>
         </div>
       </header>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-white pt-16">
-          <nav className="container mx-auto px-4 py-6 flex flex-col space-y-4">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={closeMobileMenu}
-                className={({ isActive }) => cn(
-                  "flex items-center space-x-3 p-3 rounded-md",
-                  isActive 
-                    ? "bg-nexed-50 text-nexed-700 font-medium" 
-                    : "text-gray-700 hover:bg-gray-50"
-                )}
-              >
-                {item.icon}
-                <span className="text-lg">{item.label}</span>
-              </NavLink>
-            ))}
-            <Button variant="ghost" className="justify-start" onClick={logout}>
-              <LogOut size={20} className="mr-3" />
-              <span className="text-lg">Log out</span>
-            </Button>
+        <div className="md:hidden bg-white border-b shadow-md">
+          <nav className="container mx-auto py-4">
+            <ul className="space-y-4">
+              {navItems.map((item) => (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    className={({ isActive }) => cn(
+                      "flex items-center space-x-3 px-4 py-2 rounded-md",
+                      isActive ? "bg-primary/10 text-primary font-medium" : "text-gray-600 hover:bg-gray-100"
+                    )}
+                    onClick={closeMobileMenu}
+                  >
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </NavLink>
+                </li>
+              ))}
+              <li>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-gray-600 hover:bg-gray-100 px-4"
+                  onClick={() => {
+                    closeMobileMenu();
+                    logout();
+                  }}
+                >
+                  <LogOut size={20} className="mr-3" />
+                  <span>Logout</span>
+                </Button>
+              </li>
+            </ul>
           </nav>
         </div>
       )}
 
       {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 py-6">
-        <Outlet />
+      <main className="flex-1 bg-gray-50">
+        <div className="container mx-auto px-4 py-6">
+          <Outlet />
+        </div>
       </main>
+
+      <footer className="bg-white border-t py-4">
+        <div className="container mx-auto px-4">
+          <div className="text-center text-sm text-gray-500">
+            &copy; {new Date().getFullYear()} neXed. All rights reserved.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -96,7 +96,7 @@ export const useFormAuth = ({ initialMode = "login" }: FormAuthProps = {}) => {
     return true;
   };
 
-  const handleAuth = async (e: React.FormEvent, role?: string) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isSubmitting) return;
@@ -129,8 +129,7 @@ export const useFormAuth = ({ initialMode = "login" }: FormAuthProps = {}) => {
           email,
           password,
           firstName,
-          lastName,
-          role: role || "student" 
+          lastName
         });
         
         if (signupResult) {

@@ -5,11 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isDSO, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [localLoading, setLocalLoading] = useState(true);
   
   useEffect(() => {
-    console.log("Index: Auth state:", { isAuthenticated, isDSO, isLoading });
+    console.log("Index: Auth state:", { isAuthenticated, isLoading });
     
     // If auth is still loading, wait
     if (isLoading) {
@@ -21,19 +21,15 @@ const Index = () => {
     setLocalLoading(false);
     
     if (isAuthenticated) {
-      // If authenticated, redirect based on role
-      console.log("Index: User is authenticated, redirecting based on role. isDSO:", isDSO);
-      if (isDSO) {
-        navigate('/dso-onboarding', { replace: true });
-      } else {
-        navigate('/onboarding', { replace: true });
-      }
+      // If authenticated, redirect to onboarding
+      console.log("Index: User is authenticated, redirecting to onboarding");
+      navigate('/onboarding', { replace: true });
     } else {
       // If not authenticated, redirect to student landing by default
       console.log("Index: User is not authenticated, redirecting to student landing");
       navigate('/student', { replace: true });
     }
-  }, [navigate, isAuthenticated, isDSO, isLoading]);
+  }, [navigate, isAuthenticated, isLoading]);
 
   // Add a safety timeout to prevent infinite loading
   useEffect(() => {

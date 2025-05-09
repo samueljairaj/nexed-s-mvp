@@ -1,11 +1,10 @@
+
 import { AccountCreationStep } from "./AccountCreationStep";
 import { PersonalInfoStep } from "./PersonalInfoStep";
 import { VisaStatusStep } from "./VisaStatusStep"; 
 import { AcademicInfoStep } from "./AcademicInfoStep";
 import { EmploymentStep } from "./EmploymentStep";
 import { OnboardingComplete } from "./OnboardingComplete";
-import { UniversityInfoStep } from "./UniversityInfoStep";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface OnboardingStepContentProps {
   currentStep: number;
@@ -29,8 +28,6 @@ interface OnboardingStepContentProps {
   isStemOpt: boolean;
   handleFinish: () => Promise<boolean>;
   handleBackToLogin: () => void;
-  handleUniversityInfoSetup?: (data: any) => Promise<boolean>;
-  universityData?: any;
 }
 
 export const OnboardingStepContent = ({
@@ -55,112 +52,68 @@ export const OnboardingStepContent = ({
   isStemOpt,
   handleFinish,
   handleBackToLogin,
-  handleUniversityInfoSetup,
-  universityData
 }: OnboardingStepContentProps) => {
-  const { isDSO } = useAuth();
-
   // Helper function to render the appropriate step
   const renderStep = () => {
-    // For DSO users, we have a different onboarding flow
-    if (isDSO) {
-      switch (currentStep) {
-        case 0:
-          return (
-            <AccountCreationStep
-              defaultValues={accountData}
-              onSubmit={handleAccountCreation}
-              isSubmitting={isSubmitting}
-            />
-          );
-        case 1:
-          return (
-            <PersonalInfoStep
-              defaultValues={personalData}
-              onSubmit={handlePersonalInfo}
-              isSubmitting={isSubmitting}
-            />
-          );
-        case 2:
-          return (
-            <UniversityInfoStep
-              defaultValues={universityData || {}}
-              onSubmit={handleUniversityInfoSetup || (() => Promise.resolve(false))}
-              isSubmitting={isSubmitting}
-            />
-          );
-        case 3:
-          return (
-            <OnboardingComplete
-              handleFinish={handleFinish}
-              isSubmitting={isSubmitting}
-              role="dso"
-            />
-          );
-        default:
-          return <div>Loading...</div>;
-      }
-    } else {
-      // Student onboarding flow (original)
-      switch (currentStep) {
-        case 0:
-          return (
-            <AccountCreationStep
-              defaultValues={accountData}
-              onSubmit={handleAccountCreation}
-              isSubmitting={isSubmitting}
-            />
-          );
-        case 1:
-          return (
-            <PersonalInfoStep
-              defaultValues={personalData}
-              onSubmit={handlePersonalInfo}
-              isSubmitting={isSubmitting}
-            />
-          );
-        case 2:
-          return (
-            <VisaStatusStep
-              defaultValues={visaData}
-              onSubmit={handleVisaStatus}
-              onVisaTypeChange={handleVisaTypeChange}
-              isSubmitting={isSubmitting}
-            />
-          );
-        case 3:
-          return (
-            <AcademicInfoStep
-              defaultValues={academicData}
-              onSubmit={handleAcademicInfo}
-              isSubmitting={isSubmitting}
-              isF1OrJ1={isF1OrJ1}
-            />
-          );
-        case 4:
-          return (
-            <EmploymentStep
-              defaultValues={employmentData}
-              onSubmit={handleEmploymentInfo}
-              onEmploymentStatusChange={handleEmploymentStatusChange}
-              isSubmitting={isSubmitting}
-              isOptOrCpt={isOptOrCpt}
-              isEmployed={isEmployed}
-              isStemOpt={isStemOpt}
-              isF1OrJ1={isF1OrJ1}
-            />
-          );
-        case 5:
-          return (
-            <OnboardingComplete
-              handleFinish={handleFinish}
-              isSubmitting={isSubmitting}
-              role="student"
-            />
-          );
-        default:
-          return <div>Loading...</div>;
-      }
+    // Student onboarding flow
+    switch (currentStep) {
+      case 0:
+        return (
+          <AccountCreationStep
+            defaultValues={accountData}
+            onSubmit={handleAccountCreation}
+            isSubmitting={isSubmitting}
+          />
+        );
+      case 1:
+        return (
+          <PersonalInfoStep
+            defaultValues={personalData}
+            onSubmit={handlePersonalInfo}
+            isSubmitting={isSubmitting}
+          />
+        );
+      case 2:
+        return (
+          <VisaStatusStep
+            defaultValues={visaData}
+            onSubmit={handleVisaStatus}
+            onVisaTypeChange={handleVisaTypeChange}
+            isSubmitting={isSubmitting}
+          />
+        );
+      case 3:
+        return (
+          <AcademicInfoStep
+            defaultValues={academicData}
+            onSubmit={handleAcademicInfo}
+            isSubmitting={isSubmitting}
+            isF1OrJ1={isF1OrJ1}
+          />
+        );
+      case 4:
+        return (
+          <EmploymentStep
+            defaultValues={employmentData}
+            onSubmit={handleEmploymentInfo}
+            onEmploymentStatusChange={handleEmploymentStatusChange}
+            isSubmitting={isSubmitting}
+            isOptOrCpt={isOptOrCpt}
+            isEmployed={isEmployed}
+            isStemOpt={isStemOpt}
+            isF1OrJ1={isF1OrJ1}
+          />
+        );
+      case 5:
+        return (
+          <OnboardingComplete
+            handleFinish={handleFinish}
+            isSubmitting={isSubmitting}
+            role="student"
+          />
+        );
+      default:
+        return <div>Loading...</div>;
     }
   };
 

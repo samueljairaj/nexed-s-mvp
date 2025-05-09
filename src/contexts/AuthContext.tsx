@@ -12,33 +12,16 @@ import { debugAuthState } from "@/utils/propertyMapping";
 // Export VisaType for reusability
 export type VisaType = "F1" | "J1" | "H1B" | "CPT" | "OPT" | "STEM_OPT" | "Other";
 
-export interface DsoProfile {
-  id: string;
-  title?: string;
-  department?: string;
-  office_location?: string;
-  office_hours?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  university_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   currentUser: Database["public"]["Tables"]["profiles"]["Row"] | null;
   session: Session | null;
-  isDSO: boolean;
-  isAdmin?: boolean;
-  dsoProfile: DsoProfile | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signUp: (data: any) => Promise<any>;
   signup: (data: any) => Promise<any>; // Alias for signUp
   updateProfile: (data: any) => Promise<void>;
-  updateDSOProfile: (data: any) => Promise<void>;
   completeOnboarding: () => Promise<boolean>;
 }
 
@@ -53,9 +36,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isDSO, setIsDSO] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [dsoProfile, setDsoProfile] = useState<DsoProfile | null>(null);
   const navigate = useNavigate();
 
   // Keep track of active timeouts to clear them when needed
@@ -75,8 +55,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setSession(null);
           setIsAuthenticated(false);
           setCurrentUser(null);
-          setIsDSO(false);
-          setDsoProfile(null);
           setIsLoading(false);
         }
       }
@@ -101,8 +79,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           console.log("No active session found");
           setIsAuthenticated(false);
           setCurrentUser(null);
-          setIsDSO(false);
-          setDsoProfile(null);
           setIsLoading(false);
         }
       } catch (error) {
@@ -152,32 +128,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         // Debug the user profile
         debugAuthState(profile);
-
-        // Check if the user has a DSO role
-        const isUserDSO = profile?.role === 'dso';
-        console.log("User DSO status:", isUserDSO);
-        setIsDSO(isUserDSO);
-
-        // If DSO, load DSO profile
-        if (isUserDSO) {
-          const { data: dsoData, error: dsoError } = await supabase
-            .from('dso_profiles')
-            .select('*')
-            .eq('id', user.id)
-            .maybeSingle();
-
-          if (dsoError && dsoError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-            console.error("Error fetching DSO profile:", dsoError);
-            setDsoProfile(null);
-          } else if (dsoData) {
-            setDsoProfile(dsoData as DsoProfile);
-          }
-        } else {
-          setDsoProfile(null);
-        }
-        
-        // Check if user is admin (optional)
-        setIsAdmin(profile?.role === 'admin');
       } else {
         console.log("User profile not found, should have been created by database trigger");
         setCurrentUser(null);
@@ -229,8 +179,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setIsAuthenticated(false);
       setCurrentUser(null);
       setSession(null);
-      setIsDSO(false);
-      setDsoProfile(null);
       navigate("/");
     } catch (error: any) {
       console.error("Logout failed:", error.message);
@@ -243,14 +191,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       console.log("Starting signUp process with data:", { 
         email: data.email, 
-        role: data.role, 
         firstName: data.firstName, 
         lastName: data.lastName 
       });
-      
-      // Determine if this is a DSO signup based on role field
-      const isDsoSignup = data.role === 'dso';
-      console.log("Is DSO signup:", isDsoSignup);
       
       // Create the auth user in a single operation
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -259,7 +202,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         options: {
           data: {
             name: `${data.firstName} ${data.lastName}`,
-            role: isDsoSignup ? 'dso' : 'student',
+            role: 'student',
             first_name: data.firstName,
             last_name: data.lastName
           }
@@ -325,49 +268,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       toast.error(`Profile update failed: ${error.message}`);
     }
   };
-
-  const updateDSOProfile = async (data: any) => {
-    if (!currentUser?.id) {
-      toast.error("User session not found. Please try logging out and back in.");
-      return;
-    }
-
-    try {
-      const updates = {
-        ...data,
-        id: currentUser.id,
-        updated_at: new Date().toISOString(),
-      };
-
-      console.log("Updating DSO profile with data:", updates);
-
-      const { error } = await supabase
-        .from('dso_profiles')
-        .upsert(updates);
-
-      if (error) {
-        throw error;
-      }
-
-      // Refresh DSO profile data
-      const { data: updatedDSOProfile, error: refreshError } = await supabase
-        .from('dso_profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
-
-      if (refreshError) {
-        console.error("Error refreshing DSO profile:", refreshError);
-        toast.error("Failed to refresh DSO profile data.");
-      } else {
-        setDsoProfile(updatedDSOProfile as DsoProfile);
-        toast.success("DSO Profile updated successfully!");
-      }
-    } catch (error: any) {
-      console.error("DSO Profile update failed:", error);
-      toast.error(`DSO Profile update failed: ${error.message}`);
-    }
-  };
   
   const completeOnboarding = async (): Promise<boolean> => {
     try {
@@ -402,15 +302,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isLoading,
     currentUser,
     session,
-    isDSO,
-    isAdmin,
-    dsoProfile,
     login,
     logout,
     signUp,
     signup,
     updateProfile,
-    updateDSOProfile,
     completeOnboarding,
   };
 
