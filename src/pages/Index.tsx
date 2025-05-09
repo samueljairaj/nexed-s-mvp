@@ -26,11 +26,15 @@ const Index = () => {
   const [sevisId, setSevisId] = useState("");
 
   useEffect(() => {
-    if (isAuthenticated && currentUser && getProfileProperty(currentUser, 'onboarding_complete')) {
-      navigate(isDSO ? '/app/dso-dashboard' : '/app/dashboard');
-      return;
+    if (isAuthenticated && currentUser) {
+      const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
+      if (onboardingComplete) {
+        navigate(isDSO ? '/app/dso-dashboard' : '/app/dashboard');
+      } else {
+        navigate(isDSO ? '/dso-onboarding' : '/onboarding');
+      }
     }
-  }, [isAuthenticated, currentUser, navigate]);
+  }, [isAuthenticated, currentUser, navigate, isDSO]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

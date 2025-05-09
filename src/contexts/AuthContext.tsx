@@ -151,6 +151,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  // Ensure the login method is properly handling authentication and errors
   const login = async (email: string, password: string) => {
     try {
       // Use email/password authentication instead of OAuth
@@ -169,6 +170,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error: any) {
       console.error("Login failed:", error.message);
       toast.error(`Login failed: ${error.message}`);
+      throw error; // Re-throw so calling code can handle it
     }
   };
 

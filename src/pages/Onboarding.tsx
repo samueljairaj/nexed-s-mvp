@@ -12,14 +12,13 @@ import { getProfileProperty } from "@/utils/propertyMapping";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { logout, isDSO } = useAuth();
+  const { logout, isDSO, isAuthenticated } = useAuth();
   const { handleUniversityInfoSetup, universityData } = useUniversityInfo();
   const onboardingState = useOnboardingState();
   
   const {
     currentStep,
     isSubmitting,
-    isAuthenticated,
     currentUser,
     isLoading,
     accountData,
@@ -54,21 +53,29 @@ const Onboarding = () => {
   const stepNames = isDSO ? dsoStepNames : studentStepNames;
 
   useEffect(() => {
-    // If user is authenticated and has completed onboarding, redirect to dashboard
-    const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
-    if (isAuthenticated && currentUser && onboardingComplete) {
-      // Redirect to the appropriate dashboard based on role
-      navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
+    // If not authenticated, redirect to home
+    if (!isLoading && !isAuthenticated) {
+      navigate('/');
       return;
-    } else if (isAuthenticated && isDSO) {
-      // If DSO, redirect to DSO onboarding
-      navigate("/dso-onboarding");
-      return;
-    } else if (isAuthenticated && currentStep === 0) {
-      // If user is already authenticated, skip the account creation step
-      setCurrentStep(1);
     }
-  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isDSO]);
+
+    // If user is authenticated and has completed onboarding, redirect to dashboard
+    if (!isLoading && isAuthenticated && currentUser) {
+      const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
+      if (onboardingComplete) {
+        // Redirect to the appropriate dashboard based on role
+        navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
+        return;
+      } else if (isDSO) {
+        // If DSO, redirect to DSO onboarding
+        navigate("/dso-onboarding");
+        return;
+      } else if (currentStep === 0) {
+        // If user is already authenticated, skip the account creation step
+        setCurrentStep(1);
+      }
+    }
+  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isDSO, isLoading]);
 
   // Handle back to login/landing page
   const handleBackToHome = () => {
