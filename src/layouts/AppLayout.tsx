@@ -12,12 +12,14 @@ import {
   Menu,
   X,
   LogOut,
-  Settings
+  Settings,
+  GraduationCap,
+  Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const AppLayout = () => {
-  const { currentUser, logout, isAuthenticated } = useAuth();
+  const { currentUser, logout, isAuthenticated, isDSO, isAdmin } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -27,7 +29,7 @@ export const AppLayout = () => {
       return;
     }
 
-    if (currentUser && !currentUser.onboardingComplete) {
+    if (currentUser && currentUser.role === 'student' && !currentUser.onboardingComplete) {
       navigate("/onboarding");
       return;
     }
@@ -36,14 +38,36 @@ export const AppLayout = () => {
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
-  const navItems = [
-    { to: "/app/dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
-    { to: "/app/compliance", label: "Compliance", icon: <FileCheck size={20} /> },
-    { to: "/app/documents", label: "Documents", icon: <FolderArchive size={20} /> },
-    { to: "/app/assistant", label: "Assistant", icon: <MessageCircle size={20} /> },
-    { to: "/app/profile", label: "Profile", icon: <User size={20} /> },
-    { to: "/app/settings", label: "Settings", icon: <Settings size={20} /> },
-  ];
+  // Define navigation items based on user role
+  const getNavItems = () => {
+    // Items common to all users
+    const commonItems = [
+      { to: "/app/profile", label: "Profile", icon: <User size={20} /> },
+      { to: "/app/settings", label: "Settings", icon: <Settings size={20} /> },
+    ];
+
+    // DSO-specific items
+    if (isDSO) {
+      return [
+        { to: "/app/dso-dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
+        { to: "/app/dso-profile", label: "DSO Profile", icon: <Building2 size={20} /> },
+        { to: "/app/compliance", label: "Compliance", icon: <FileCheck size={20} /> },
+        { to: "/app/documents", label: "Documents", icon: <FolderArchive size={20} /> },
+        ...commonItems
+      ];
+    }
+
+    // Student-specific items
+    return [
+      { to: "/app/dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
+      { to: "/app/compliance", label: "Compliance", icon: <FileCheck size={20} /> },
+      { to: "/app/documents", label: "Documents", icon: <FolderArchive size={20} /> },
+      { to: "/app/assistant", label: "Assistant", icon: <MessageCircle size={20} /> },
+      ...commonItems
+    ];
+  };
+
+  const navItems = getNavItems();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -51,9 +75,14 @@ export const AppLayout = () => {
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center">
-            <NavLink to="/app/dashboard" className="flex items-center space-x-2">
+            <NavLink to={isDSO ? "/app/dso-dashboard" : "/app/dashboard"} className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-md nexed-gradient" />
               <span className="text-xl font-bold text-nexed-900">neXed</span>
+              {isDSO && (
+                <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">
+                  DSO Portal
+                </span>
+              )}
             </NavLink>
           </div>
           

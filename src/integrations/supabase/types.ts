@@ -159,6 +159,50 @@ export type Database = {
         }
         Relationships: []
       }
+      dso_profiles: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          department: string | null
+          id: string
+          office_hours: string | null
+          office_location: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          department?: string | null
+          id: string
+          office_hours?: string | null
+          office_location?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          office_hours?: string | null
+          office_location?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dso_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -177,7 +221,9 @@ export type Database = {
           passport_expiry_date: string | null
           passport_number: string | null
           phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
           university: string | null
+          university_id: string | null
           updated_at: string | null
           us_entry_date: string | null
           visa_type: Database["public"]["Enums"]["visa_type"] | null
@@ -199,7 +245,9 @@ export type Database = {
           passport_expiry_date?: string | null
           passport_number?: string | null
           phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           university?: string | null
+          university_id?: string | null
           updated_at?: string | null
           us_entry_date?: string | null
           visa_type?: Database["public"]["Enums"]["visa_type"] | null
@@ -221,10 +269,50 @@ export type Database = {
           passport_expiry_date?: string | null
           passport_number?: string | null
           phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           university?: string | null
+          university_id?: string | null
           updated_at?: string | null
           us_entry_date?: string | null
           visa_type?: Database["public"]["Enums"]["visa_type"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      universities: {
+        Row: {
+          country: string
+          created_at: string | null
+          id: string
+          name: string
+          sevis_id: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          country: string
+          created_at?: string | null
+          id?: string
+          name: string
+          sevis_id?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          country?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          sevis_id?: string | null
+          updated_at?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -236,6 +324,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      user_role: "student" | "dso" | "admin"
       visa_type: "F1" | "OPT" | "H1B" | "Other"
     }
     CompositeTypes: {
@@ -352,6 +441,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      user_role: ["student", "dso", "admin"],
       visa_type: ["F1", "OPT", "H1B", "Other"],
     },
   },

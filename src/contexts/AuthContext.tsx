@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -5,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 
 export type VisaType = "F1" | "J1" | "H1B" | "Other" | null;
+export type UserRole = "student" | "dso" | "admin";
 
 export interface UserProfile {
   id: string;
@@ -13,9 +15,11 @@ export interface UserProfile {
   country: string;
   visaType: VisaType;
   university?: string;
-  degreeLevel?: string;     // Added field
-  fieldOfStudy?: string;    // Added field
-  isSTEM?: boolean;         // Added field
+  universityId?: string;
+  role: UserRole;
+  degreeLevel?: string;     
+  fieldOfStudy?: string;    
+  isSTEM?: boolean;         
   courseStartDate?: Date;
   usEntryDate?: Date;
   employmentStartDate?: Date;
@@ -27,14 +31,27 @@ export interface UserProfile {
   address?: string;
 }
 
+interface DSOProfile {
+  title?: string;
+  department?: string;
+  officeLocation?: string;
+  officeHours?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+
 interface AuthContextType {
   currentUser: UserProfile | null;
+  dsoProfile: DSOProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isDSO: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
+  updateDSOProfile: (data: Partial<DSOProfile>) => Promise<void>;
   completeOnboarding: () => void;
 }
 
@@ -50,6 +67,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [dsoProfile, setDSOProfile] = useState<DSOProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
@@ -67,6 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }, 0);
         } else {
           setCurrentUser(null);
+          setDSOProfile(null);
           setIsLoading(false);
         }
       }
@@ -93,25 +112,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (user: User) => {
     try {
+      // First fetch the basic profile
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          universities(name)
+        `)
         .eq('id', user.id)
         .single();
 
       if (error) throw error;
 
       if (data) {
-        setCurrentUser({
+        const userProfile: UserProfile = {
           id: user.id,
           name: data.name || '',
           email: data.email || user.email || '',
           country: data.country || '',
           visaType: data.visa_type as VisaType,
-          university: data.university || undefined,
-          degreeLevel: data.degree_level || undefined,  // Map from DB column
-          fieldOfStudy: data.field_of_study || undefined,  // Map from DB column
-          isSTEM: data.is_stem || false,  // Map from DB column
+          university: data.universities?.name || undefined,
+          universityId: data.university_id || undefined,
+          role: data.role || 'student',
+          degreeLevel: data.degree_level || undefined,
+          fieldOfStudy: data.field_of_study || undefined,
+          isSTEM: data.is_stem || false,
           courseStartDate: data.course_start_date ? new Date(data.course_start_date) : undefined,
           usEntryDate: data.us_entry_date ? new Date(data.us_entry_date) : undefined,
           employmentStartDate: data.employment_start_date ? new Date(data.employment_start_date) : undefined,
@@ -121,7 +146,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           phone: data.phone || undefined,
           passportNumber: data.passport_number || undefined,
           address: data.address || undefined
-        });
+        };
+        
+        setCurrentUser(userProfile);
+        
+        // If the user is a DSO, fetch the DSO-specific profile
+        if (userProfile.role === 'dso') {
+          const { data: dsoData, error: dsoError } = await supabase
+            .from('dso_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+            
+          if (!dsoError && dsoData) {
+            setDSOProfile({
+              title: dsoData.title || undefined,
+              department: dsoData.department || undefined,
+              officeLocation: dsoData.office_location || undefined,
+              officeHours: dsoData.office_hours || undefined,
+              contactEmail: dsoData.contact_email || undefined,
+              contactPhone: dsoData.contact_phone || undefined
+            });
+          }
+        }
       } else {
         // Profile not found, create one
         const { error: insertError } = await supabase
@@ -129,7 +176,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .insert([{ 
             id: user.id,
             email: user.email,
-            onboarding_complete: false
+            onboarding_complete: false,
+            role: 'student'
           }]);
 
         if (insertError) throw insertError;
@@ -140,6 +188,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: user.email || '',
           country: '',
           visaType: null,
+          role: 'student',
           onboardingComplete: false,
           dateOfBirth: undefined,
           passportExpiryDate: undefined,
@@ -259,6 +308,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           delete dbData.visaType;
         }
         
+        // Handle university ID
+        if (data.universityId !== undefined) {
+          dbData.university_id = data.universityId;
+          delete dbData.universityId;
+        }
+        
+        // Map role
+        if (data.role !== undefined) {
+          dbData.role = data.role;
+          delete dbData.role;
+        }
+        
         // Handle personal info fields
         if (data.dateOfBirth) {
           dbData.date_of_birth = typeof data.dateOfBirth === 'string' 
@@ -334,6 +395,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateDSOProfile = async (data: Partial<DSOProfile>) => {
+    if (!currentUser || currentUser.role !== 'dso') {
+      throw new Error("Only DSO users can update DSO profiles");
+    }
+
+    try {
+      // Map properties to database column names
+      const dbData: any = {};
+      
+      if (data.title !== undefined) dbData.title = data.title;
+      if (data.department !== undefined) dbData.department = data.department;
+      if (data.officeLocation !== undefined) dbData.office_location = data.officeLocation;
+      if (data.officeHours !== undefined) dbData.office_hours = data.officeHours;
+      if (data.contactEmail !== undefined) dbData.contact_email = data.contactEmail;
+      if (data.contactPhone !== undefined) dbData.contact_phone = data.contactPhone;
+      
+      // Check if DSO profile exists
+      const { data: existingProfile } = await supabase
+        .from('dso_profiles')
+        .select('id')
+        .eq('id', currentUser.id)
+        .single();
+      
+      let error;
+      
+      if (existingProfile) {
+        // Update existing profile
+        const { error: updateError } = await supabase
+          .from('dso_profiles')
+          .update(dbData)
+          .eq('id', currentUser.id);
+          
+        error = updateError;
+      } else {
+        // Insert new profile
+        const { error: insertError } = await supabase
+          .from('dso_profiles')
+          .insert([{ 
+            ...dbData,
+            id: currentUser.id 
+          }]);
+          
+        error = insertError;
+      }
+      
+      if (error) throw error;
+
+      // Update local state
+      setDSOProfile(prev => ({
+        ...prev,
+        ...data,
+      }));
+
+      toast.success('DSO profile updated successfully');
+    } catch (error: any) {
+      console.error("Error updating DSO profile:", error);
+      toast.error(`Failed to update DSO profile: ${error.message}`);
+      throw error;
+    }
+  };
+
   const completeOnboarding = async () => {
     if (currentUser && currentUser.id) {
       try {
@@ -381,21 +503,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Check if user should be directed to onboarding
   useEffect(() => {
     if (currentUser && !isLoading) {
-      // If user is logged in but hasn't completed onboarding
-      if (!currentUser.onboardingComplete && !window.location.pathname.includes("/onboarding")) {
+      // Student users without completed onboarding should be directed to onboarding
+      if (currentUser.role === 'student' && !currentUser.onboardingComplete && !window.location.pathname.includes("/onboarding")) {
         navigate("/onboarding");
       }
     }
   }, [currentUser, isLoading, navigate]);
 
+  // Computed properties for user roles
+  const isDSO = currentUser?.role === 'dso';
+  const isAdmin = currentUser?.role === 'admin';
+
   const value = {
     currentUser,
+    dsoProfile,
     isAuthenticated: !!session,
     isLoading,
+    isDSO,
+    isAdmin,
     login,
     signup,
     logout,
     updateProfile,
+    updateDSOProfile,
     completeOnboarding
   };
 
