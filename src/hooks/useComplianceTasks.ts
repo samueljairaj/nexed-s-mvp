@@ -21,6 +21,16 @@ export interface Task {
   updatedAt?: Date;
 }
 
+// Interface for custom task creation
+interface CustomTaskInput {
+  title: string;
+  description: string;
+  dueDate: string;
+  priority: 'low' | 'medium' | 'high';
+  category: DocumentCategory;
+  phase?: string;
+}
+
 export const useComplianceTasks = () => {
   const { currentUser } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -206,6 +216,32 @@ export const useComplianceTasks = () => {
     });
   }, []);
 
+  // Add a custom task or reminder
+  const addCustomTask = useCallback((taskInput: CustomTaskInput) => {
+    const newTask: Task = {
+      id: `custom-task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: taskInput.title,
+      description: taskInput.description,
+      dueDate: taskInput.dueDate,
+      deadline: new Date(taskInput.dueDate),
+      completed: false,
+      category: taskInput.category,
+      phase: taskInput.phase || "general",
+      priority: taskInput.priority,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    setTasks(prevTasks => {
+      const updatedTasks = [...prevTasks, newTask];
+      cacheTasksToLocalStorage(updatedTasks);
+      return updatedTasks;
+    });
+    
+    toast.success("Added new reminder");
+    return newTask;
+  }, []);
+
   // Toggle category filter
   const toggleFilter = useCallback((category: DocumentCategory) => {
     setSelectedFilters(prev => {
@@ -269,5 +305,6 @@ export const useComplianceTasks = () => {
     toggleTaskStatus,
     generateTasksWithAI,
     loadTasks,
+    addCustomTask,  // Add the new function
   };
 };

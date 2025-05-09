@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Tabs,
@@ -13,6 +14,9 @@ import { PhaseGroupedTasks } from "@/components/compliance/PhaseGroupedTasks";
 import { useComplianceTasks, Task } from "@/hooks/useComplianceTasks";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TaskReminders } from "@/components/compliance/TaskReminders";
+import { CalendarView } from "@/components/compliance/CalendarView";
+import { DailyTasks } from "@/components/compliance/DailyTasks";
 
 const Compliance = () => {
   const {
@@ -29,8 +33,30 @@ const Compliance = () => {
     phaseGroups,
     toggleTaskStatus,
     generateTasksWithAI,
-    setSelectedFilters  // Make sure this is available from the hook
+    setSelectedFilters,
+    addCustomTask
   } = useComplianceTasks();
+
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDateTasks, setSelectedDateTasks] = useState<Task[]>([]);
+
+  // Handle calendar date selection
+  const handleDateClick = (date: Date, tasksForDate: Task[]) => {
+    setSelectedDate(date);
+    setSelectedDateTasks(tasksForDate);
+  };
+
+  // Handle adding a custom reminder
+  const handleAddCustomReminder = (title: string, dueDate: string, priority: "low" | "medium" | "high") => {
+    addCustomTask({
+      title,
+      description: "Custom reminder",
+      dueDate,
+      priority,
+      category: "personal",
+      phase: "general"
+    });
+  };
 
   if (isLoading) {
     return (
@@ -93,6 +119,27 @@ const Compliance = () => {
           </Button>
         </div>
       )}
+
+      {/* Reminders Section */}
+      {tasks.length > 0 && (
+        <div className="mb-8">
+          <TaskReminders 
+            tasks={tasks} 
+            toggleTaskStatus={toggleTaskStatus} 
+            onAddCustomReminder={handleAddCustomReminder}
+          />
+        </div>
+      )}
+
+      {/* Calendar and Daily Tasks View */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <CalendarView tasks={tasks} onDateClick={handleDateClick} />
+        <DailyTasks 
+          date={selectedDate} 
+          tasks={selectedDateTasks} 
+          toggleTaskStatus={toggleTaskStatus} 
+        />
+      </div>
 
       {/* Task Lists */}
       <Tabs defaultValue="all" className="w-full">
