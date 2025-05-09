@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -63,20 +64,30 @@ export function VisaStatusStep({
   isSubmitting = false,
   handleBackToLogin // Added prop
 }: VisaStatusStepProps) {
+  // Convert the string visa type to the enum type expected by the schema
+  const initialVisaType = defaultValues.visaType as "F1" | "J1" | "H1B" | "Other";
+
   const form = useForm({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
-      visaType: defaultValues.visaType || "",
-      visaExpiryDate: defaultValues.visaExpiryDate || null,
-      hasDS2019: defaultValues.hasDS2019 || false,
-      hasDependents: defaultValues.hasDependents || false,
-      sevisId: defaultValues.sevisId || "",
-      i20ExpiryDate: defaultValues.i20ExpiryDate || null,
+      ...defaultValues,
+      visaType: initialVisaType || "F1",
     },
   });
 
   // Watch visa type to update form fields and validation
   const visaType = form.watch("visaType");
+  
+  // Handle submit to ensure data is properly typed
+  const handleFormSubmit = (data: any) => {
+    // Ensure visaType is one of the allowed types
+    const formattedData: VisaStatusFormData = {
+      ...data,
+      visaType: data.visaType as "F1" | "J1" | "H1B" | "Other"
+    };
+    
+    onSubmit(formattedData);
+  };
 
   return (
     <div className="space-y-6">
@@ -97,7 +108,7 @@ export function VisaStatusStep({
       <p className="text-muted-foreground">Please provide your current visa status information.</p>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="visaType"

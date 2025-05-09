@@ -1,225 +1,231 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { DocumentCategory } from '@/types/document';
+import { getBaselineChecklist } from '@/utils/baselineChecklists';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { useAICompliance } from "@/hooks/useAICompliance";
-import { generateMockTasks } from "@/utils/mockTasks";
-import { DocumentCategory } from "@/types/document";
-import { getBaselineChecklist, baselineItemsToAITasks } from "@/utils/baselineChecklists";
-
-// Export the Task type that matches AITask
-export type Task = {
+// Task type
+export interface Task {
   id: string;
   title: string;
   description: string;
-  dueDate: string;
-  category: DocumentCategory;
+  deadline?: Date | null;
   completed: boolean;
-  priority: "low" | "medium" | "high";
+  category: DocumentCategory;
   phase?: string;
-};
-
-// Add cache key to localStorage for AI-generated tasks
-const AI_TASKS_CACHE_KEY = "nexed_ai_compliance_tasks";
+  priority: 'low' | 'medium' | 'high';
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export const useComplianceTasks = () => {
   const { currentUser } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFilters, setSelectedFilters] = useState<DocumentCategory[]>([]);
-  const [selectedPhase, setSelectedPhase] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
-  const { generateCompliance, isGenerating } = useAICompliance();
-  const [isAILoading, setIsAILoading] = useState(false);
-  const [phaseGroups, setPhaseGroups] = useState<{[key: string]: Task[]}>({});
+  const [selectedPhase, setSelectedPhase] = useState<string>('');
+  const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
 
-  // Toggle task completion status
-  const toggleTaskStatus = (taskId: string) => {
-    setTasks(prev => 
-      prev.map(task => 
-        task.id === taskId 
-          ? { ...task, completed: !task.completed } 
-          : task
-      )
-    );
-    
-    // Update filtered tasks as well
-    setFilteredTasks(prev => 
-      prev.map(task => 
-        task.id === taskId 
-          ? { ...task, completed: !task.completed } 
-          : task
-      )
-    );
+  // Load tasks on component mount
+  useEffect(() => {
+    loadTasks();
+  }, [currentUser?.id]);
 
-    // Also update phase groups
-    setPhaseGroups(prev => {
-      const newGroups = { ...prev };
-      
-      Object.keys(newGroups).forEach(phase => {
-        newGroups[phase] = newGroups[phase].map(task => 
-          task.id === taskId 
-            ? { ...task, completed: !task.completed } 
-            : task
-        );
-      });
-      
-      return newGroups;
-    });
-
-    const taskTitle = tasks.find(task => task.id === taskId)?.title;
-    const newStatus = !tasks.find(task => task.id === taskId)?.completed;
-    
-    toast(
-      newStatus ? "Task marked as complete" : "Task marked as incomplete", 
-      { description: taskTitle }
-    );
-
-    // Also update tasks in cache
-    const cachedTasks = JSON.parse(localStorage.getItem(AI_TASKS_CACHE_KEY) || "[]");
-    if (cachedTasks.length > 0) {
-      const updatedCache = cachedTasks.map((task: Task) => 
-        task.id === taskId ? { ...task, completed: newStatus } : task
-      );
-      localStorage.setItem(AI_TASKS_CACHE_KEY, JSON.stringify(updatedCache));
-    }
-  };
-
-  // Filter tasks based on search, category, and phase
-  const filterTasks = (query: string, filters: DocumentCategory[], phase: string) => {
-    let result = [...tasks];
-    
-    // Apply search query
-    if (query) {
-      result = result.filter(task => 
-        task.title.toLowerCase().includes(query.toLowerCase()) || 
-        task.description.toLowerCase().includes(query.toLowerCase())
-      );
-    }
-    
-    // Apply category filters
-    if (filters.length > 0) {
-      result = result.filter(task => filters.includes(task.category));
-    }
-    
-    // Apply phase filter
-    if (phase) {
-      result = result.filter(task => task.phase === phase);
-    }
-    
-    setFilteredTasks(result);
-  };
-
-  // Toggle category filter
-  const toggleFilter = (filter: DocumentCategory) => {
-    setSelectedFilters(prev => 
-      prev.includes(filter) 
-        ? prev.filter(f => f !== filter)
-        : [...prev, filter]
-    );
-  };
-
-  // Load baseline tasks immediately
-  const loadBaselineTasks = () => {
-    const visaType = currentUser?.visaType || "F1";
-    const mockTasks = generateMockTasks(visaType);
-    
-    // Try to get cached AI tasks
-    const cachedTasks = localStorage.getItem(AI_TASKS_CACHE_KEY);
-    
-    if (cachedTasks) {
-      try {
-        const parsedCache = JSON.parse(cachedTasks);
-        setTasks(parsedCache);
-        setFilteredTasks(parsedCache);
-        
-        // Group cached tasks by phase
-        const groupedByPhase = parsedCache.reduce((groups: {[key: string]: Task[]}, task: Task) => {
-          const phase = task.phase || "general";
-          if (!groups[phase]) {
-            groups[phase] = [];
-          }
-          groups[phase].push(task);
-          return groups;
-        }, {});
-        
-        setPhaseGroups(groupedByPhase);
-        toast.success("Loaded your compliance tasks");
-      } catch (error) {
-        console.error("Error parsing cached tasks:", error);
-        setTasksAndGroups(mockTasks);
-      }
-    } else {
-      // Load baseline tasks if no cache
-      const baselineItems = getBaselineChecklist(visaType);
-      const baselineTasks = baselineItemsToAITasks(baselineItems);
-      
-      if (baselineTasks.length > 0) {
-        setTasksAndGroups(baselineTasks);
-      } else {
-        // Fallback to mock tasks if baseline is empty
-        setTasksAndGroups(mockTasks);
-      }
-    }
-    
-    setIsLoading(false);
-  };
-
-  // Helper to set tasks and create phase groups
-  const setTasksAndGroups = (taskList: Task[]) => {
-    setTasks(taskList);
-    setFilteredTasks(taskList);
-    
-    // Group tasks by phase
-    const groupedByPhase = taskList.reduce((groups: {[key: string]: Task[]}, task) => {
-      const phase = task.phase || "general";
-      if (!groups[phase]) {
-        groups[phase] = [];
-      }
-      groups[phase].push(task);
-      return groups;
-    }, {});
-    
-    setPhaseGroups(groupedByPhase);
-  };
-
-  // Generate tasks using AI - now explicitly triggered by user
-  const generateTasksWithAI = async () => {
-    setIsAILoading(true);
+  // Load user's tasks from local storage or generate baseline if none exist
+  const loadTasks = async () => {
+    setIsLoading(true);
     
     try {
-      const aiTasks = await generateCompliance();
+      // Check local storage for cached tasks
+      const cachedTasksJson = localStorage.getItem('compliance_tasks');
+      let cachedTasks = null;
       
-      if (aiTasks && aiTasks.length > 0) {
-        setTasksAndGroups(aiTasks as Task[]);
+      if (cachedTasksJson) {
+        try {
+          const cached = JSON.parse(cachedTasksJson);
+          // Validate structure and ensure it has the expected user ID
+          if (cached && cached.tasks && cached.userId === currentUser?.id) {
+            cachedTasks = cached;
+            console.log('Loaded cached tasks from local storage');
+          }
+        } catch (e) {
+          console.error('Error parsing cached tasks:', e);
+        }
+      }
+      
+      if (cachedTasks) {
+        // Parse dates since JSON.stringify doesn't preserve Date objects
+        const parsedTasks = cachedTasks.tasks.map((task: any) => ({
+          ...task,
+          deadline: task.deadline ? new Date(task.deadline) : null,
+          createdAt: task.createdAt ? new Date(task.createdAt) : new Date(),
+          updatedAt: task.updatedAt ? new Date(task.updatedAt) : new Date()
+        }));
         
-        // Cache the AI-generated tasks
-        localStorage.setItem(AI_TASKS_CACHE_KEY, JSON.stringify(aiTasks));
-        
-        toast.success("AI-generated compliance tasks created successfully");
+        setTasks(parsedTasks);
+        if (cachedTasks.lastGeneratedAt) {
+          setLastGeneratedAt(new Date(cachedTasks.lastGeneratedAt));
+        }
       } else {
-        toast.error("AI task generation failed, using baseline tasks instead");
-        loadBaselineTasks();
+        // No cached tasks, load baseline checklist based on user's visa type
+        const baselineTasks = getBaselineChecklist(currentUser?.visaType || 'F1');
+        setTasks(baselineTasks);
+        
+        // Cache the baseline tasks
+        cacheTasksToLocalStorage(baselineTasks);
       }
     } catch (error) {
-      console.error("Error generating AI tasks:", error);
-      toast.error("Failed to generate AI tasks");
-      loadBaselineTasks();
+      console.error('Error loading tasks:', error);
+      toast.error('Failed to load compliance tasks');
+      
+      // Fallback to baseline tasks
+      const baselineTasks = getBaselineChecklist(currentUser?.visaType || 'F1');
+      setTasks(baselineTasks);
     } finally {
-      setIsAILoading(false);
+      setIsLoading(false);
+    }
+  };
+  
+  // Cache tasks to localStorage
+  const cacheTasksToLocalStorage = (tasksToCache: Task[]) => {
+    try {
+      localStorage.setItem('compliance_tasks', JSON.stringify({
+        userId: currentUser?.id,
+        tasks: tasksToCache,
+        lastGeneratedAt: lastGeneratedAt?.toISOString()
+      }));
+    } catch (e) {
+      console.error('Error caching tasks to local storage:', e);
     }
   };
 
-  // Effect to filter tasks when filters change
-  useEffect(() => {
-    filterTasks(searchQuery, selectedFilters, selectedPhase);
-  }, [searchQuery, selectedFilters, selectedPhase, tasks]);
+  // Generate AI tasks
+  const generateTasksWithAI = async () => {
+    if (!currentUser) return;
+    
+    setIsGenerating(true);
+    
+    try {
+      // First show baseline checklist immediately
+      const baselineTasks = getBaselineChecklist(currentUser.visaType || 'F1');
+      setTasks(baselineTasks);
+      
+      // Then enhance with AI tasks
+      const { data, error } = await supabase.functions.invoke('generate-compliance', {
+        body: { 
+          userId: currentUser.id,
+          visaType: currentUser.visaType,
+          profile: {
+            country: currentUser.country,
+            university: currentUser.university,
+            employmentStatus: currentUser.employmentStatus
+          }
+        }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (data && data.tasks) {
+        // Transform API response to our task format
+        const aiTasks: Task[] = data.tasks.map((task: any, index: number) => ({
+          id: `ai-task-${Date.now()}-${index}`,
+          title: task.title,
+          description: task.description,
+          deadline: task.deadline ? new Date(task.deadline) : null,
+          completed: false,
+          category: task.category || 'immigration',
+          phase: task.phase || 'general',
+          priority: task.priority || 'medium',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }));
+        
+        // Update the tasks and cache them
+        setTasks(aiTasks);
+        setLastGeneratedAt(new Date());
+        cacheTasksToLocalStorage(aiTasks);
+        
+        toast.success('Successfully generated personalized tasks!');
+      } else {
+        throw new Error('No tasks returned from AI');
+      }
+    } catch (error) {
+      console.error('Error generating AI tasks:', error);
+      toast.error('Failed to generate personalized tasks');
+      
+      // Keep the baseline tasks that were already set
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
-  // Load baseline tasks on component mount
-  useEffect(() => {
-    loadBaselineTasks();
-  }, [currentUser]);
+  // Toggle task status (completed/incomplete)
+  const toggleTaskStatus = useCallback((taskId: string) => {
+    setTasks(prev => {
+      const updatedTasks = prev.map(task => 
+        task.id === taskId 
+          ? { ...task, completed: !task.completed, updatedAt: new Date() } 
+          : task
+      );
+      
+      // Cache the updated tasks
+      cacheTasksToLocalStorage(updatedTasks);
+      
+      return updatedTasks;
+    });
+  }, []);
+
+  // Toggle category filter
+  const toggleFilter = useCallback((category: DocumentCategory) => {
+    setSelectedFilters(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(c => c !== category);
+      } else {
+        return [...prev, category];
+      }
+    });
+  }, []);
+
+  // Filter tasks based on search query, category filters, and phase
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = searchQuery === '' || 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      task.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = selectedFilters.length === 0 || 
+      selectedFilters.includes(task.category);
+    
+    const matchesPhase = selectedPhase === '' || 
+      task.phase === selectedPhase;
+    
+    return matchesSearch && matchesCategory && matchesPhase;
+  });
+
+  // Group tasks by phase
+  const phaseGroups = tasks.reduce((groups: {[key: string]: Task[]}, task) => {
+    const phase = task.phase || 'general';
+    if (!groups[phase]) {
+      groups[phase] = [];
+    }
+    
+    const matchesSearch = searchQuery === '' || 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      task.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = selectedFilters.length === 0 || 
+      selectedFilters.includes(task.category);
+      
+    if (matchesSearch && matchesCategory) {
+      groups[phase].push(task);
+    }
+    
+    return groups;
+  }, {});
 
   return {
     tasks,
@@ -227,13 +233,15 @@ export const useComplianceTasks = () => {
     searchQuery,
     setSearchQuery,
     selectedFilters,
+    setSelectedFilters,  // Export this
     toggleFilter,
     selectedPhase,
     setSelectedPhase,
-    isLoading,
-    isGenerating: isGenerating || isAILoading,
     phaseGroups,
+    isLoading,
+    isGenerating,
     toggleTaskStatus,
-    generateTasksWithAI
+    generateTasksWithAI,
+    loadTasks,
   };
 };

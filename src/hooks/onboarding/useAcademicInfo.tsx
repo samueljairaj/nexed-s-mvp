@@ -2,19 +2,18 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { AcademicInfoFormData } from "@/components/onboarding/AcademicInfoStep";
+import { AcademicInfoFormValues } from "@/types/onboarding";
 
 export function useAcademicInfo() {
   const { updateProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [academicData, setAcademicData] = useState<Partial<AcademicInfoFormData>>({
+  const [academicData, setAcademicData] = useState<Partial<AcademicInfoFormValues>>({
     university: "",
     degreeLevel: "",
-    fieldOfStudy: "",
-    isSTEM: false
+    fieldOfStudy: ""
   });
 
-  const handleAcademicInfo = async (data: AcademicInfoFormData) => {
+  const handleAcademicInfo = async (data: AcademicInfoFormValues) => {
     setAcademicData(data);
     setIsSubmitting(true);
     
@@ -24,19 +23,18 @@ export function useAcademicInfo() {
         university: data.university,
         degree_level: data.degreeLevel,  // Use snake_case for database columns
         field_of_study: data.fieldOfStudy,  // Use snake_case for database columns
-        is_stem: data.isSTEM  // Use snake_case for database columns
       };
       
       // Format program start date as YYYY-MM-DD string
-      if (data.courseStartDate) {
-        updateData.courseStartDate = formatDateToString(data.courseStartDate);
+      if (data.programStartDate) {
+        updateData.courseStartDate = formatDateToString(data.programStartDate);
       }
 
-      if (data.graduationDate) {
-        updateData.graduationDate = formatDateToString(data.graduationDate);
+      if (data.expectedGraduationDate) {
+        updateData.graduationDate = formatDateToString(data.expectedGraduationDate);
       }
 
-      if (data.hasTransferred) {
+      if (data.isTransferStudent) {
         updateData.previous_university = data.previousUniversity;
         updateData.has_transferred = true;
       }

@@ -28,6 +28,7 @@ export interface FormDatePickerProps {
   className?: string;
   buttonClassName?: string;
   required?: boolean;
+  control?: any; // Allow control prop for compatibility
 }
 
 export function FormDatePicker({
@@ -39,6 +40,7 @@ export function FormDatePicker({
   className,
   buttonClassName,
   required = false,
+  control // Accept control prop but don't use it directly
 }: FormDatePickerProps) {
   const form = useFormContext();
 

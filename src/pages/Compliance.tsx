@@ -29,7 +29,8 @@ const Compliance = () => {
     isGenerating,
     phaseGroups,
     toggleTaskStatus,
-    generateTasksWithAI
+    generateTasksWithAI,
+    setSelectedFilters  // Make sure this is available from the hook
   } = useComplianceTasks();
 
   if (isLoading) {
@@ -73,6 +74,7 @@ const Compliance = () => {
         phaseGroups={phaseGroups}
         selectedPhase={selectedPhase}
         setSelectedPhase={setSelectedPhase}
+        setSelectedFilters={setSelectedFilters} // Pass this prop to fix the error
       />
 
       {/* Initial AI Generation Prompt - show if no tasks are available */}

@@ -19,6 +19,8 @@ interface ComplianceFiltersProps {
   phaseGroups: {[key: string]: any[]};
   selectedPhase: string;
   setSelectedPhase: (phase: string) => void;
+  // Add this prop to fix the error
+  setSelectedFilters: (filters: DocumentCategory[]) => void;
 }
 
 export function ComplianceFilters({
@@ -31,6 +33,8 @@ export function ComplianceFilters({
   phaseGroups,
   selectedPhase,
   setSelectedPhase,
+  // Add the new prop here
+  setSelectedFilters,
 }: ComplianceFiltersProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 

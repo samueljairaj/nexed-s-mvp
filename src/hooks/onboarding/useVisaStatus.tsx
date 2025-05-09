@@ -2,17 +2,17 @@
 import { useState } from "react";
 import { useAuth, VisaType } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { VisaStatusFormData } from "@/components/onboarding/VisaStatusStep";
+import { VisaStatusFormValues } from "@/types/onboarding";
 
 export function useVisaStatus() {
   const { updateProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [visaData, setVisaData] = useState<Partial<VisaStatusFormData>>({
+  const [visaData, setVisaData] = useState<Partial<VisaStatusFormValues>>({
     visaType: "F1",
     currentStatus: ""
   });
 
-  const handleVisaStatus = async (data: VisaStatusFormData) => {
+  const handleVisaStatus = async (data: VisaStatusFormValues) => {
     // Store the full data in the component state
     setVisaData(data);
     setIsSubmitting(true);

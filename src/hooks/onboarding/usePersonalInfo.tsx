@@ -2,19 +2,19 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PersonalInfoFormData } from "@/components/onboarding/PersonalInfoStep";
+import { PersonalInfoFormValues } from "@/types/onboarding";
 
 export function usePersonalInfo() {
   const { updateProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [personalData, setPersonalData] = useState<Partial<PersonalInfoFormData>>({
+  const [personalData, setPersonalData] = useState<Partial<PersonalInfoFormValues>>({
     country: "",
     phoneNumber: "",
     nationality: "",
     address: ""
   });
 
-  const handlePersonalInfo = async (data: PersonalInfoFormData) => {
+  const handlePersonalInfo = async (data: PersonalInfoFormValues) => {
     setPersonalData(data);
     setIsSubmitting(true);
     

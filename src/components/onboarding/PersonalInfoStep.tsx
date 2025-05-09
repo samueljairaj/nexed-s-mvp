@@ -89,14 +89,12 @@ export function PersonalInfoStep({
               control={form.control}
               name="dateOfBirth"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date of Birth</FormLabel>
-                  <FormDatePicker
-                    name="dateOfBirth"
-                    placeholder="Select date"
-                  />
-                  <FormMessage />
-                </FormItem>
+                <FormDatePicker
+                  name="dateOfBirth"
+                  label="Date of Birth"
+                  placeholder="Select date"
+                  required
+                />
               )}
             />
             
@@ -134,14 +132,11 @@ export function PersonalInfoStep({
               control={form.control}
               name="usEntryDate"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date of First Entry to the U.S.</FormLabel>
-                  <FormDatePicker
-                    name="usEntryDate"
-                    placeholder="Select date"
-                  />
-                  <FormMessage />
-                </FormItem>
+                <FormDatePicker
+                  name="usEntryDate"
+                  label="Date of First Entry to the U.S."
+                  placeholder="Select date"
+                />
               )}
             />
           </div>
