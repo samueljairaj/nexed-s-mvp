@@ -1,9 +1,10 @@
 
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { ComplianceChecklist } from "./ComplianceChecklist";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface OnboardingCompleteProps {
   onFinish: () => void;
@@ -28,6 +29,7 @@ interface OnboardingCompleteProps {
 export function OnboardingComplete({ onFinish, isSubmitting = false, userData = {} }: OnboardingCompleteProps) {
   const [showChecklist, setShowChecklist] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     // Show compliance checklist automatically after a short delay
@@ -45,6 +47,13 @@ export function OnboardingComplete({ onFinish, isSubmitting = false, userData = 
     // Then explicitly navigate to the dashboard using replace to prevent 
     // the user from navigating back to the onboarding flow with the back button
     navigate("/app/dashboard", { replace: true });
+  };
+
+  const handleBackToLogin = () => {
+    // First logout the user if they are authenticated
+    logout();
+    // Then navigate to the root page which contains the login form
+    navigate("/", { replace: true });
   };
 
   return (
@@ -71,20 +80,31 @@ export function OnboardingComplete({ onFinish, isSubmitting = false, userData = 
           </p>
         </div>
         
-        <Button 
-          onClick={handleGoToDashboard} 
-          className="mt-6 px-10"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
-              Processing...
-            </>
-          ) : (
-            "Go to Dashboard"
-          )}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-6">
+          <Button 
+            onClick={handleGoToDashboard} 
+            className="px-10"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
+                Processing...
+              </>
+            ) : (
+              "Go to Dashboard"
+            )}
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={handleBackToLogin}
+            className="flex items-center gap-1"
+          >
+            <ArrowLeft size={16} />
+            Back to Login
+          </Button>
+        </div>
       </div>
 
       {/* Compliance Checklist Dialog */}
