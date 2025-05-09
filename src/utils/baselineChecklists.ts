@@ -1,3 +1,4 @@
+
 import { Task } from "@/hooks/useComplianceTasks";
 import { DocumentCategory } from "@/types/document";
 
@@ -256,10 +257,13 @@ export function baselineItemsToAITasks(items: BaselineChecklistItem[]): Task[] {
     title: item.title,
     description: item.description,
     dueDate: calculateDueDate(item.priority),
+    deadline: new Date(calculateDueDate(item.priority)),
     category: item.category,
     completed: false,
     priority: item.priority,
-    phase: item.phase
+    phase: item.phase,
+    createdAt: new Date(),
+    updatedAt: new Date()
   }));
 }
 
