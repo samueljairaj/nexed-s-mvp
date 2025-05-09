@@ -62,11 +62,11 @@ const Onboarding = () => {
     }
   }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isDSO]);
 
-  // Handle back to login
-  const handleBackToLogin = () => {
+  // Handle back to login/landing page
+  const handleBackToHome = () => {
     // Logout the user if they are authenticated
     logout();
-    // Navigate back to login page
+    // Navigate back to landing page
     navigate("/", { replace: true });
   };
 
@@ -119,7 +119,7 @@ const Onboarding = () => {
           isOptOrCpt={typeof isOptOrCpt === 'function' ? isOptOrCpt() : isOptOrCpt}
           isStemOpt={typeof isStemOpt === 'function' ? isStemOpt() : isStemOpt}
           handleFinish={handleFinish}
-          handleBackToLogin={handleBackToLogin}
+          handleBackToLogin={handleBackToHome}
           handleUniversityInfoSetup={handleUniversityInfoSetup}
           universityData={universityData}
         />
@@ -136,6 +136,7 @@ const Onboarding = () => {
           }}
           onPrevious={goToPreviousStep}
           isSubmitting={isSubmitting}
+          onBackToHome={handleBackToHome}
         />
       )}
     </OnboardingLayout>

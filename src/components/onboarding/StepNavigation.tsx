@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Home } from "lucide-react";
 
 interface StepNavigationProps {
   onNext: () => void;
@@ -9,6 +9,7 @@ interface StepNavigationProps {
   isFirstStep: boolean;
   isLastStep: boolean;
   isSubmitting?: boolean;
+  onBackToHome?: () => void;
 }
 
 export function StepNavigation({
@@ -17,20 +18,36 @@ export function StepNavigation({
   currentStep,
   isFirstStep,
   isLastStep,
-  isSubmitting = false
+  isSubmitting = false,
+  onBackToHome
 }: StepNavigationProps) {
   return (
     <div className="flex justify-between mt-8 pt-4 border-t">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onPrevious}
-        disabled={isFirstStep || isSubmitting}
-        className="flex items-center gap-2"
-      >
-        <ArrowLeft size={16} />
-        Back
-      </Button>
+      <div className="flex gap-2">
+        {onBackToHome && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onBackToHome}
+            disabled={isSubmitting}
+            className="flex items-center gap-2"
+          >
+            <Home size={16} />
+            Back to Home
+          </Button>
+        )}
+        
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onPrevious}
+          disabled={isFirstStep || isSubmitting}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </Button>
+      </div>
       
       <Button
         type={isLastStep ? "button" : "submit"}
