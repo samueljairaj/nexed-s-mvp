@@ -6,6 +6,18 @@ import { supabase } from "../integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { Database } from "@/integrations/supabase/types";
 
+// Define types for DSO profile
+type DsoProfile = {
+  title?: string;
+  department?: string;
+  officeLocation?: string;
+  officeHours?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  role?: "dso_admin" | "dso_viewer";
+  university_id?: string;
+};
+
 // Define user profile type
 type UserProfile = {
   id: string;
@@ -16,28 +28,19 @@ type UserProfile = {
   university?: string;
   universityId?: string;
   country?: string;
-  visaType?: Database["public"]["Enums"]["visa_type"] | null;
+  visaType?: "F1" | "J1" | "H1B" | "CPT" | "OPT" | "STEM_OPT" | "Other";
   address?: string;
   phone?: string;
   degreeLevel?: string;
   fieldOfStudy?: string;
   isSTEM?: boolean;
-  courseStartDate?: Date | null;
-  usEntryDate?: Date | null;
-  employmentStartDate?: Date | null;
-  dateOfBirth?: Date | null;
+  courseStartDate?: string | null;
+  usEntryDate?: string | null;
+  employmentStartDate?: string | null;
+  dateOfBirth?: string | null;
   passportNumber?: string;
-  passportExpiryDate?: Date | null;
-  dsoProfile?: {
-    title?: string;
-    department?: string;
-    officeLocation?: string;
-    officeHours?: string;
-    contactEmail?: string;
-    contactPhone?: string;
-    role?: "dso_admin" | "dso_viewer";
-    university_id?: string;
-  };
+  passportExpiryDate?: string | null;
+  dsoProfile?: DsoProfile;
 };
 
 // Define authentication context type
@@ -59,16 +62,7 @@ type AuthContextType = {
   updateDSOProfile: (data: any) => Promise<void>;
   completeOnboarding: () => Promise<void>;
   session: Session | null;
-  dsoProfile?: {
-    title?: string;
-    department?: string;
-    officeLocation?: string;
-    officeHours?: string;
-    contactEmail?: string;
-    contactPhone?: string;
-    role?: "dso_admin" | "dso_viewer";
-    university_id?: string;
-  };
+  dsoProfile?: DsoProfile;
 };
 
 // Create context
@@ -96,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [dsoProfile, setDsoProfile] = useState<UserProfile['dsoProfile']>(undefined);
+  const [dsoProfile, setDsoProfile] = useState<DsoProfile | undefined>(undefined);
   const navigate = useNavigate();
 
   // Fetch user profile data
@@ -119,31 +113,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .single();
         
         if (!dsoError && dsoData) {
-          // Store DSO profile data
-          setDsoProfile({
+          // Store DSO profile data with proper type mapping
+          const dsoProfileData: DsoProfile = {
             title: dsoData.title || undefined,
             department: dsoData.department || undefined,
             officeLocation: dsoData.office_location || undefined,
             officeHours: dsoData.office_hours || undefined,
             contactEmail: dsoData.contact_email || undefined,
             contactPhone: dsoData.contact_phone || undefined,
-            role: dsoData.role as "dso_admin" | "dso_viewer" || undefined,
+            role: dsoData.role || undefined,
             university_id: dsoData.university_id || undefined
-          });
+          };
+          
+          setDsoProfile(dsoProfileData);
           
           // Merge DSO profile data with user profile
           return {
             ...data,
-            dsoProfile: {
-              title: dsoData.title || undefined,
-              department: dsoData.department || undefined,
-              officeLocation: dsoData.office_location || undefined,
-              officeHours: dsoData.office_hours || undefined,
-              contactEmail: dsoData.contact_email || undefined,
-              contactPhone: dsoData.contact_phone || undefined,
-              role: dsoData.role as "dso_admin" | "dso_viewer" || undefined,
-              university_id: dsoData.university_id || undefined
-            },
+            dsoProfile: dsoProfileData,
             universityId: dsoData.university_id // Map university_id to universityId for consistency
           };
         }
@@ -341,12 +328,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           degree_level: data.degreeLevel !== undefined ? data.degreeLevel : currentUser.degreeLevel,
           field_of_study: data.fieldOfStudy !== undefined ? data.fieldOfStudy : currentUser.fieldOfStudy,
           is_stem: data.isSTEM !== undefined ? data.isSTEM : currentUser.isSTEM,
-          course_start_date: data.courseStartDate ? data.courseStartDate.toISOString() : currentUser.courseStartDate?.toISOString(),
-          us_entry_date: data.usEntryDate ? data.usEntryDate.toISOString() : currentUser.usEntryDate?.toISOString(),
-          employment_start_date: data.employmentStartDate ? data.employmentStartDate.toISOString() : currentUser.employmentStartDate?.toISOString(),
-          date_of_birth: data.dateOfBirth ? data.dateOfBirth.toISOString() : currentUser.dateOfBirth?.toISOString(),
+          course_start_date: data.courseStartDate !== undefined ? data.courseStartDate : currentUser.courseStartDate,
+          us_entry_date: data.usEntryDate !== undefined ? data.usEntryDate : currentUser.usEntryDate,
+          employment_start_date: data.employmentStartDate !== undefined ? data.employmentStartDate : currentUser.employmentStartDate,
+          date_of_birth: data.dateOfBirth !== undefined ? data.dateOfBirth : currentUser.dateOfBirth,
           passport_number: data.passportNumber !== undefined ? data.passportNumber : currentUser.passportNumber,
-          passport_expiry_date: data.passportExpiryDate ? data.passportExpiryDate.toISOString() : currentUser.passportExpiryDate?.toISOString()
+          passport_expiry_date: data.passportExpiryDate !== undefined ? data.passportExpiryDate : currentUser.passportExpiryDate
         })
         .eq("id", currentUser.id);
 
@@ -384,7 +371,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       // Update local DSO profile state
-      const updatedDsoProfile = {
+      const updatedDsoProfile: DsoProfile = {
         ...dsoProfile,
         title: data.title,
         department: data.department,

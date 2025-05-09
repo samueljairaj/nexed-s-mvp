@@ -46,7 +46,7 @@ interface TeamInviteStepProps {
   isSubmitting: boolean;
   addInviteField: () => void;
   removeInviteField: (index: number) => void;
-  updateInviteField: (index: number, field: string, value: string) => void;
+  updateInviteField: (index: number, field: keyof TeamMemberInvite, value: string) => void;
 }
 
 export const TeamInviteStep = ({
@@ -67,7 +67,7 @@ export const TeamInviteStep = ({
   });
   
   const handleSubmit = form.handleSubmit(async (data) => {
-    const result = await onSubmit(data);
+    const result = await onSubmit(data as TeamInviteFormData);
     
     if (result) {
       // Form submission successful, handled by parent component
@@ -98,10 +98,10 @@ export const TeamInviteStep = ({
   };
   
   // Update invite field wrapper
-  const handleFieldChange = (index: number, field: string, value: string) => {
+  const handleFieldChange = (index: number, field: keyof TeamMemberInvite, value: string) => {
     updateInviteField(index, field, value);
     // Also update form state
-    form.setValue(`invites.${index}.${field}`, value as any);
+    form.setValue(`invites.${index}.${field}`, value);
   };
   
   return (

@@ -35,7 +35,7 @@ export function useDsoTeamInvite() {
   };
   
   // Update an invite field value
-  const updateInviteField = (index: number, field: string, value: string) => {
+  const updateInviteField = (index: number, field: keyof TeamMemberInvite, value: string) => {
     setTeamInviteData(prev => {
       const newInvites = [...prev.invites];
       newInvites[index] = { 

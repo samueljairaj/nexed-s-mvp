@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,7 +50,7 @@ const VISA_TYPES = [
 
 // Define schema for document requirement
 const documentRequirementSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().min(1, "Document ID is required"),
   name: z.string().min(2, "Document name is required"),
   required: z.boolean(),
   description: z.string().optional(),
@@ -85,12 +86,20 @@ export const DocumentRulesStep = ({
   const filteredVisaTypes = VISA_TYPES.filter(
     visaType => availableVisaTypes.includes(visaType.id)
   );
+
+  // Ensure we have proper default values with required id property
+  const getFormattedDefaultDocuments = (): DocumentRequirement[] => {
+    if (defaultValues.documentRequirements && defaultValues.documentRequirements.length > 0) {
+      return defaultValues.documentRequirements;
+    }
+    return getDefaultDocuments(defaultValues.visaType || "F1");
+  };
   
   const form = useForm<z.infer<typeof documentRulesSchema>>({
     resolver: zodResolver(documentRulesSchema),
     defaultValues: {
       visaType: defaultValues.visaType || "F1",
-      documentRequirements: defaultValues.documentRequirements || getDefaultDocuments("F1"),
+      documentRequirements: getFormattedDefaultDocuments(),
     }
   });
   

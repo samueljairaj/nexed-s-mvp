@@ -103,32 +103,35 @@ export function useDocumentRuleConfig() {
         return acc;
       }, {});
       
-      // We need to use a customized approach since university_document_rules isn't in the types yet
+      // Use fetch API directly since university_document_rules isn't in the types yet
+      const SUPABASE_URL = supabase.supabaseUrl;
+      const SUPABASE_KEY = supabase.supabaseKey;
+      
       // Check if rule exists first
-      const { data: existingRules, error: queryError } = await fetch(
-        `${supabase.supabaseUrl}/rest/v1/university_document_rules?university_id=eq.${dsoProfile.university_id}&visa_type=eq.${data.visaType}`,
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/university_document_rules?university_id=eq.${dsoProfile.university_id}&visa_type=eq.${data.visaType}`,
         {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.supabaseKey}`
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
           }
         }
-      ).then(res => res.json());
+      );
       
-      if (queryError) throw queryError;
+      const existingRules = await response.json();
       
       if (existingRules && existingRules.length > 0) {
         // Update existing rule
-        const response = await fetch(
-          `${supabase.supabaseUrl}/rest/v1/university_document_rules?id=eq.${existingRules[0].id}`,
+        const updateResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/university_document_rules?id=eq.${existingRules[0].id}`,
           {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
-              'apikey': supabase.supabaseKey,
-              'Authorization': `Bearer ${supabase.supabaseKey}`,
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
               'Prefer': 'return=minimal'
             },
             body: JSON.stringify({ 
@@ -137,17 +140,17 @@ export function useDocumentRuleConfig() {
           }
         );
         
-        if (!response.ok) throw new Error('Failed to update document requirements');
+        if (!updateResponse.ok) throw new Error('Failed to update document requirements');
       } else {
         // Create new rule
-        const response = await fetch(
-          `${supabase.supabaseUrl}/rest/v1/university_document_rules`,
+        const createResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/university_document_rules`,
           {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'apikey': supabase.supabaseKey,
-              'Authorization': `Bearer ${supabase.supabaseKey}`,
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
               'Prefer': 'return=minimal'
             },
             body: JSON.stringify({ 
@@ -158,7 +161,7 @@ export function useDocumentRuleConfig() {
           }
         );
         
-        if (!response.ok) throw new Error('Failed to create document requirements');
+        if (!createResponse.ok) throw new Error('Failed to create document requirements');
       }
       
       toast.success("Document requirements updated successfully!");
