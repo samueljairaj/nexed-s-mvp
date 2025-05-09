@@ -1,8 +1,8 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { getProfileProperty } from '@/utils/propertyMapping';
+import { getProfileProperty, debugAuthState } from '@/utils/propertyMapping';
 
 interface RoleBasedRedirectProps {
   children: React.ReactNode;
@@ -12,8 +12,14 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
   const { currentUser, isLoading, isDSO } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [redirectProcessed, setRedirectProcessed] = useState(false);
 
   useEffect(() => {
+    // Skip redirection logic if we've already processed a redirect
+    if (redirectProcessed) {
+      return;
+    }
+    
     // Skip redirection logic if we're still loading auth state
     if (isLoading) {
       console.log("RoleBasedRedirect: Still loading auth state, skipping redirection");
@@ -21,8 +27,13 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     }
 
     const currentPath = location.pathname;
-    console.log("RoleBasedRedirect: Current path:", currentPath);
+    console.log("RoleBasedRedirect: Processing path:", currentPath);
     console.log("RoleBasedRedirect: Authentication state:", { isAuthenticated: !!currentUser, isDSO, isLoading });
+    
+    // Debug user state
+    if (currentUser) {
+      debugAuthState(currentUser);
+    }
     
     // Allow access to landing pages without redirection
     if (currentPath === '/' || currentPath === '/student' || currentPath === '/university') {
@@ -34,27 +45,20 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     if (currentUser) {
       const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
       console.log("RoleBasedRedirect: Onboarding complete:", onboardingComplete);
-      
-      // Special handling for authenticated users on landing pages to prevent unnecessary redirects
-      if (currentPath === '/' || currentPath === '/student' || currentPath === '/university') {
-        console.log("RoleBasedRedirect: Authenticated user on landing page, checking onboarding status");
-        if (onboardingComplete) {
-          navigate(isDSO ? '/app/dso-dashboard' : '/app/dashboard', { replace: true });
-        } else {
-          navigate(isDSO ? '/dso-onboarding' : '/onboarding', { replace: true });
-        }
-        return;
-      }
 
-      // Critical fix: Handle onboarding paths strictly based on role, regardless of path
+      // Critical fix: Handle onboarding paths strictly based on role
       if (!onboardingComplete) {
-        if (isDSO && currentPath !== '/dso-onboarding') {
-          console.log("RoleBasedRedirect: DSO needs to complete DSO onboarding, redirecting");
-          navigate('/dso-onboarding', { replace: true });
-          return;
-        } else if (!isDSO && currentPath !== '/onboarding') {
+        if (isDSO) {
+          if (currentPath !== '/dso-onboarding') {
+            console.log("RoleBasedRedirect: DSO needs to complete DSO onboarding, redirecting");
+            navigate('/dso-onboarding', { replace: true });
+            setRedirectProcessed(true);
+            return;
+          }
+        } else if (currentPath !== '/onboarding') {
           console.log("RoleBasedRedirect: Student needs to complete student onboarding, redirecting");
           navigate('/onboarding', { replace: true });
+          setRedirectProcessed(true);
           return;
         }
       }
@@ -63,20 +67,32 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       if (isDSO && currentPath === '/app/dashboard') {
         console.log("RoleBasedRedirect: DSO on student dashboard, redirecting to DSO dashboard");
         navigate('/app/dso-dashboard', { replace: true });
+        setRedirectProcessed(true);
         return;
       } else if (!isDSO && currentPath === '/app/dso-dashboard') {
         console.log("RoleBasedRedirect: Student on DSO dashboard, redirecting to student dashboard");
         navigate('/app/dashboard', { replace: true });
+        setRedirectProcessed(true);
         return;
       }
       
       // Prevent access to DSO-specific routes for non-DSO users
       if (!isDSO && (
         currentPath === '/app/dso-dashboard' || 
-        currentPath === '/app/dso-profile'
+        currentPath === '/app/dso-profile' ||
+        currentPath === '/dso-onboarding'
       )) {
         console.log("RoleBasedRedirect: Non-DSO user trying to access DSO routes");
         navigate('/app/dashboard', { replace: true });
+        setRedirectProcessed(true);
+        return;
+      }
+
+      // Prevent DSO users from accessing student onboarding
+      if (isDSO && currentPath === '/onboarding') {
+        console.log("RoleBasedRedirect: DSO user trying to access student onboarding");
+        navigate('/dso-onboarding', { replace: true });
+        setRedirectProcessed(true);
         return;
       }
     } else {
@@ -95,10 +111,23 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         } else {
           navigate('/student', { replace: true });
         }
+        setRedirectProcessed(true);
         return;
       }
     }
-  }, [currentUser, isLoading, isDSO, navigate, location.pathname]);
+    
+    // Reset processed flag if we don't redirect
+    setRedirectProcessed(false);
+  }, [currentUser, isLoading, isDSO, navigate, location.pathname, redirectProcessed]);
+
+  // Safety timeout to prevent getting stuck in a redirect loop
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setRedirectProcessed(false); // Reset after timeout to allow new redirections
+    }, 5000);
+    
+    return () => clearTimeout(timeout);
+  }, [redirectProcessed]);
 
   return <>{children}</>;
 };

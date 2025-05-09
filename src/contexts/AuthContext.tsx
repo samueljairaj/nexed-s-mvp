@@ -7,6 +7,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
+import { debugAuthState } from "@/utils/propertyMapping";
 
 // Export VisaType for reusability
 export type VisaType = "F1" | "J1" | "H1B" | "CPT" | "OPT" | "STEM_OPT" | "Other";
@@ -58,10 +59,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Setup auth state listeners FIRST before checking session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state changed:", event, "Session:", !!session);
+        setSession(session);
+
+        if (session) {
+          setIsAuthenticated(true);
+          await loadUser(session?.user);
+        } else {
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          setIsDSO(false);
+          setDsoProfile(null);
+          // Always make sure loading is false even when session is null
+          setIsLoading(false);
+        }
+      }
+    );
+
+    // Then load current session
     const loadSession = async () => {
       setIsLoading(true);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Loading initial session...");
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          throw error;
+        }
 
         setSession(session);
 
@@ -69,6 +96,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setIsAuthenticated(true);
           await loadUser(session?.user);
         } else {
+          console.log("No active session found");
           setIsAuthenticated(false);
           setCurrentUser(null);
           setIsDSO(false);
@@ -78,38 +106,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.error("Error loading session:", error);
         toast.error("Failed to load session");
       } finally {
+        // CRITICAL: Always set loading to false, even on error
         setIsLoading(false);
       }
     };
 
-    loadSession();
-
-    // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-
-        if (session) {
-          setIsAuthenticated(true);
-          await loadUser(session?.user);
-        } else {
-          setIsAuthenticated(false);
-          setCurrentUser(null);
-          setIsDSO(false);
-          setDsoProfile(null);
-        }
+    // Add a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.log("Auth loading timed out - forcing loading state to false");
+        setIsLoading(false);
       }
-    );
+    }, 5000); // 5 second timeout
+
+    loadSession();
 
     return () => {
       subscription.unsubscribe();
+      clearTimeout(timeout);
     };
   }, []);
 
-  const loadUser = async (user: User) => {
-    if (!user) return;
+  const loadUser = async (user: User | undefined) => {
+    if (!user) {
+      console.log("No user to load");
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      console.log("Loading user profile for:", user.id);
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -123,9 +149,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setCurrentUser(profile);
       setIsAuthenticated(true);
 
-      // Check if the user has a DSO profile
-      if (profile?.role === 'dso') {
-        setIsDSO(true);
+      // Debug the user profile
+      debugAuthState(profile);
+
+      // Check if the user has a DSO role
+      const isUserDSO = profile?.role === 'dso';
+      console.log("User DSO status:", isUserDSO);
+      setIsDSO(isUserDSO);
+
+      // If DSO, load DSO profile
+      if (isUserDSO) {
         const { data: dsoData, error: dsoError } = await supabase
           .from('dso_profiles')
           .select('*')
@@ -139,7 +172,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setDsoProfile(dsoData as DsoProfile);
         }
       } else {
-        setIsDSO(false);
         setDsoProfile(null);
       }
       
@@ -148,6 +180,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error("Error loading user data:", error);
       toast.error("Failed to load user data");
+    } finally {
+      // CRITICAL: Always set loading to false when done
+      setIsLoading(false);
     }
   };
 
