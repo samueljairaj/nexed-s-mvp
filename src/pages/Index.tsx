@@ -99,12 +99,7 @@ const Index = () => {
     setConfirmPassword("");
   };
 
-  const handleSignUp = () => {
-    // Replace this with a redirect to the signup page
-    // or use the login method that is available
-    login();
-  };
-
+  // Fixed: Adding required parameters (email and password)
   const handleDemoLogin = () => {
     setEmail("demo@example.com");
     setPassword("Password123!");
