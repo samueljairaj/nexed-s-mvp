@@ -45,23 +45,25 @@ export function useOnboardingState() {
   }, [isAuthenticated, currentUser]);
 
   // Handle account creation and navigate to next step if successful
-  const handleAccountCreation = async (data: any) => {
+  const handleAccountCreation = async (data: any): Promise<boolean> => {
     const success = await accountCreation.handleAccountCreation(data);
     if (success) {
       navigation.goToNextStep();
     }
+    return success;
   };
 
   // Handle personal info and navigate to next step if successful
-  const handlePersonalInfo = async (data: any) => {
+  const handlePersonalInfo = async (data: any): Promise<boolean> => {
     const success = await personalInfo.handlePersonalInfo(data);
     if (success) {
       navigation.goToNextStep();
     }
+    return success;
   };
 
   // Handle visa status and navigate to next step if successful
-  const handleVisaStatus = async (data: any) => {
+  const handleVisaStatus = async (data: any): Promise<boolean> => {
     const success = await visaStatus.handleVisaStatus(data);
     if (success) {
       // Skip to employment step for non-student visas
@@ -71,22 +73,25 @@ export function useOnboardingState() {
         navigation.goToNextStep();
       }
     }
+    return success;
   };
 
   // Handle academic info and navigate to next step if successful
-  const handleAcademicInfo = async (data: any) => {
+  const handleAcademicInfo = async (data: any): Promise<boolean> => {
     const success = await academicInfo.handleAcademicInfo(data);
     if (success) {
       navigation.goToNextStep();
     }
+    return success;
   };
 
   // Handle employment info and navigate to next step if successful 
-  const handleEmploymentInfo = async (data: any) => {
+  const handleEmploymentInfo = async (data: any): Promise<boolean> => {
     const success = await employmentInfo.handleEmploymentInfo(data);
     if (success) {
       navigation.goToNextStep();
     }
+    return success;
   };
 
   const isF1OrJ1 = () => {

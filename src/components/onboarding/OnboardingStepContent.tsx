@@ -23,9 +23,7 @@ interface OnboardingStepContentProps {
   handleVisaTypeChange: (type: any) => void;
   handleAcademicInfo: (data: any) => Promise<boolean>;
   handleEmploymentInfo: (data: any) => Promise<boolean>;
-  // Fix: Changed parameter type from string to boolean to match what's passed from Onboarding.tsx
   handleEmploymentStatusChange: (status: boolean) => void;
-  // Fix: These are now boolean values instead of functions
   isF1OrJ1: boolean;
   isEmployed: boolean;
   isOptOrCpt: boolean;

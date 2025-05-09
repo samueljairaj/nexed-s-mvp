@@ -20,7 +20,7 @@ export function useEmploymentInfo() {
     stemI983Date: null
   });
 
-  const handleEmploymentInfo = async (data: any) => {
+  const handleEmploymentInfo = async (data: any): Promise<boolean> => {
     setEmploymentData(data);
     setIsSubmitting(true);
     
