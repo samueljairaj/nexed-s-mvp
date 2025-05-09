@@ -1,3 +1,4 @@
+
 import React from "react";
 import { AccountCreationStep } from "@/components/onboarding/AccountCreationStep";
 import { PersonalInfoStep } from "@/components/onboarding/PersonalInfoStep";
@@ -27,6 +28,7 @@ interface OnboardingStepContentProps {
   isOptOrCpt: () => boolean;
   isStemOpt: () => boolean;
   handleFinish: () => void;
+  handleBackToLogin?: () => void; // Add this prop
 }
 
 export function OnboardingStepContent({
@@ -50,6 +52,7 @@ export function OnboardingStepContent({
   isOptOrCpt,
   isStemOpt,
   handleFinish,
+  handleBackToLogin, // Add this prop
 }: OnboardingStepContentProps) {
   switch (currentStep) {
     case 0:
@@ -66,6 +69,7 @@ export function OnboardingStepContent({
           defaultValues={personalData}
           onSubmit={handlePersonalInfo}
           isSubmitting={isSubmitting}
+          handleBackToLogin={handleBackToLogin} // Add this prop
         />
       );
     case 2:
@@ -75,6 +79,7 @@ export function OnboardingStepContent({
           onSubmit={handleVisaStatus}
           onVisaTypeChange={handleVisaTypeChange}
           isSubmitting={isSubmitting}
+          handleBackToLogin={handleBackToLogin} // Add this prop
         />
       );
     case 3:
@@ -84,6 +89,7 @@ export function OnboardingStepContent({
           onSubmit={handleAcademicInfo}
           isF1OrJ1={visaData.visaType === "F1" || visaData.visaType === "J1"}
           isSubmitting={isSubmitting}
+          handleBackToLogin={handleBackToLogin} // Add this prop
         />
       );
     case 4:

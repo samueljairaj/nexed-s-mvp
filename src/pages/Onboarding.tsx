@@ -6,9 +6,11 @@ import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepContent";
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const onboardingState = useOnboardingState();
   const {
     currentStep,
@@ -52,6 +54,14 @@ const Onboarding = () => {
     }
   }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep]);
 
+  // Handle back to login
+  const handleBackToLogin = () => {
+    // Logout the user if they are authenticated
+    logout();
+    // Navigate back to login page
+    navigate("/", { replace: true });
+  };
+
   // If loading, show a loading indicator
   if (isLoading) {
     return (
@@ -93,6 +103,7 @@ const Onboarding = () => {
           isOptOrCpt={isOptOrCpt}
           isStemOpt={isStemOpt}
           handleFinish={handleFinish}
+          handleBackToLogin={handleBackToLogin} // Pass the function
         />
       </div>
       

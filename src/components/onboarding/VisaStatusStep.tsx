@@ -1,18 +1,19 @@
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, FileText } from "lucide-react";
-import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { visaStatusSchema } from "@/types/onboarding";
+import { FormDatePicker } from "@/components/ui/form-date-picker";
+import { ArrowLeft } from "lucide-react"; // Added import
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -20,111 +21,67 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
-const visaStatusSchema = z.object({
-  visaType: z.enum(["F1", "J1", "H1B", "Other"]),
-  currentStatus: z.string().min(1, "Please select your current status"),
-  sevisId: z.string().optional(),
-  i797Number: z.string().optional(),
-  entryDate: z.date().optional(),
-  visaExpirationDate: z.date().optional(),
-  i94ExpirationDate: z.date().optional(),
-  programStartDate: z.date().optional(),
-  programEndDate: z.date().optional(),
-});
-
-export type VisaStatusFormData = z.infer<typeof visaStatusSchema>;
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface VisaStatusStepProps {
-  defaultValues: Partial<VisaStatusFormData>;
-  onSubmit: (data: VisaStatusFormData) => void;
+  defaultValues: {
+    visaType: string;
+    visaExpiryDate: Date | null;
+    hasDS2019?: boolean;
+    hasDependents?: boolean;
+    sevisId?: string;
+    i20ExpiryDate?: Date | null;
+  };
+  onSubmit: (data: any) => void;
   onVisaTypeChange: (visaType: string) => void;
   isSubmitting?: boolean;
+  handleBackToLogin?: () => void; // Added prop
 }
 
 export function VisaStatusStep({ 
-  defaultValues,
-  onSubmit,
+  defaultValues, 
+  onSubmit, 
   onVisaTypeChange,
-  isSubmitting = false 
+  isSubmitting = false,
+  handleBackToLogin // Added prop
 }: VisaStatusStepProps) {
-  const form = useForm<VisaStatusFormData>({
+  const form = useForm({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
-      visaType: defaultValues.visaType || "F1",
-      currentStatus: defaultValues.currentStatus || "",
+      visaType: defaultValues.visaType || "",
+      visaExpiryDate: defaultValues.visaExpiryDate || null,
+      hasDS2019: defaultValues.hasDS2019 || false,
+      hasDependents: defaultValues.hasDependents || false,
       sevisId: defaultValues.sevisId || "",
-      i797Number: defaultValues.i797Number || "",
-      entryDate: defaultValues.entryDate || undefined,
-      visaExpirationDate: defaultValues.visaExpirationDate || undefined,
-      i94ExpirationDate: defaultValues.i94ExpirationDate || undefined,
-      programStartDate: defaultValues.programStartDate || undefined,
-      programEndDate: defaultValues.programEndDate || undefined,
-    }
+      i20ExpiryDate: defaultValues.i20ExpiryDate || null,
+    },
   });
 
-  // Get the current visa type value
+  // Watch visa type to update form fields and validation
   const visaType = form.watch("visaType");
-
-  // Status options based on visa type
-  const getStatusOptions = () => {
-    switch (visaType) {
-      case "F1":
-        return [
-          { value: "Active", label: "Active" },
-          { value: "Initial", label: "Initial (Not yet in US)" },
-          { value: "Terminated", label: "Terminated" },
-          { value: "Completed", label: "Completed Program" },
-          { value: "OPT", label: "Optional Practical Training (OPT)" },
-          { value: "STEM_OPT", label: "STEM OPT Extension" },
-        ];
-      case "J1":
-        return [
-          { value: "Active", label: "Active" },
-          { value: "Initial", label: "Initial (Not yet in US)" },
-          { value: "Terminated", label: "Terminated" },
-          { value: "Academic_Training", label: "Academic Training" },
-        ];
-      case "H1B":
-        return [
-          { value: "Active", label: "Active" },
-          { value: "Approved", label: "Approved (Not yet in US)" },
-          { value: "Transfer", label: "Transfer Pending" },
-          { value: "Extension", label: "Extension Pending" },
-        ];
-      default:
-        return [
-          { value: "Active", label: "Active" },
-          { value: "Initial", label: "Initial (Not yet in US)" },
-          { value: "Other", label: "Other" },
-        ];
-    }
-  };
-  
-  // Handle visa type change
-  const handleVisaTypeChange = (value: string) => {
-    form.setValue("currentStatus", "");
-    onVisaTypeChange(value);
-  };
-
-  // Function to format date for display in the button
-  const formatDate = (date: Date | undefined) => {
-    return date ? format(date, "PPP") : "Select date";
-  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Visa & Status Information</h2>
-        <p className="text-muted-foreground mt-2">Please provide details about your current visa status and related information.</p>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Visa Information</h2>
+        {handleBackToLogin && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleBackToLogin}
+            className="flex items-center gap-1 text-primary"
+          >
+            <ArrowLeft size={16} />
+            Back to Login
+          </Button>
+        )}
       </div>
+      <p className="text-muted-foreground">Please provide your current visa status information.</p>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -134,367 +91,124 @@ export function VisaStatusStep({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Visa Type</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      handleVisaTypeChange(value);
-                    }}
-                    defaultValue={field.value}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-4"
-                  >
-                    <FormItem>
-                      <FormControl>
-                        <RadioGroupItem 
-                          value="F1" 
-                          id="visa-f1" 
-                          className="peer sr-only" 
-                        />
-                      </FormControl>
-                      <FormLabel 
-                        htmlFor="visa-f1"
-                        className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                      >
-                        <span className="text-xl font-bold">F-1</span>
-                        <span className="text-sm text-muted-foreground">Student Visa</span>
-                      </FormLabel>
-                    </FormItem>
-                    
-                    <FormItem>
-                      <FormControl>
-                        <RadioGroupItem 
-                          value="J1" 
-                          id="visa-j1" 
-                          className="peer sr-only" 
-                        />
-                      </FormControl>
-                      <FormLabel 
-                        htmlFor="visa-j1"
-                        className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                      >
-                        <span className="text-xl font-bold">J-1</span>
-                        <span className="text-sm text-muted-foreground">Exchange Visitor</span>
-                      </FormLabel>
-                    </FormItem>
-                    
-                    <FormItem>
-                      <FormControl>
-                        <RadioGroupItem 
-                          value="H1B" 
-                          id="visa-h1b" 
-                          className="peer sr-only" 
-                        />
-                      </FormControl>
-                      <FormLabel 
-                        htmlFor="visa-h1b"
-                        className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                      >
-                        <span className="text-xl font-bold">H-1B</span>
-                        <span className="text-sm text-muted-foreground">Work Visa</span>
-                      </FormLabel>
-                    </FormItem>
-                    
-                    <FormItem>
-                      <FormControl>
-                        <RadioGroupItem 
-                          value="Other" 
-                          id="visa-other" 
-                          className="peer sr-only" 
-                        />
-                      </FormControl>
-                      <FormLabel 
-                        htmlFor="visa-other"
-                        className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                      >
-                        <span className="text-xl font-bold">Other</span>
-                        <span className="text-sm text-muted-foreground">Other Visa Type</span>
-                      </FormLabel>
-                    </FormItem>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="currentStatus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Current Status</FormLabel>
                 <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                  value={field.value}
+                  value={field.value} 
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    onVisaTypeChange(value);
+                  }}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your current status" />
+                      <SelectValue placeholder="Select your visa type" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {getStatusOptions().map(option => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
+                    <SelectItem value="F1">F-1 Student Visa</SelectItem>
+                    <SelectItem value="J1">J-1 Exchange Visitor Visa</SelectItem>
+                    <SelectItem value="H1B">H-1B Specialty Occupation Visa</SelectItem>
+                    <SelectItem value="Other">Other Visa Type</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
-          {/* SEVIS ID for F1/J1 - fixing controlled component issue */}
-          {(visaType === "F1" || visaType === "J1") && (
-            <FormField
-              control={form.control}
-              name="sevisId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SEVIS ID</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input 
-                        placeholder="N00xxxxxxxx" 
-                        className="pl-10" 
-                        {...field} 
-                        value={field.value || ""}
-                      />
-                      <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-          
-          {/* I-797 Number for H1B - fixing controlled component issue */}
-          {visaType === "H1B" && (
-            <FormField
-              control={form.control}
-              name="i797Number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>I-797 Receipt Number</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input 
-                        placeholder="WAC-XX-XXX-XXXXX" 
-                        className="pl-10" 
-                        {...field} 
-                        value={field.value || ""}
-                      />
-                      <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-          
-          {/* Date fields - fixing controlled component issue */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="entryDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Most Recent U.S. Entry Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                          type="button"
-                        >
-                          <div className="relative w-full">
-                            <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                            <span className="pl-2">
-                              {formatDate(field.value)}
-                            </span>
-                          </div>
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date > new Date()}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="visaExpirationDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Visa Expiration Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                          type="button"
-                        >
-                          <div className="relative w-full">
-                            <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                            <span className="pl-2">
-                              {formatDate(field.value)}
-                            </span>
-                          </div>
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          {/* I-94 Expiration Date - fixing controlled component issue */}
-          <FormField
-            control={form.control}
-            name="i94ExpirationDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>I-94 Expiration Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                        type="button"
-                      >
-                        <div className="relative w-full">
-                          <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                          <span className="pl-2">
-                            {formatDate(field.value)}
-                          </span>
-                        </div>
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Program Start/End Dates for F1/J1 - fixing controlled component issue */}
-          {(visaType === "F1" || visaType === "J1") && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {visaType === "F1" && (
+            <>
               <FormField
                 control={form.control}
-                name="programStartDate"
+                name="sevisId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>{visaType === "F1" ? "I-20" : "DS-2019"} Program Start Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                            type="button"
-                          >
-                            <div className="relative w-full">
-                              <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                              <span className="pl-2">
-                                {formatDate(field.value)}
-                              </span>
-                            </div>
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel>SEVIS ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your SEVIS ID" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
+              <FormDatePicker
+                name="i20ExpiryDate"
+                label="I-20 Expiration Date"
+                placeholder="Select I-20 expiration date"
+              />
+            </>
+          )}
+
+          {visaType === "J1" && (
+            <>
               <FormField
                 control={form.control}
-                name="programEndDate"
+                name="sevisId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>{visaType === "F1" ? "I-20" : "DS-2019"} Program End Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                            type="button"
-                          >
-                            <div className="relative w-full">
-                              <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                              <span className="pl-2">
-                                {formatDate(field.value)}
-                              </span>
-                            </div>
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
+                  <FormItem>
+                    <FormLabel>SEVIS ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your SEVIS ID" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
+              
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="ds2019">
+                  <AccordionTrigger>DS-2019 Information</AccordionTrigger>
+                  <AccordionContent>
+                    <FormField
+                      control={form.control}
+                      name="hasDS2019"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              className="focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                              checked={field.value}
+                              onChange={(e) => field.onChange(e.target.checked)}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Do you have a DS-2019 form?</FormLabel>
+                            <FormDescription>
+                              If you are a J-1 Exchange Visitor, you should have a DS-2019 form.
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormDatePicker
+                      name="visaExpiryDate"
+                      label="Visa Expiry Date"
+                      placeholder="Select visa expiry date"
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </>
+          )}
+
+          {visaType === "H1B" && (
+            <FormDatePicker
+              name="visaExpiryDate"
+              label="Visa Expiry Date"
+              placeholder="Select visa expiry date"
+            />
+          )}
+
+          {visaType === "Other" && (
+            <FormDatePicker
+              name="visaExpiryDate"
+              label="Visa Expiry Date"
+              placeholder="Select visa expiry date"
+            />
           )}
           
-          {/* Submit button - keep existing code */}
           <Button 
             type="submit" 
             className="w-full mt-6"
