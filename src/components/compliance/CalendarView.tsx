@@ -124,12 +124,12 @@ export function CalendarView({ tasks, onDateClick }: CalendarViewProps) {
           onMonthChange={setSelectedMonth}
           className="rounded-md border"
           components={{
-            Day: ({ day }) => (
+            Day: ({ date, ...props }) => (
               <div className="relative h-9 w-9 p-0 font-normal">
                 <div className="flex h-full w-full items-center justify-center">
-                  {day.day}
+                  {date.getDate()}
                 </div>
-                {renderDay(day.date)}
+                {renderDay(date)}
               </div>
             ),
           }}
