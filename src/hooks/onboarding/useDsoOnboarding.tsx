@@ -16,7 +16,8 @@ export function useDsoOnboarding() {
     contactPhone: ""
   });
 
-  const handleDsoProfileSetup = async (data: DsoProfileFormData) => {
+  // Fix: Make sure this function returns a Promise<boolean>
+  const handleDsoProfileSetup = async (data: DsoProfileFormData): Promise<boolean> => {
     setDsoProfileData(data);
     setIsSubmitting(true);
     try {

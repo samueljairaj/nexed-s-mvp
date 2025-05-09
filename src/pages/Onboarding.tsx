@@ -7,11 +7,14 @@ import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepCon
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDsoOnboarding } from "@/hooks/onboarding/useDsoOnboarding";
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { logout, isDSO } = useAuth();
+  const { handleDsoProfileSetup } = useDsoOnboarding();
   const onboardingState = useOnboardingState();
+  
   const {
     currentStep,
     isSubmitting,
@@ -100,13 +103,15 @@ const Onboarding = () => {
           handlePersonalInfo={handlePersonalInfo}
           handleVisaStatus={handleVisaStatus}
           handleVisaTypeChange={handleVisaTypeChange}
-          handleAcademicInfo={handleAcademicInfo}
+          // For DSOs, use handleDsoProfileSetup instead of handleAcademicInfo
+          handleAcademicInfo={isDSO ? handleDsoProfileSetup : handleAcademicInfo}
           handleEmploymentInfo={handleEmploymentInfo}
           handleEmploymentStatusChange={handleEmploymentStatusChange}
-          isF1OrJ1={isF1OrJ1}
-          isEmployed={isEmployed}
-          isOptOrCpt={isOptOrCpt}
-          isStemOpt={isStemOpt}
+          // Convert function references to actual boolean values to fix type errors
+          isF1OrJ1={typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1}
+          isEmployed={typeof isEmployed === 'function' ? isEmployed() : isEmployed}
+          isOptOrCpt={typeof isOptOrCpt === 'function' ? isOptOrCpt() : isOptOrCpt}
+          isStemOpt={typeof isStemOpt === 'function' ? isStemOpt() : isStemOpt}
           handleFinish={handleFinish}
           handleBackToLogin={handleBackToLogin} // Pass the function
         />
