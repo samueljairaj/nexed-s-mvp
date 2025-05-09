@@ -7,13 +7,11 @@ import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepCon
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUniversityInfo } from "@/hooks/onboarding/useUniversityInfo";
 import { getProfileProperty } from "@/utils/propertyMapping";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { logout, isDSO, isAuthenticated } = useAuth();
-  const { handleUniversityInfoSetup, universityData } = useUniversityInfo();
+  const { logout, isAuthenticated } = useAuth();
   const onboardingState = useOnboardingState();
   
   const {
@@ -45,12 +43,8 @@ const Onboarding = () => {
     setCurrentStep
   } = onboardingState;
 
-  // Step names for the progress indicator - different for DSO and student
-  const studentStepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
-  const dsoStepNames = ["Account", "Personal", "University"];
-
-  // Use the appropriate step names based on user role
-  const stepNames = isDSO ? dsoStepNames : studentStepNames;
+  // Step names for the progress indicator - only student flow now
+  const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
 
   useEffect(() => {
     // If not authenticated, redirect to home
@@ -63,19 +57,15 @@ const Onboarding = () => {
     if (!isLoading && isAuthenticated && currentUser) {
       const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
       if (onboardingComplete) {
-        // Redirect to the appropriate dashboard based on role
-        navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
-        return;
-      } else if (isDSO) {
-        // If DSO, redirect to DSO onboarding
-        navigate("/dso-onboarding");
+        // Redirect to student dashboard
+        navigate("/app/dashboard");
         return;
       } else if (currentStep === 0) {
         // If user is already authenticated, skip the account creation step
         setCurrentStep(1);
       }
     }
-  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isDSO, isLoading]);
+  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isLoading]);
 
   // Handle back to login/landing page
   const handleBackToHome = () => {
@@ -83,14 +73,6 @@ const Onboarding = () => {
     logout();
     // Navigate back to landing page
     navigate("/", { replace: true });
-  };
-
-  // Adjust last step calculation based on role
-  const isLastStepForCurrentRole = () => {
-    if (isDSO) {
-      return currentStep === 2; // University info is the last interactive step for DSOs
-    }
-    return isLastStep();
   };
 
   // If loading, show a loading indicator
@@ -135,17 +117,15 @@ const Onboarding = () => {
           isStemOpt={typeof isStemOpt === 'function' ? isStemOpt() : isStemOpt}
           handleFinish={handleFinish}
           handleBackToLogin={handleBackToHome}
-          handleUniversityInfoSetup={handleUniversityInfoSetup}
-          universityData={universityData}
         />
       </div>
       
       {/* Navigation buttons - only show if not on the final completion screen */}
-      {currentStep !== (isDSO ? 3 : 5) && currentStep !== 0 && (
+      {currentStep !== 5 && currentStep !== 0 && (
         <StepNavigation
           currentStep={currentStep}
           isFirstStep={isFirstStep()}
-          isLastStep={isLastStepForCurrentRole()}
+          isLastStep={isLastStep()}
           onNext={() => {
             // This is handled by the individual form submissions
           }}

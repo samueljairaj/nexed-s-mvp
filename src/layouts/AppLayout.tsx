@@ -14,7 +14,6 @@ import {
   X,
   LogOut,
   Settings,
-  GraduationCap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

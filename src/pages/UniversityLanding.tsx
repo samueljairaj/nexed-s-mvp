@@ -1,230 +1,16 @@
 
-import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { UserTypeToggle } from "@/components/landing/UserTypeToggle";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, FileCheck, FolderArchive, AlertCircle, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
+import { User, FileCheck, FolderArchive } from "lucide-react";
 
 const UniversityLanding = () => {
-  const { isAuthenticated, login, currentUser, isLoading, signup, isDSO } = useAuth();
   const navigate = useNavigate();
   
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionProgress, setSubmissionProgress] = useState(0);
-  const [submissionStep, setSubmissionStep] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  
-  // Basic auth form fields
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-
-  // Use refs for timeouts to avoid re-renders
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Check authentication status and redirect if necessary
-  useEffect(() => {
-    console.log("UniversityLanding: Auth state:", { isAuthenticated, isDSO, isLoading });
-    
-    if (!isLoading && isAuthenticated && currentUser) {
-      const onboardingComplete = currentUser.onboarding_complete;
-      
-      if (isDSO) {
-        if (onboardingComplete) {
-          navigate('/app/dso-dashboard', { replace: true });
-        } else {
-          navigate('/dso-onboarding', { replace: true });
-        }
-      } else {
-        navigate('/student', { replace: true });
-      }
-    }
-  }, [isAuthenticated, currentUser, navigate, isLoading, isDSO]);
-  
-  // Clean up timeouts on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-    };
-  }, []);
-
-  // Progress bar animation for better UX during account creation/login
-  useEffect(() => {
-    if (!isSubmitting) {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-      return;
-    }
-    
-    // Clear any existing interval first
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-    }
-    
-    progressIntervalRef.current = setInterval(() => {
-      setSubmissionProgress((prev) => {
-        // Cap progress at 80% during waiting to avoid false completion indication
-        if (prev >= 80) return prev;
-        return prev + 5; // Faster progress increments
-      });
-    }, 300); // More frequent updates for smoother animation
-    
-    return () => {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-    };
-  }, [isSubmitting]);
-
-  const resetForm = () => {
-    setErrorMessage("");
-    setSubmissionStep("");
-    setSubmissionProgress(0);
+  // Redirect to student landing page temporarily
+  const redirectToStudent = () => {
+    navigate('/student');
   };
-
-  const validateInputs = () => {
-    resetForm();
-    
-    if (authMode === "signup") {
-      if (!email || !password || !firstName || !lastName) {
-        const message = "Please fill out all required fields";
-        setErrorMessage(message);
-        toast.error(message);
-        return false;
-      }
-      
-      if (password.length < 6) {
-        const message = "Password must be at least 6 characters";
-        setErrorMessage(message);
-        toast.error(message);
-        return false;
-      }
-    } else {
-      if (!email || !password) {
-        const message = "Please enter both email and password";
-        setErrorMessage(message);
-        toast.error(message);
-        return false;
-      }
-    }
-    
-    return true;
-  };
-
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (isSubmitting) return;
-    
-    if (!validateInputs()) return;
-    
-    setIsSubmitting(true);
-    setSubmissionProgress(10);
-    setErrorMessage("");
-
-    // Clear any existing timeout
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    
-    // Shorter timeout (5 seconds instead of 8)
-    timeoutRef.current = setTimeout(() => {
-      console.log("Auth operation timed out, resetting submission state");
-      setIsSubmitting(false);
-      setSubmissionProgress(0);
-      setSubmissionStep("");
-      setErrorMessage("Operation timed out. Please try again. If this persists, check your network connection.");
-      toast.error("Operation timed out. Please try again.");
-    }, 5000);
-    
-    try {
-      if (authMode === "signup") {
-        setSubmissionStep("Creating your account...");
-        setSubmissionProgress(30);
-        
-        // Simplified signup with just basic info
-        const signupResult = await signup({
-          email,
-          password,
-          firstName,
-          lastName,
-          role: "dso" // Always create DSO users from university landing
-        });
-        
-        console.log("Signup result:", signupResult);
-        
-        if (signupResult) {
-          // Success! Clear timeout and update UI
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          setSubmissionProgress(100);
-          setSubmissionStep("Account created! Redirecting...");
-          // The auth state change should handle redirection automatically
-        } else {
-          throw new Error("Account creation failed");
-        }
-      } else {
-        setSubmissionStep("Signing in...");
-        setSubmissionProgress(30);
-        
-        await login(email, password);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        setSubmissionProgress(100);
-        setSubmissionStep("Login successful! Redirecting...");
-      }
-    } catch (error: any) {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      console.error("Authentication error:", error);
-      
-      // Provide more detailed error information
-      let errorMsg = "Authentication failed";
-      
-      if (error?.message?.includes("already registered")) {
-        errorMsg = "This email is already registered. Try logging in instead.";
-      } else if (error?.message?.includes("Invalid login credentials")) {
-        errorMsg = "Invalid email or password. Check your credentials and try again.";
-      } else if (error?.message) {
-        errorMsg = error.message;
-      }
-      
-      setErrorMessage(errorMsg);
-      toast.error(errorMsg);
-      setIsSubmitting(false);
-      setSubmissionProgress(0);
-    }
-  };
-
-  const toggleAuthMode = () => {
-    setAuthMode(authMode === "login" ? "signup" : "login");
-    resetForm();
-  };
-
-  const handleDemoLogin = () => {
-    setEmail("dso@example.com");
-    setPassword("Password123!");
-    toast.info("Demo credentials loaded! Click Sign In to continue.");
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading authentication...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -249,149 +35,20 @@ const UniversityLanding = () => {
             <div className="grid md:grid-cols-2 gap-10 items-center">
               <div className="space-y-6">
                 <h1 className="text-4xl md:text-5xl font-bold animate-fade-in">
-                  Streamline Your DSO Responsibilities
+                  University Features Coming Soon
                 </h1>
                 <p className="text-lg md:text-xl text-blue-50 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                  Efficiently manage student visa compliance, document verification, and reporting with neXed's comprehensive DSO platform.
+                  We're currently focusing on student features. Please use our student portal for now.
                 </p>
                 <div className="pt-4 flex flex-wrap gap-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
                   <Button 
                     size="lg" 
                     className="bg-white text-nexed-700 hover:bg-blue-50"
-                    onClick={() => setAuthMode("signup")}
+                    onClick={redirectToStudent}
                   >
-                    Get Started
-                  </Button>
-                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
-                    Learn More
+                    Go to Student Portal
                   </Button>
                 </div>
-              </div>
-              
-              {/* Auth Card */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-                <Card>
-                  <CardContent className="pt-6">
-                    <Tabs defaultValue={authMode} value={authMode} onValueChange={(v) => setAuthMode(v as "login" | "signup")}>
-                      <TabsList className="grid w-full grid-cols-2 mb-4">
-                        <TabsTrigger value="login">Sign In</TabsTrigger>
-                        <TabsTrigger value="signup">Create Account</TabsTrigger>
-                      </TabsList>
-                      
-                      <form onSubmit={handleAuth} className="space-y-4 mt-2">
-                        {errorMessage && (
-                          <Alert variant="destructive" className="mb-4">
-                            <AlertCircle className="h-4 w-4 mr-2" />
-                            <AlertDescription>{errorMessage}</AlertDescription>
-                          </Alert>
-                        )}
-                        
-                        <TabsContent value="signup" className="space-y-4 mt-0">
-                          <h2 className="text-xl font-semibold text-center">Create University DSO Account</h2>
-                          <p className="text-sm text-gray-500 text-center mb-2">
-                            University details will be collected during onboarding
-                          </p>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="firstName">First Name</Label>
-                              <Input
-                                id="firstName"
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                placeholder="John"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="lastName">Last Name</Label>
-                              <Input
-                                id="lastName"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                placeholder="Doe"
-                              />
-                            </div>
-                          </div>
-                        </TabsContent>
-                        
-                        <TabsContent value="login" className="mt-0">
-                          <h2 className="text-xl font-semibold text-center mb-4">Sign In to Your DSO Account</h2>
-                        </TabsContent>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email Address</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="your.name@university.edu"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="password">Password</Label>
-                          <Input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder={authMode === "signup" ? "Create a password" : "Enter your password"}
-                          />
-                        </div>
-                        
-                        {isSubmitting && (
-                          <div className="mt-4 space-y-2">
-                            <Progress value={submissionProgress} className="h-2 w-full" />
-                            <p className="text-sm text-center text-gray-600">{submissionStep}</p>
-                          </div>
-                        )}
-                        
-                        <div className="flex flex-col space-y-3 pt-2">
-                          <Button
-                            type="submit"
-                            className="w-full"
-                            disabled={isSubmitting}
-                          >
-                            {isSubmitting ? (
-                              <div className="flex items-center justify-center">
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                {authMode === "signup" ? "Creating Account..." : "Signing In..."}
-                              </div>
-                            ) : (
-                              authMode === "signup" ? "Create Account" : "Sign In"
-                            )}
-                          </Button>
-                          
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full"
-                            onClick={toggleAuthMode}
-                            disabled={isSubmitting}
-                          >
-                            {authMode === "signup" 
-                              ? "Already have an account? Sign In" 
-                              : "New DSO? Create Account"
-                            }
-                          </Button>
-                          
-                          {authMode === "login" && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full"
-                              onClick={handleDemoLogin}
-                              disabled={isSubmitting}
-                            >
-                              Demo Login
-                            </Button>
-                          )}
-                        </div>
-                      </form>
-                    </Tabs>
-                  </CardContent>
-                </Card>
               </div>
             </div>
           </div>
@@ -400,7 +57,7 @@ const UniversityLanding = () => {
         {/* Features Section */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Why Choose neXed for DSOs</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">Features Coming Soon</h2>
             
             <div className="grid md:grid-cols-3 gap-8">
               <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
