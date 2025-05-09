@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
 
 const VISA_OPTIONS = [
   { value: "F1", label: "F-1 Student Visa" },
@@ -105,11 +104,11 @@ export const ProfileEditor = () => {
         degreeLevel: data.degreeLevel,
         fieldOfStudy: data.fieldOfStudy,
         isSTEM: data.isSTEM,
-        courseStartDate: courseStartDate,
-        usEntryDate: usEntryDate,
-        employmentStartDate: employmentStartDate,
-        dateOfBirth: dateOfBirth,
-        passportExpiryDate: passportExpiryDate,
+        courseStartDate: courseStartDate ? courseStartDate.toISOString() : undefined,
+        usEntryDate: usEntryDate ? usEntryDate.toISOString() : undefined,
+        employmentStartDate: employmentStartDate ? employmentStartDate.toISOString() : undefined,
+        dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : undefined,
+        passportExpiryDate: passportExpiryDate ? passportExpiryDate.toISOString() : undefined,
       });
       toast.success("Profile updated successfully");
     } catch (error) {
@@ -214,7 +213,7 @@ export const ProfileEditor = () => {
                   <FormLabel>Date of Birth</FormLabel>
                   <DatePicker
                     date={dateOfBirth}
-                    setDate={setDateOfBirth}
+                    onDateChange={setDateOfBirth}
                     className="w-full"
                   />
                 </div>
@@ -223,7 +222,7 @@ export const ProfileEditor = () => {
                   <FormLabel>Passport Expiry Date</FormLabel>
                   <DatePicker
                     date={passportExpiryDate}
-                    setDate={setPassportExpiryDate}
+                    onDateChange={setPassportExpiryDate}
                     className="w-full"
                   />
                 </div>
@@ -262,7 +261,7 @@ export const ProfileEditor = () => {
                   <FormLabel>US Entry Date</FormLabel>
                   <DatePicker
                     date={usEntryDate}
-                    setDate={setUsEntryDate}
+                    onDateChange={setUsEntryDate}
                     className="w-full"
                   />
                 </div>
@@ -331,7 +330,7 @@ export const ProfileEditor = () => {
                   <FormLabel>Course Start Date</FormLabel>
                   <DatePicker
                     date={courseStartDate}
-                    setDate={setCourseStartDate}
+                    onDateChange={setCourseStartDate}
                     className="w-full"
                   />
                 </div>
@@ -340,7 +339,7 @@ export const ProfileEditor = () => {
                   <FormLabel>Employment Start Date (if applicable)</FormLabel>
                   <DatePicker
                     date={employmentStartDate}
-                    setDate={setEmploymentStartDate}
+                    onDateChange={setEmploymentStartDate}
                     className="w-full"
                   />
                 </div>

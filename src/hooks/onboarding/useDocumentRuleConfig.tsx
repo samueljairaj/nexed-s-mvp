@@ -84,7 +84,7 @@ export function useDocumentRuleConfig() {
       // Get DSO profile to get university_id
       const { data: dsoProfile, error: dsoError } = await supabase
         .from('dso_profiles')
-        .select('*')
+        .select('university_id')
         .eq('id', currentUser?.id)
         .single();
       
@@ -104,8 +104,8 @@ export function useDocumentRuleConfig() {
       }, {});
       
       // Use fetch API directly since university_document_rules isn't in the types yet
-      const SUPABASE_URL = supabase.supabaseUrl;
-      const SUPABASE_KEY = supabase.supabaseKey;
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://dmmyriqbltjrtvvpllmz.supabase.co';
+      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtbXlyaXFibHRqcnR2dnBsbG16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1NzY2OTAsImV4cCI6MjA2MjE1MjY5MH0.xw4zI0aDw9tYU7cJwSa9RcaE2nhl-juZpXTcnbsgfrU';
       
       // Check if rule exists first
       const response = await fetch(

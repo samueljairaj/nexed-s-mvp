@@ -1,449 +1,313 @@
-
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Session,
+  User,
+} from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { supabase } from "../integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
 import { Database } from "@/integrations/supabase/types";
+import { DsoProfile } from "@/types/dso";
 
-// Define types for DSO profile
-type DsoProfile = {
-  title?: string;
-  department?: string;
-  officeLocation?: string;
-  officeHours?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  role?: "dso_admin" | "dso_viewer";
-  university_id?: string;
-};
-
-// Define user profile type
-type UserProfile = {
-  id: string;
-  email: string;
-  name?: string;
-  role?: "student" | "dso" | "admin";
-  onboardingComplete?: boolean;
-  university?: string;
-  universityId?: string;
-  country?: string;
-  visaType?: "F1" | "J1" | "H1B" | "CPT" | "OPT" | "STEM_OPT" | "Other";
-  address?: string;
-  phone?: string;
-  degreeLevel?: string;
-  fieldOfStudy?: string;
-  isSTEM?: boolean;
-  courseStartDate?: string | null;
-  usEntryDate?: string | null;
-  employmentStartDate?: string | null;
-  dateOfBirth?: string | null;
-  passportNumber?: string;
-  passportExpiryDate?: string | null;
-  dsoProfile?: DsoProfile;
-};
-
-// Define authentication context type
-type AuthContextType = {
-  currentUser: UserProfile | null;
+interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
-  isDSO: boolean;
-  isAdmin: boolean;
-  login: (email: string, password: string) => Promise<UserProfile | null>;
-  signup: (
-    email: string,
-    password: string,
-    role?: "student" | "dso",
-    metadata?: any
-  ) => Promise<UserProfile | null>;
-  logout: () => Promise<void>;
-  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
-  updateDSOProfile: (data: any) => Promise<void>;
-  completeOnboarding: () => Promise<void>;
+  currentUser: Database["public"]["Tables"]["profiles"]["Row"] | null;
   session: Session | null;
-  dsoProfile?: DsoProfile;
-};
+  isDSO: boolean;
+  dsoProfile: DsoProfile | null;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
+  signUp: (data: any) => Promise<any>;
+  updateProfile: (data: any) => Promise<void>;
+  updateDSOProfile: (data: any) => Promise<void>;
+}
 
-// Create context
-const AuthContext = createContext<AuthContextType>({
-  currentUser: null,
-  isAuthenticated: false,
-  isLoading: true,
-  isDSO: false,
-  isAdmin: false,
-  login: async () => null,
-  signup: async () => null,
-  logout: async () => {},
-  updateProfile: async () => {},
-  updateDSOProfile: async () => {},
-  completeOnboarding: async () => {},
-  session: null,
-  dsoProfile: undefined,
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Export useAuth hook
-export const useAuth = () => useContext(AuthContext);
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-// AuthProvider component
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [dsoProfile, setDsoProfile] = useState<DsoProfile | undefined>(undefined);
+  const [isDSO, setIsDSO] = useState(false);
+  const [dsoProfile, setDsoProfile] = useState<DsoProfile | null>(null);
   const navigate = useNavigate();
 
-  // Fetch user profile data
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (error) throw error;
-      
-      // If the user is a DSO, fetch additional DSO profile data
-      if (data.role === "dso") {
-        const { data: dsoData, error: dsoError } = await supabase
-          .from("dso_profiles")
-          .select("*")
-          .eq("id", userId)
-          .single();
-        
-        if (!dsoError && dsoData) {
-          // Store DSO profile data with proper type mapping
-          const dsoProfileData: DsoProfile = {
-            title: dsoData.title || undefined,
-            department: dsoData.department || undefined,
-            officeLocation: dsoData.office_location || undefined,
-            officeHours: dsoData.office_hours || undefined,
-            contactEmail: dsoData.contact_email || undefined,
-            contactPhone: dsoData.contact_phone || undefined,
-            role: dsoData.role || undefined,
-            university_id: dsoData.university_id || undefined
-          };
-          
-          setDsoProfile(dsoProfileData);
-          
-          // Merge DSO profile data with user profile
-          return {
-            ...data,
-            dsoProfile: dsoProfileData,
-            universityId: dsoData.university_id // Map university_id to universityId for consistency
-          };
-        }
-      }
-
-      return data;
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      return null;
-    }
-  };
-
-  // Initialize auth state
   useEffect(() => {
-    const initializeAuth = async () => {
+    const loadSession = async () => {
       setIsLoading(true);
-      
       try {
-        // Set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            setSession(session);
-            
-            if (session?.user) {
-              const profile = await fetchUserProfile(session.user.id);
-              setCurrentUser({
-                id: session.user.id,
-                email: session.user.email || "",
-                ...profile
-              });
-            } else {
-              setCurrentUser(null);
-            }
-            
-            setIsLoading(false);
-          }
-        );
-        
-        // Get current session
         const { data: { session } } = await supabase.auth.getSession();
+
         setSession(session);
-        
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          setCurrentUser({
-            id: session.user.id,
-            email: session.user.email || "",
-            ...profile
-          });
+
+        if (session) {
+          setIsAuthenticated(true);
+          await loadUser(session?.user);
+        } else {
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          setIsDSO(false);
+          setDsoProfile(null);
         }
-        
-        setIsLoading(false);
-        
-        return () => {
-          subscription.unsubscribe();
-        };
       } catch (error) {
-        console.error("Auth initialization error:", error);
+        console.error("Error loading session:", error);
+        toast.error("Failed to load session");
+      } finally {
         setIsLoading(false);
       }
     };
 
-    initializeAuth();
+    loadSession();
+
+    // Listen for changes on auth state
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+
+        if (session) {
+          setIsAuthenticated(true);
+          await loadUser(session?.user);
+        } else {
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          setIsDSO(false);
+          setDsoProfile(null);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Login function
-  const login = async (email: string, password: string) => {
+  const loadUser = async (user: User) => {
+    if (!user) return;
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-      if (error) throw error;
+      if (profileError) {
+        throw profileError;
+      }
 
-      const profile = await fetchUserProfile(data.user.id);
-      
-      const user: UserProfile = {
-        id: data.user.id,
-        email: data.user.email || "",
-        ...profile,
-      };
+      setCurrentUser(profile);
+      setIsAuthenticated(true);
 
-      setCurrentUser(user);
-      toast.success("Login successful!");
-      return user;
-    } catch (error: any) {
-      console.error("Login error:", error);
-      toast.error(`Login failed: ${error.message}`);
-      return null;
+      // Check if the user has a DSO profile
+      if (profile?.role === 'dso') {
+        setIsDSO(true);
+        const { data: dsoData, error: dsoError } = await supabase
+          .from('dso_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (dsoError) {
+          console.error("Error fetching DSO profile:", dsoError);
+          setDsoProfile(null);
+        } else {
+          // setDsoProfile(dsoData);
+          setDsoProfile(dsoData as DsoProfile);
+        }
+      } else {
+        setIsDSO(false);
+        setDsoProfile(null);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+      toast.error("Failed to load user data");
     }
   };
 
-  // Signup function
-  const signup = async (
-    email: string, 
-    password: string, 
-    role: "student" | "dso" = "student",
-    metadata?: any
-  ) => {
+  const login = async () => {
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
         options: {
-          data: {
-            role: role // Add role to user metadata
-          }
+          redirectTo: `${window.location.origin}/onboarding`,
         }
       });
-      
-      if (authError) throw authError;
-      
-      if (!authData.user) {
-        throw new Error("User registration failed");
+
+      if (error) {
+        throw error;
       }
-      
-      // Update the profile with role information
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          role: role,
-          // For DSO signup, add university info
-          ...(role === "dso" && metadata ? {
-            university: metadata.universityName
-          } : {})
-        })
-        .eq("id", authData.user.id);
-      
-      if (profileError) throw profileError;
-      
-      // If user is a DSO, create DSO profile
-      if (role === "dso") {
-        const { error: dsoProfileError } = await supabase
-          .from("dso_profiles")
-          .insert({
-            id: authData.user.id,
-            role: "dso_admin" // First DSO is always admin
-          });
-        
-        if (dsoProfileError) throw dsoProfileError;
-        
-        // If university info is provided, check if it exists
-        if (metadata?.universityName) {
-          // This will be handled in the onboarding process now
-        }
-      }
-      
-      const profile = await fetchUserProfile(authData.user.id);
-      
-      const user: UserProfile = {
-        id: authData.user.id,
-        email: authData.user.email || "",
-        role: role,
-        ...profile,
-      };
-      
-      setCurrentUser(user);
-      return user;
     } catch (error: any) {
-      console.error("Signup error:", error);
-      toast.error(`Signup failed: ${error.message}`);
-      return null;
+      console.error("Login failed:", error.message);
+      toast.error(`Login failed: ${error.message}`);
     }
   };
 
-  // Logout function
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setIsAuthenticated(false);
       setCurrentUser(null);
-      setSession(null);
-      toast.success("You've been logged out");
+      setIsDSO(false);
+      setDsoProfile(null);
       navigate("/");
     } catch (error: any) {
-      console.error("Logout error:", error);
+      console.error("Logout failed:", error.message);
       toast.error(`Logout failed: ${error.message}`);
     }
   };
 
-  // Update user profile
-  const updateProfile = async (data: Partial<UserProfile>) => {
-    if (!currentUser) return;
-
+  const signUp = async (data: any) => {
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          name: data.name !== undefined ? data.name : currentUser.name,
-          country: data.country !== undefined ? data.country : currentUser.country,
-          university: data.university !== undefined ? data.university : currentUser.university,
-          visa_type: data.visaType !== undefined ? data.visaType : currentUser.visaType,
-          address: data.address !== undefined ? data.address : currentUser.address,
-          phone: data.phone !== undefined ? data.phone : currentUser.phone,
-          degree_level: data.degreeLevel !== undefined ? data.degreeLevel : currentUser.degreeLevel,
-          field_of_study: data.fieldOfStudy !== undefined ? data.fieldOfStudy : currentUser.fieldOfStudy,
-          is_stem: data.isSTEM !== undefined ? data.isSTEM : currentUser.isSTEM,
-          course_start_date: data.courseStartDate !== undefined ? data.courseStartDate : currentUser.courseStartDate,
-          us_entry_date: data.usEntryDate !== undefined ? data.usEntryDate : currentUser.usEntryDate,
-          employment_start_date: data.employmentStartDate !== undefined ? data.employmentStartDate : currentUser.employmentStartDate,
-          date_of_birth: data.dateOfBirth !== undefined ? data.dateOfBirth : currentUser.dateOfBirth,
-          passport_number: data.passportNumber !== undefined ? data.passportNumber : currentUser.passportNumber,
-          passport_expiry_date: data.passportExpiryDate !== undefined ? data.passportExpiryDate : currentUser.passportExpiryDate
-        })
-        .eq("id", currentUser.id);
-
-      if (error) throw error;
-
-      // Update local state
-      setCurrentUser({
-        ...currentUser,
-        ...data,
+      const { data: { user }, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: `${data.firstName} ${data.lastName}`,
+            role: 'student',
+          }
+        }
       });
+
+      if (error) {
+        throw error;
+      }
+
+      // After successful signup, create a user profile
+      if (user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: user.id,
+              name: `${data.firstName} ${data.lastName}`,
+              email: data.email,
+              role: 'student',
+            },
+          ]);
+
+        if (profileError) {
+          throw profileError;
+        }
+      }
+
+      toast.success("Signup successful! Please check your email to verify your account.");
+      return true;
     } catch (error: any) {
-      console.error("Profile update error:", error);
+      console.error("Signup failed:", error.message);
+      toast.error(`Signup failed: ${error.message}`);
+      return false;
+    }
+  };
+
+  const updateProfile = async (data: any) => {
+    try {
+      const updates = {
+        id: currentUser?.id,
+        updated_at: new Date().toISOString(),
+        ...data,
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(updates, { returning: 'minimal' });
+
+      if (error) {
+        throw error;
+      }
+
+      // Refresh user data
+      const { data: updatedProfile, error: refreshError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser?.id)
+        .single();
+
+      if (refreshError) {
+        throw refreshError;
+      }
+
+      setCurrentUser(updatedProfile);
+      toast.success("Profile updated successfully!");
+    } catch (error: any) {
+      console.error("Profile update failed:", error.message);
       toast.error(`Profile update failed: ${error.message}`);
     }
   };
-  
-  // Update DSO profile
-  const updateDSOProfile = async (data: any) => {
-    if (!currentUser || currentUser.role !== "dso") return;
-    
-    try {
-      const { error } = await supabase
-        .from("dso_profiles")
-        .update({
-          title: data.title,
-          department: data.department,
-          office_location: data.officeLocation,
-          office_hours: data.officeHours,
-          contact_email: data.contactEmail,
-          contact_phone: data.contactPhone,
-          university_id: data.universityId,
-        })
-        .eq("id", currentUser.id);
-      
-      if (error) throw error;
-      
-      // Update local DSO profile state
-      const updatedDsoProfile: DsoProfile = {
-        ...dsoProfile,
-        title: data.title,
-        department: data.department,
-        officeLocation: data.officeLocation,
-        officeHours: data.officeHours,
-        contactEmail: data.contactEmail,
-        contactPhone: data.contactPhone,
-        university_id: data.universityId
-      };
-      
-      setDsoProfile(updatedDsoProfile);
-      
-      // Update local user state
-      setCurrentUser({
-        ...currentUser,
-        dsoProfile: updatedDsoProfile
-      });
-    } catch (error: any) {
-      console.error("DSO profile update error:", error);
-      toast.error(`DSO profile update failed: ${error.message}`);
-    }
-  };
 
-  // Complete onboarding
-  const completeOnboarding = async () => {
-    if (!currentUser) return;
-    
+  const updateDSOProfile = async (data: any) => {
+    if (!currentUser?.id) {
+      toast.error("User ID not found. Please log in again.");
+      return;
+    }
+
     try {
+      const updates = {
+        ...data,
+        id: currentUser.id,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
-        .from("profiles")
-        .update({
-          onboarding_complete: true,
-        })
-        .eq("id", currentUser.id);
-      
-      if (error) throw error;
-      
-      // Update local state
-      setCurrentUser({
-        ...currentUser,
-        onboardingComplete: true,
-      });
-      
-      // Set flag for dashboard tour
-      sessionStorage.setItem("onboardingJustCompleted", "true");
+        .from('dso_profiles')
+        .upsert(updates, { returning: 'minimal' });
+
+      if (error) {
+        throw error;
+      }
+
+      // Refresh DSO profile data
+      const { data: updatedDSOProfile, error: refreshError } = await supabase
+        .from('dso_profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (refreshError) {
+        console.error("Error refreshing DSO profile:", refreshError);
+        toast.error("Failed to refresh DSO profile data.");
+      } else {
+        setDsoProfile(updatedDSOProfile as DsoProfile);
+        toast.success("DSO Profile updated successfully!");
+      }
     } catch (error: any) {
-      console.error("Onboarding completion error:", error);
-      toast.error(`Failed to complete onboarding: ${error.message}`);
+      console.error("DSO Profile update failed:", error);
+      toast.error(`DSO Profile update failed: ${error.message}`);
     }
   };
-  
-  // Determine if user is a DSO
-  const isDSO = Boolean(currentUser?.role === "dso");
-  
-  // Determine if user is an admin
-  const isAdmin = Boolean(currentUser?.role === "admin");
 
   const value = {
-    currentUser,
-    isAuthenticated: !!currentUser,
+    isAuthenticated,
     isLoading,
+    currentUser,
+    session,
     isDSO,
-    isAdmin,
+    dsoProfile,
     login,
-    signup,
     logout,
+    signUp,
     updateProfile,
     updateDSOProfile,
-    completeOnboarding,
-    session,
-    dsoProfile,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

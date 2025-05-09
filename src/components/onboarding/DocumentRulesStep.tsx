@@ -90,7 +90,12 @@ export const DocumentRulesStep = ({
   // Ensure we have proper default values with required id property
   const getFormattedDefaultDocuments = (): DocumentRequirement[] => {
     if (defaultValues.documentRequirements && defaultValues.documentRequirements.length > 0) {
-      return defaultValues.documentRequirements;
+      return defaultValues.documentRequirements.map(doc => ({
+        id: doc.id || `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: doc.name,
+        required: doc.required,
+        description: doc.description
+      }));
     }
     return getDefaultDocuments(defaultValues.visaType || "F1");
   };
@@ -114,9 +119,15 @@ export const DocumentRulesStep = ({
   }, [activeVisaType, form, getDefaultDocuments, onVisaTypeChange]);
   
   const handleSubmit = form.handleSubmit(async (data) => {
+    // Ensure all documents have an ID
+    const validDocuments = data.documentRequirements.map(doc => ({
+      ...doc,
+      id: doc.id || `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    }));
+    
     const result = await onSubmit({
       visaType: data.visaType,
-      documentRequirements: data.documentRequirements
+      documentRequirements: validDocuments
     });
     
     if (result) {
