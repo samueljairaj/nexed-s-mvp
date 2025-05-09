@@ -24,6 +24,7 @@ const UniversityLanding = () => {
   const [universityName, setUniversityName] = useState("");
   const [universityCountry, setUniversityCountry] = useState("United States");
   const [sevisId, setSevisId] = useState("");
+  const [submissionTimeoutId, setSubmissionTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
@@ -46,23 +47,36 @@ const UniversityLanding = () => {
   
   // Add a safety timeout to prevent infinite loading
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
+    // Clear previous timeout if exists
+    if (submissionTimeoutId) {
+      clearTimeout(submissionTimeoutId);
+    }
     
+    // Set new timeout if currently submitting
     if (isSubmitting) {
-      timeoutId = setTimeout(() => {
-        console.log("Form submission timed out after 15 seconds");
+      const timeoutId = setTimeout(() => {
+        console.log("Form submission timed out after 10 seconds");
         setIsSubmitting(false);
         toast.error("Request timed out. Please try again or refresh the page.");
-      }, 15000); // 15 second timeout
+      }, 10000); // Reduced to 10 second timeout for faster feedback
+      
+      setSubmissionTimeoutId(timeoutId);
     }
     
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      if (submissionTimeoutId) clearTimeout(submissionTimeoutId);
     };
   }, [isSubmitting]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Ensure we're not already submitting
+    if (isSubmitting) {
+      console.log("Already submitting, ignoring additional submit");
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -115,11 +129,7 @@ const UniversityLanding = () => {
           setTimeout(() => {
             console.log("Manual navigation to DSO onboarding");
             navigate('/dso-onboarding', { replace: true });
-            setIsSubmitting(false);
-          }, 2000);
-        } else {
-          // This will execute if signUp returns false
-          setIsSubmitting(false);
+          }, 1500);
         }
       } else {
         // Login with email and password
@@ -130,15 +140,20 @@ const UniversityLanding = () => {
         }
         
         await login(email, password);
-        // After successful login, we'll let the auth state change handle redirection
-        // But also have a backup timeout
+        
+        // If login is successful, the useEffect above will handle redirection
+        // But also have a backup timeout for manual navigation
         setTimeout(() => {
-          setIsSubmitting(false);
-        }, 3000);
+          if (isAuthenticated && isDSO) {
+            navigate('/app/dso-dashboard', { replace: true });
+          }
+        }, 2000);
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
       toast.error(`Authentication failed: ${error.message}`);
+    } finally {
+      // Always reset submitting state
       setIsSubmitting(false);
     }
   };
