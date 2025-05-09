@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -221,6 +220,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            role: role // Add role to user metadata
+          }
+        }
       });
       
       if (authError) throw authError;

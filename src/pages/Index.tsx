@@ -28,8 +28,9 @@ const Index = () => {
   useEffect(() => {
     if (isAuthenticated) {
       if (currentUser?.onboardingComplete) {
-        navigate("/app/dashboard");
+        navigate(currentUser.role === "dso" ? "/app/dso-dashboard" : "/app/dashboard");
       } else {
+        // The onboarding page will handle redirecting based on role
         navigate("/onboarding");
       }
     }
@@ -67,10 +68,17 @@ const Index = () => {
           return;
         }
         
+        const fullName = `${firstName} ${lastName}`;
+        
         // Create account with role metadata
-        await signup(email, password, userType, userType === "dso" ? 
-          { universityName, universityCountry, sevisId } : undefined);
-          
+        await signup(
+          email, 
+          password,
+          userType, 
+          userType === "dso" ? 
+            { universityName, universityCountry, sevisId } : undefined
+        );
+        
         toast.success(`${userType === "dso" ? "DSO" : "Student"} account created! Proceeding to onboarding...`);
       } else {
         // Login
