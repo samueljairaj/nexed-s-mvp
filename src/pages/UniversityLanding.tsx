@@ -29,6 +29,9 @@ const UniversityLanding = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
+  // Add a timeout ref to clear any hanging timeouts
+  const timeoutRef = useState<NodeJS.Timeout | null>(null)[0];
+
   // Check authentication status and redirect if necessary
   useEffect(() => {
     console.log("UniversityLanding: Auth state:", { isAuthenticated, isDSO, isLoading });
@@ -48,6 +51,15 @@ const UniversityLanding = () => {
     }
   }, [isAuthenticated, currentUser, navigate, isLoading, isDSO]);
   
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef) {
+        clearTimeout(timeoutRef);
+      }
+    };
+  }, [timeoutRef]);
+
   // Progress bar animation for better UX during account creation/login
   useEffect(() => {
     if (!isSubmitting) {
@@ -112,15 +124,34 @@ const UniversityLanding = () => {
     
     setIsSubmitting(true);
     setSubmissionProgress(10);
+
+    // Set a timeout to prevent infinite loading state
+    if (timeoutRef) clearTimeout(timeoutRef);
+    const timeout = setTimeout(() => {
+      console.log("Auth operation timed out, resetting submission state");
+      setIsSubmitting(false);
+      setSubmissionProgress(0);
+      setSubmissionStep("");
+      setErrorMessage("Operation timed out. Please try again.");
+      toast.error("Operation timed out. Please try again.");
+    }, 15000); // 15 second timeout
     
     try {
       if (authMode === "signup") {
         setSubmissionStep("Creating your account...");
+        console.log("Starting signup process for:", email);
         
         // Generate a unique email if testing with the same email repeatedly
-        const emailToUse = email.includes("+test") ? email : email;
+        const emailToUse = email;
         
         // Simplified signup with just basic info - university details come later
+        console.log("Calling signup with data:", {
+          email: emailToUse,
+          firstName,
+          lastName,
+          role: "dso"
+        });
+        
         const signupResult = await signup({
           email: emailToUse,
           password,
@@ -129,7 +160,10 @@ const UniversityLanding = () => {
           role: "dso" // Always create DSO users from university landing
         });
         
+        console.log("Signup result:", signupResult);
+        
         if (signupResult) {
+          clearTimeout(timeout);
           setSubmissionProgress(100);
           setSubmissionStep("Account created successfully! Redirecting to onboarding...");
           toast.success("DSO account created successfully!");
@@ -140,20 +174,23 @@ const UniversityLanding = () => {
             console.log("Signup successful, auth state change should redirect...");
           }, 1500);
         } else {
-          throw new Error("Failed to create account");
+          throw new Error("Failed to create account - signup returned false");
         }
       } else {
         setSubmissionStep("Signing in...");
+        console.log("Starting login process for:", email);
         
         await login(email, password);
+        clearTimeout(timeout);
         setSubmissionProgress(100);
         setSubmissionStep("Login successful! Redirecting...");
       }
     } catch (error: any) {
+      clearTimeout(timeout);
       console.error("Authentication error:", error);
       let errorMsg = "Authentication failed";
       
-      // Provide more helpful error messages
+      // Provide more detailed error information
       if (error?.message?.includes("already registered")) {
         errorMsg = "This email is already registered. Please try logging in instead.";
       } else if (error?.message) {
@@ -172,8 +209,10 @@ const UniversityLanding = () => {
       setTimeout(() => {
         if (isSubmitting) {
           setIsSubmitting(false);
+          setSubmissionProgress(0);
+          setSubmissionStep("");
         }
-      }, 10000); // 10 second timeout as a fallback
+      }, 500);
     }
   };
 

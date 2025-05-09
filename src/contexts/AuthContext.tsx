@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -238,7 +239,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Improved signUp function with better error handling
+  // Improved signUp function with better error handling and logging
   const signUp = async (data: any) => {
     // Prevent multiple simultaneous signup attempts
     if (signupInProgress) {
@@ -258,6 +259,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // Determine if this is a DSO signup based on role field
       const isDsoSignup = data.role === 'dso';
+      console.log("Is DSO signup:", isDsoSignup);
       
       console.log("Creating auth user...");
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -279,8 +281,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log("Auth user created successfully:", !!authData.user);
       
-      // The database trigger will handle creating the profile and DSO profile
-
+      // Add a small delay to ensure the database trigger has time to run
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Force a session refresh to ensure we have the latest data
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (sessionData.session) {
+        console.log("Session refreshed after signup");
+        setSession(sessionData.session);
+        
+        // Wait a moment and then attempt to load the user profile
+        setTimeout(() => {
+          loadUser(sessionData.session?.user);
+        }, 500);
+      }
+      
       // Let the auth state change listener handle profile loading and redirections
       toast.success("Account created successfully!");
       return true;
