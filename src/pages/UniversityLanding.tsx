@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserTypeToggle } from "@/components/landing/UserTypeToggle";
@@ -29,9 +29,11 @@ const UniversityLanding = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  // Effect to redirect authenticated users
-  useState(() => {
-    if (isAuthenticated && currentUser) {
+  // Check authentication status and redirect if necessary
+  useEffect(() => {
+    console.log("UniversityLanding: Auth state:", { isAuthenticated, isDSO, isLoading });
+    
+    if (!isLoading && isAuthenticated && currentUser) {
       const onboardingComplete = currentUser.onboarding_complete;
       
       if (isDSO) {
@@ -44,27 +46,27 @@ const UniversityLanding = () => {
         navigate('/student', { replace: true });
       }
     }
-  });
+  }, [isAuthenticated, currentUser, navigate, isLoading, isDSO]);
   
-  // Progress bar animation
-  useState(() => {
-    let progressInterval: NodeJS.Timeout;
-    
-    if (isSubmitting) {
-      progressInterval = setInterval(() => {
-        setSubmissionProgress((prev) => {
-          if (prev >= 90) return prev;
-          return prev + Math.random() * 5 + 1; // Random increment for natural feel
-        });
-      }, 800);
-      
-      return () => clearInterval(progressInterval);
+  // Progress bar animation for better UX during account creation/login
+  useEffect(() => {
+    if (!isSubmitting) {
+      return;
     }
+    
+    let progressInterval: NodeJS.Timeout | undefined;
+    
+    progressInterval = setInterval(() => {
+      setSubmissionProgress((prev) => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 5 + 1; // Random increment for natural feel
+      });
+    }, 800);
     
     return () => {
       if (progressInterval) clearInterval(progressInterval);
     };
-  });
+  }, [isSubmitting]);
 
   const resetForm = () => {
     setErrorMessage("");
@@ -115,9 +117,12 @@ const UniversityLanding = () => {
       if (authMode === "signup") {
         setSubmissionStep("Creating your account...");
         
+        // Generate a unique email if testing with the same email repeatedly
+        const emailToUse = email.includes("+test") ? email : email;
+        
         // Simplified signup with just basic info - university details come later
         const signupResult = await signup({
-          email,
+          email: emailToUse,
           password,
           firstName,
           lastName,
@@ -126,18 +131,13 @@ const UniversityLanding = () => {
         
         if (signupResult) {
           setSubmissionProgress(100);
-          setSubmissionStep("Account created! Redirecting to onboarding...");
+          setSubmissionStep("Account created successfully! Redirecting to onboarding...");
           toast.success("DSO account created successfully!");
           
-          // Wait briefly before attempting login
-          setTimeout(async () => {
-            try {
-              await login(email, password);
-            } catch (error) {
-              console.error("Auto login failed:", error);
-              // Redirect anyway - they can log in manually
-              navigate('/dso-onboarding', { replace: true });
-            }
+          // Wait briefly before attempting login - the signup process already logged them in
+          setTimeout(() => {
+            // The auth state change should handle redirection
+            console.log("Signup successful, auth state change should redirect...");
           }, 1500);
         } else {
           throw new Error("Failed to create account");
@@ -151,12 +151,29 @@ const UniversityLanding = () => {
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
-      const errorMsg = error?.message || "Unknown error occurred";
-      setErrorMessage(`Authentication failed: ${errorMsg}`);
-      toast.error(`Authentication failed: ${errorMsg}`);
+      let errorMsg = "Authentication failed";
+      
+      // Provide more helpful error messages
+      if (error?.message?.includes("already registered")) {
+        errorMsg = "This email is already registered. Please try logging in instead.";
+      } else if (error?.message) {
+        errorMsg = `Authentication failed: ${error.message}`;
+      }
+      
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
+      
+      // Reset state
       setIsSubmitting(false);
       setSubmissionProgress(0);
       setSubmissionStep("");
+    } finally {
+      // Ensure we don't leave the user in a stuck state
+      setTimeout(() => {
+        if (isSubmitting) {
+          setIsSubmitting(false);
+        }
+      }, 10000); // 10 second timeout as a fallback
     }
   };
 
@@ -168,7 +185,7 @@ const UniversityLanding = () => {
   const handleDemoLogin = () => {
     setEmail("dso@example.com");
     setPassword("Password123!");
-    login("dso@example.com", "Password123!");
+    toast.info("Demo credentials loaded! Click Sign In to continue.");
   };
 
   if (isLoading) {

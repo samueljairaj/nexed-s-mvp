@@ -45,6 +45,8 @@ export function useDsoOnboarding() {
         updated_at: new Date().toISOString()
       };
 
+      console.log("Updating DSO profile:", profileData);
+
       // Upsert the DSO profile (will insert or update)
       const { error } = await supabase
         .from('dso_profiles')

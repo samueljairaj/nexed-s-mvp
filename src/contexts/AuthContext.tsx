@@ -186,38 +186,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         console.log("User profile not found, creating new profile");
         
-        // Create a minimal profile if it doesn't exist
-        try {
-          const { error: createProfileError } = await supabase
-            .from('profiles')
-            .insert([
-              {
-                id: user.id,
-                email: user.email,
-                role: 'student', // Default role
-              },
-            ]);
-            
-          if (createProfileError) {
-            throw createProfileError;
-          }
-          
-          // Fetch the new profile
-          const { data: newProfile, error: newProfileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-            
-          if (newProfileError) {
-            throw newProfileError;
-          }
-          
-          setCurrentUser(newProfile);
-          setIsAuthenticated(true);
-        } catch (createError) {
-          console.error("Error creating user profile:", createError);
-        }
+        // We don't need to create a profile here anymore since we've set up a trigger
+        // Just log the issue and set loading to false
+        console.log("Profile should have been created by database trigger");
+        setCurrentUser(null);
+        setIsAuthenticated(true); // Still authenticated even if profile not found
       }
     } catch (error) {
       console.error("Error loading user data:", error);
@@ -228,10 +201,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Ensure the login method is properly handling authentication and errors
   const login = async (email: string, password: string) => {
     try {
-      // Use email/password authentication instead of OAuth
+      // Use email/password authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -266,7 +238,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Optimized signUp function with better error handling and reduced timeout
+  // Improved signUp function with better error handling
   const signUp = async (data: any) => {
     // Prevent multiple simultaneous signup attempts
     if (signupInProgress) {
@@ -307,33 +279,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log("Auth user created successfully:", !!authData.user);
       
-      // If this is a DSO and we need to create a university record
-      if (isDsoSignup && data.universityName && data.universityCountry) {
-        try {
-          // First check if university already exists
-          const { data: existingUniversity } = await supabase
-            .from('universities')
-            .select('id')
-            .eq('name', data.universityName)
-            .eq('country', data.universityCountry)
-            .maybeSingle();
-            
-          // Only create if it doesn't exist
-          if (!existingUniversity) {
-            console.log("Creating university record:", data.universityName);
-            await supabase.from('universities').insert({
-              name: data.universityName,
-              country: data.universityCountry,
-              sevis_id: data.sevisId
-            });
-          } else {
-            console.log("University already exists, not creating a new one");
-          }
-        } catch (universityError) {
-          console.error("Error creating university:", universityError);
-          // Continue anyway - the profile creation might still succeed
-        }
-      }
+      // The database trigger will handle creating the profile and DSO profile
 
       // Let the auth state change listener handle profile loading and redirections
       toast.success("Account created successfully!");
@@ -348,7 +294,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const signup = signUp;
+  const signup = signUp; // Alias for compatibility
 
   const updateProfile = async (data: any) => {
     try {
@@ -358,7 +304,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         ...data,
       };
 
-      // Remove 'returning' option which is not supported
       const { error } = await supabase
         .from('profiles')
         .upsert(updates);
@@ -388,7 +333,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const updateDSOProfile = async (data: any) => {
     if (!currentUser?.id) {
-      toast.error("User ID not found. Please log in again.");
+      toast.error("User session not found. Please try logging out and back in.");
       return;
     }
 
@@ -401,7 +346,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log("Updating DSO profile with data:", updates);
 
-      // Remove 'returning' option which is not supported
       const { error } = await supabase
         .from('dso_profiles')
         .upsert(updates);
@@ -430,7 +374,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
   
-  // Add the completeOnboarding method
   const completeOnboarding = async (): Promise<boolean> => {
     try {
       if (!currentUser?.id) {
