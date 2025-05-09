@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -239,7 +238,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Improved signUp function with better error handling and logging
+  // Simplified signUp function with better error handling
   const signUp = async (data: any) => {
     // Prevent multiple simultaneous signup attempts
     if (signupInProgress) {
@@ -261,7 +260,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const isDsoSignup = data.role === 'dso';
       console.log("Is DSO signup:", isDsoSignup);
       
-      console.log("Creating auth user...");
+      // Create the auth user in a single operation
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -269,35 +268,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           data: {
             name: `${data.firstName} ${data.lastName}`,
             role: isDsoSignup ? 'dso' : 'student',
+            first_name: data.firstName,
+            last_name: data.lastName
           }
         }
       });
 
       if (authError) {
         console.error("Auth signup error:", authError);
-        toast.error(`Signup failed: ${authError.message}`);
+        
+        // Provide more specific error messages
+        if (authError.message.includes("already registered")) {
+          toast.error("This email is already registered. Please use a different email or try logging in.");
+        } else {
+          toast.error(`Signup failed: ${authError.message}`);
+        }
         return false;
       }
 
       console.log("Auth user created successfully:", !!authData.user);
       
-      // Add a small delay to ensure the database trigger has time to run
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Force a session refresh to ensure we have the latest data
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      if (sessionData.session) {
-        console.log("Session refreshed after signup");
-        setSession(sessionData.session);
-        
-        // Wait a moment and then attempt to load the user profile
-        setTimeout(() => {
-          loadUser(sessionData.session?.user);
-        }, 500);
-      }
-      
-      // Let the auth state change listener handle profile loading and redirections
+      // If we got here, the signup was successful
+      // The auth state change listener will handle the session update and redirection
       toast.success("Account created successfully!");
       return true;
       

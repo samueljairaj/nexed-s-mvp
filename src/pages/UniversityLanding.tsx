@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserTypeToggle } from "@/components/landing/UserTypeToggle";
@@ -29,8 +28,9 @@ const UniversityLanding = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  // Add a timeout ref to clear any hanging timeouts
-  const timeoutRef = useState<NodeJS.Timeout | null>(null)[0];
+  // Use refs instead of state for timeouts to avoid re-renders
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check authentication status and redirect if necessary
   useEffect(() => {
@@ -51,14 +51,17 @@ const UniversityLanding = () => {
     }
   }, [isAuthenticated, currentUser, navigate, isLoading, isDSO]);
   
-  // Clear timeout on unmount
+  // Clean up timeouts on unmount
   useEffect(() => {
     return () => {
-      if (timeoutRef) {
-        clearTimeout(timeoutRef);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
       }
     };
-  }, [timeoutRef]);
+  }, []);
 
   // Progress bar animation for better UX during account creation/login
   useEffect(() => {
@@ -66,17 +69,23 @@ const UniversityLanding = () => {
       return;
     }
     
-    let progressInterval: NodeJS.Timeout | undefined;
+    // Clear any existing interval first to prevent multiple intervals
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
     
-    progressInterval = setInterval(() => {
+    progressIntervalRef.current = setInterval(() => {
       setSubmissionProgress((prev) => {
+        // Cap progress at 90% during waiting to give feedback without claiming completion
         if (prev >= 90) return prev;
-        return prev + Math.random() * 5 + 1; // Random increment for natural feel
+        return prev + Math.random() * 3 + 1; // Smaller, more gradual increments
       });
     }, 800);
     
     return () => {
-      if (progressInterval) clearInterval(progressInterval);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
     };
   }, [isSubmitting]);
 
@@ -124,36 +133,36 @@ const UniversityLanding = () => {
     
     setIsSubmitting(true);
     setSubmissionProgress(10);
+    setErrorMessage("");
 
-    // Set a timeout to prevent infinite loading state
-    if (timeoutRef) clearTimeout(timeoutRef);
-    const timeout = setTimeout(() => {
+    // Clear any existing timeout
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    
+    // Set a reasonable timeout (8 seconds instead of 15)
+    timeoutRef.current = setTimeout(() => {
       console.log("Auth operation timed out, resetting submission state");
       setIsSubmitting(false);
       setSubmissionProgress(0);
       setSubmissionStep("");
-      setErrorMessage("Operation timed out. Please try again.");
+      setErrorMessage("Operation timed out. Please try again. If this persists, check your network connection or try refreshing the page.");
       toast.error("Operation timed out. Please try again.");
-    }, 15000); // 15 second timeout
+    }, 8000);
     
     try {
       if (authMode === "signup") {
         setSubmissionStep("Creating your account...");
         console.log("Starting signup process for:", email);
         
-        // Generate a unique email if testing with the same email repeatedly
-        const emailToUse = email;
-        
         // Simplified signup with just basic info - university details come later
         console.log("Calling signup with data:", {
-          email: emailToUse,
+          email,
           firstName,
           lastName,
           role: "dso"
         });
         
         const signupResult = await signup({
-          email: emailToUse,
+          email,
           password,
           firstName,
           lastName,
@@ -163,47 +172,40 @@ const UniversityLanding = () => {
         console.log("Signup result:", signupResult);
         
         if (signupResult) {
-          clearTimeout(timeout);
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
           setSubmissionProgress(100);
           setSubmissionStep("Account created successfully! Redirecting to onboarding...");
           toast.success("DSO account created successfully!");
           
-          // Wait briefly before attempting login - the signup process already logged them in
-          setTimeout(() => {
-            // The auth state change should handle redirection
-            console.log("Signup successful, auth state change should redirect...");
-          }, 1500);
+          // The auth state change should handle redirection automatically
         } else {
-          throw new Error("Failed to create account - signup returned false");
+          throw new Error("Failed to create account");
         }
       } else {
         setSubmissionStep("Signing in...");
         console.log("Starting login process for:", email);
         
         await login(email, password);
-        clearTimeout(timeout);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setSubmissionProgress(100);
         setSubmissionStep("Login successful! Redirecting...");
       }
     } catch (error: any) {
-      clearTimeout(timeout);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       console.error("Authentication error:", error);
       let errorMsg = "Authentication failed";
       
       // Provide more detailed error information
       if (error?.message?.includes("already registered")) {
         errorMsg = "This email is already registered. Please try logging in instead.";
+      } else if (error?.message?.includes("Invalid login credentials")) {
+        errorMsg = "Invalid email or password. Please check your credentials and try again.";
       } else if (error?.message) {
         errorMsg = `Authentication failed: ${error.message}`;
       }
       
       setErrorMessage(errorMsg);
       toast.error(errorMsg);
-      
-      // Reset state
-      setIsSubmitting(false);
-      setSubmissionProgress(0);
-      setSubmissionStep("");
     } finally {
       // Ensure we don't leave the user in a stuck state
       setTimeout(() => {
