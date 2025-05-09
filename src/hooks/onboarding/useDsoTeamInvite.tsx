@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 
 export interface TeamMemberInvite {
   email: string;
-  role: 'dso_admin' | 'dso_viewer';
+  role: Database["public"]["Enums"]["dso_role"];
 }
 
 export interface TeamInviteFormData {

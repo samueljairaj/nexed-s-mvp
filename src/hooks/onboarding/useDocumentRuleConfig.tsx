@@ -45,7 +45,7 @@ export function useDocumentRuleConfig() {
           { id: 'ead', name: 'EAD Card', required: true },
           { id: 'i765', name: 'I-765 Approval Notice', required: false }
         ];
-      case 'STEM OPT':
+      case 'STEM_OPT':
         return [
           ...commonDocs,
           { id: 'i20', name: 'I-20 with STEM OPT Endorsement', required: true },
@@ -90,12 +90,9 @@ export function useDocumentRuleConfig() {
       
       if (dsoError) throw dsoError;
       
-      // Check if rule exists first
-      const { data: existingRules } = await supabase
-        .from('university_document_rules')
-        .select('id')
-        .eq('university_id', dsoProfile.university_id)
-        .eq('visa_type', data.visaType);
+      if (!dsoProfile.university_id) {
+        throw new Error("University ID not found in DSO profile");
+      }
       
       const documentRequirements = data.documentRequirements.reduce((acc: Record<string, any>, doc) => {
         acc[doc.id] = {
@@ -105,6 +102,13 @@ export function useDocumentRuleConfig() {
         };
         return acc;
       }, {});
+      
+      // Check if rule exists first
+      const { data: existingRules } = await supabase
+        .from('university_document_rules')
+        .select('id')
+        .eq('university_id', dsoProfile.university_id)
+        .eq('visa_type', data.visaType);
       
       if (existingRules && existingRules.length > 0) {
         // Update existing rule

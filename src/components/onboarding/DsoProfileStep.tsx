@@ -39,17 +39,17 @@ export function DsoProfileStep({
   onSubmit,
   isSubmitting = false 
 }: DsoProfileStepProps) {
-  const { dsoProfile } = useAuth();
+  const { currentUser } = useAuth();
   
   const form = useForm<DsoProfileFormData>({
     resolver: zodResolver(dsoProfileSchema),
     defaultValues: {
-      title: dsoProfile?.title || defaultValues.title || "",
-      department: dsoProfile?.department || defaultValues.department || "",
-      officeLocation: dsoProfile?.officeLocation || defaultValues.officeLocation || "",
-      officeHours: dsoProfile?.officeHours || defaultValues.officeHours || "",
-      contactEmail: dsoProfile?.contactEmail || defaultValues.contactEmail || "",
-      contactPhone: dsoProfile?.contactPhone || defaultValues.contactPhone || "",
+      title: currentUser?.dsoProfile?.title || defaultValues.title || "",
+      department: currentUser?.dsoProfile?.department || defaultValues.department || "",
+      officeLocation: currentUser?.dsoProfile?.officeLocation || defaultValues.officeLocation || "",
+      officeHours: currentUser?.dsoProfile?.officeHours || defaultValues.officeHours || "",
+      contactEmail: currentUser?.dsoProfile?.contactEmail || defaultValues.contactEmail || "",
+      contactPhone: currentUser?.dsoProfile?.contactPhone || defaultValues.contactPhone || "",
     }
   });
 

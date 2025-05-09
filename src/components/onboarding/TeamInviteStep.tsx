@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,6 +29,7 @@ import {
 } from "@/components/ui/select";
 
 import { TeamInviteFormData, TeamMemberInvite } from "@/hooks/onboarding/useDsoTeamInvite";
+import { Database } from "@/integrations/supabase/types";
 
 const teamInviteSchema = z.object({
   invites: z.array(z.object({
@@ -64,7 +64,7 @@ export const TeamInviteStep = ({
   
   const handleSubmit = form.handleSubmit(async (data) => {
     const result = await onSubmit({
-      invites: data.invites,
+      invites: data.invites as TeamMemberInvite[],
     });
     
     if (result) {
@@ -146,7 +146,7 @@ export const TeamInviteStep = ({
                             </FormLabel>
                             <Select
                               value={field.value}
-                              onValueChange={(value) => {
+                              onValueChange={(value: Database["public"]["Enums"]["dso_role"]) => {
                                 field.onChange(value);
                                 updateInviteField(index, "role", value);
                               }}
