@@ -29,7 +29,12 @@ export function getProperty<T extends object, K extends keyof T>(
  * Helper function to uniformly access common profile properties
  * regardless of whether they're in camelCase or snake_case
  */
-export function getProfileProperty(profile: any, property: string): any {
+export function getProfileProperty(profile: any | null | undefined, property: string): any {
+  // Return undefined early if profile is null or undefined
+  if (!profile) {
+    return undefined;
+  }
+
   const snakeMapping: Record<string, string> = {
     visaType: 'visa_type',
     onboardingComplete: 'onboarding_complete',

@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { getProfileProperty } from '@/utils/propertyMapping';
 
 interface RoleBasedRedirectProps {
   children: React.ReactNode;
@@ -21,12 +22,13 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       }
       
       // Handle onboarding for DSOs
-      if (isDSO && !currentUser.onboarding_complete && !window.location.pathname.includes("/dso-onboarding")) {
+      const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
+      if (isDSO && !onboardingComplete && !window.location.pathname.includes("/dso-onboarding")) {
         navigate('/dso-onboarding');
       }
       
       // Handle onboarding for students
-      if (!isDSO && !currentUser.onboarding_complete && 
+      if (!isDSO && !onboardingComplete && 
           !window.location.pathname.includes("/onboarding") && 
           window.location.pathname !== '/') {
         navigate('/onboarding');

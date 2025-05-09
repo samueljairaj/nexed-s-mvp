@@ -29,12 +29,11 @@ export const AppLayout = () => {
       return;
     }
 
-    if (currentUser && currentUser.role === 'student' && 
-        !getProfileProperty(currentUser, 'onboarding_complete')) {
-      navigate("/onboarding");
+    if (currentUser && !getProfileProperty(currentUser, 'onboarding_complete')) {
+      navigate(isDSO ? "/dso-onboarding" : "/onboarding");
       return;
     }
-  }, [isAuthenticated, currentUser, navigate]);
+  }, [isAuthenticated, currentUser, navigate, isDSO]);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);

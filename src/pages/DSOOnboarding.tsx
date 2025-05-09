@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
@@ -76,7 +77,7 @@ const DSOOnboarding = () => {
     }
     
     // Redirect users who completed onboarding
-    if (isAuthenticated && getProfileProperty(currentUser, 'onboarding_complete')) {
+    if (isAuthenticated && currentUser && getProfileProperty(currentUser, 'onboarding_complete')) {
       navigate("/app/dso-dashboard");
     }
   }, [isAuthenticated, currentUser, navigate, isLoading, isDSO]);
