@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +11,8 @@ import { User, FileCheck, FolderArchive, ChevronRight, AlertCircle } from "lucid
 import { toast } from "sonner";
 import { getProfileProperty } from "@/utils/propertyMapping";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 
 const UniversityLanding = () => {
   const { isAuthenticated, login, currentUser, isLoading, signUp, isDSO } = useAuth();
@@ -47,9 +50,10 @@ const UniversityLanding = () => {
     }
   }, [isAuthenticated, currentUser, navigate, isDSO]);
   
-  // Progress bar animation
+  // Progress bar animation with timeout
   useEffect(() => {
     let progressInterval: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout;
     
     // Only start the progress animation if currently submitting
     if (isSubmitting) {
@@ -62,12 +66,28 @@ const UniversityLanding = () => {
         });
       }, 800);
       
+      // Add a timeout to prevent infinite submission state
+      timeoutId = setTimeout(() => {
+        if (isSubmitting) {
+          console.log("Signup timed out after 20 seconds");
+          setIsSubmitting(false);
+          setSubmissionProgress(0);
+          setSubmissionStep("");
+          setErrorMessage("Signup timed out after 20 seconds");
+          toast.error("Signup timed out after 20 seconds");
+        }
+      }, 20000); // 20 seconds timeout
+      
       return () => {
         clearInterval(progressInterval);
+        clearTimeout(timeoutId);
       };
     }
     
-    return () => {};
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [isSubmitting]);
 
   const resetForm = () => {
@@ -113,6 +133,107 @@ const UniversityLanding = () => {
     return true;
   };
 
+  // Direct auth with Supabase for more reliable signup
+  const directSignUp = async () => {
+    try {
+      setSubmissionStep("Creating auth account...");
+      setSubmissionProgress(30);
+      
+      // 1. Create the auth user directly with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: `${firstName} ${lastName}`,
+            role: "dso",
+            firstName,
+            lastName
+          }
+        }
+      });
+
+      if (authError) throw authError;
+      console.log("Auth user created successfully:", !!authData.user);
+      
+      // 2. Check if university exists or create it
+      setSubmissionStep("Setting up university...");
+      setSubmissionProgress(60);
+      
+      let universityId: string | null = null;
+      
+      const { data: existingUniversity } = await supabase
+        .from('universities')
+        .select('id')
+        .eq('name', universityName)
+        .eq('country', universityCountry)
+        .maybeSingle();
+        
+      if (existingUniversity) {
+        universityId = existingUniversity.id;
+        console.log("Using existing university:", universityId);
+      } else {
+        // Create university
+        const { data: newUniversity, error: createError } = await supabase
+          .from('universities')
+          .insert({
+            name: universityName,
+            country: universityCountry,
+            sevis_id: sevisId
+          })
+          .select('id')
+          .single();
+          
+        if (createError) {
+          console.error("Error creating university:", createError);
+          // Continue anyway - profile can be updated later
+        } else if (newUniversity) {
+          universityId = newUniversity.id;
+          console.log("Created new university:", universityId);
+        }
+      }
+      
+      // 3. Update the profile with university info
+      if (universityId && authData.user) {
+        setSubmissionStep("Finalizing profile...");
+        setSubmissionProgress(80);
+        
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            university_id: universityId,
+            university: universityName
+          })
+          .eq('id', authData.user.id);
+          
+        if (profileError) {
+          console.error("Error updating profile with university:", profileError);
+          // Non-critical error, continue
+        }
+      }
+      
+      setSubmissionProgress(100);
+      setSubmissionStep("Account created! Redirecting...");
+      toast.success("DSO account created! Proceeding to onboarding...");
+      
+      // Wait briefly before redirecting via login
+      setTimeout(() => {
+        login(email, password).catch(err => {
+          console.error("Auto-login failed:", err);
+          // If auto-login fails, redirect to onboarding anyway
+          navigate('/dso-onboarding', { replace: true });
+        });
+      }, 1500);
+      
+      return true;
+    } catch (error: any) {
+      console.error("Direct signup failed:", error);
+      setErrorMessage(`Signup failed: ${error.message}`);
+      toast.error(`Signup failed: ${error.message}`);
+      return false;
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -132,45 +253,10 @@ const UniversityLanding = () => {
     
     try {
       if (isSignup) {
-        setSubmissionStep("Creating DSO account...");
-        setSubmissionProgress(20);
-        
-        const fullName = `${firstName} ${lastName}`;
-        console.log("Creating DSO account with data:", {
-          email,
-          fullName,
-          role: "dso",
-          universityName,
-          universityCountry,
-          sevisId
-        });
-        
-        // Create account with full name and role
-        const success = await signUp({
-          email,
-          password,
-          firstName,
-          lastName,
-          name: fullName,
-          role: "dso", // Important: Set role to DSO
-          universityName,
-          universityCountry,
-          sevisId
-        });
-        
-        if (success) {
-          setSubmissionStep("Account created! Redirecting to onboarding...");
-          setSubmissionProgress(100);
-          toast.success("DSO account created! Proceeding to onboarding...");
-          
-          // Manual navigation if the auth state change doesn't trigger navigation
-          setTimeout(() => {
-            console.log("Manual navigation to DSO onboarding");
-            navigate('/dso-onboarding', { replace: true });
-          }, 1500);
-        } else {
-          setErrorMessage("Failed to create account. Please try again.");
-          toast.error("Failed to create account. Please try again.");
+        // Use direct signup for DSO accounts to bypass potential timeouts
+        const success = await directSignUp();
+        if (!success) {
+          setIsSubmitting(false);
           setSubmissionProgress(0);
         }
       } else {
@@ -190,6 +276,7 @@ const UniversityLanding = () => {
         } catch (error: any) {
           setErrorMessage(`Login failed: ${error.message}`);
           toast.error(`Login failed: ${error.message}`);
+          setIsSubmitting(false);
         }
       }
     } catch (error: any) {
@@ -197,8 +284,6 @@ const UniversityLanding = () => {
       const errorMsg = error.message || "Unknown error occurred";
       setErrorMessage(`Authentication failed: ${errorMsg}`);
       toast.error(`Authentication failed: ${errorMsg}`);
-    } finally {
-      // Always reset submitting state
       setIsSubmitting(false);
     }
   };
@@ -374,12 +459,7 @@ const UniversityLanding = () => {
                       
                       {isSubmitting && (
                         <div className="mt-4 space-y-2">
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div 
-                              className="bg-primary h-2.5 rounded-full transition-all duration-500" 
-                              style={{ width: `${submissionProgress}%` }}
-                            ></div>
-                          </div>
+                          <Progress value={submissionProgress} className="h-2 w-full" />
                           <p className="text-sm text-center text-gray-600">{submissionStep}</p>
                         </div>
                       )}
