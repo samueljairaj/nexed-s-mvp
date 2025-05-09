@@ -28,12 +28,14 @@ const DSOOnboarding = () => {
   
   // Step state
   const [currentStep, setCurrentStep] = useState(0);
+  const [hasAttemptedProfile, setHasAttemptedProfile] = useState(false);
   
   // DSO Profile setup hook
   const {
     dsoProfileData,
     handleDsoProfileSetup,
-    isSubmitting: isDsoProfileSubmitting
+    isSubmitting: isDsoProfileSubmitting,
+    submitError: dsoProfileError
   } = useDsoOnboarding();
   
   // University setup hooks
@@ -132,9 +134,16 @@ const DSOOnboarding = () => {
   // Step submission handlers
   const handleDsoProfileStep = async (data: any) => {
     console.log("DSOOnboarding: Handling DSO profile step", data);
+    setHasAttemptedProfile(true);
     const success = await handleDsoProfileSetup(data);
     if (success) goToNextStep();
     return success;
+  };
+  
+  // Skip DSO profile step
+  const handleSkipDsoProfile = () => {
+    toast.info("You can complete your DSO profile later from settings");
+    goToNextStep();
   };
   
   const handleUniversityStep = async (data: any) => {
@@ -185,6 +194,8 @@ const DSOOnboarding = () => {
             defaultValues={dsoProfileData}
             onSubmit={handleDsoProfileStep}
             isSubmitting={isDsoProfileSubmitting}
+            submitError={dsoProfileError}
+            onSkip={hasAttemptedProfile ? handleSkipDsoProfile : undefined}
           />
         );
       case 1:
