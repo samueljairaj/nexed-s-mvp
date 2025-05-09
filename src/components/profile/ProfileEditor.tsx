@@ -1,23 +1,19 @@
-
-import React, { useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { countries } from "@/types/onboarding";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,20 +44,10 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export const ProfileEditor = () => {
   const { currentUser, updateProfile } = useAuth();
-  const [openSections, setOpenSections] = useState({
-    personal: true,
-    visa: false,
-    academic: false,
-    employment: false,
-  });
-
-  const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("personal");
+  
+  // Initialize form with user data
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -70,7 +56,7 @@ export const ProfileEditor = () => {
       country: currentUser?.country || "",
       address: currentUser?.address || "",
       phone: currentUser?.phone || "",
-      visaType: currentUser?.visaType || null,
+      visaType: (currentUser?.visaType as VisaType) || null,
       university: currentUser?.university || "",
       degreeLevel: currentUser?.degreeLevel || "",
       fieldOfStudy: currentUser?.fieldOfStudy || "",
@@ -84,370 +70,468 @@ export const ProfileEditor = () => {
     },
   });
 
-  const onSubmit = async (data: ProfileFormValues) => {
+  // Form submission handler
+  const onSubmit = async (values: ProfileFormValues) => {
+    setIsSubmitting(true);
     try {
-      await updateProfile(data);
-      toast.success("Profile updated successfully!");
-    } catch (error: any) {
+      await updateProfile(values);
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
       toast.error("Failed to update profile");
-      console.error(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Personal Information */}
-        <Card>
-          <Collapsible open={openSections.personal}>
-            <CollapsibleTrigger asChild>
-              <div 
-                className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/50"
-                onClick={() => toggleSection("personal")}
-              >
-                <h2 className="text-lg font-semibold">Personal Information</h2>
-                {openSections.personal ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="pt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+    <Card>
+      <CardHeader>
+        <CardTitle>Edit Profile</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="personal">Personal Info</TabsTrigger>
+            <TabsTrigger value="contact">Contact Info</TabsTrigger>
+            <TabsTrigger value="academic">Academic Info</TabsTrigger>
+            <TabsTrigger value="passport">Passport Info</TabsTrigger>
+          </TabsList>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <TabsContent value="personal" className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="johndoe@example.com" {...field} type="email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="dateOfBirth"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date of Birth</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Select your date of birth.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+              
+              <TabsContent value="contact" className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="dateOfBirth"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Date of Birth</FormLabel>
-                        <FormDatePicker
-                          name="dateOfBirth"
-                        />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Country of Origin</FormLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select country" />
+                            <SelectValue placeholder="Select a country" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {countries.map((country) => (
-                              <SelectItem key={country} value={country}>
-                                {country}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
                         </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-
-        {/* Visa Information */}
-        <Card>
-          <Collapsible open={openSections.visa}>
-            <CollapsibleTrigger asChild>
-              <div 
-                className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/50"
-                onClick={() => toggleSection("visa")}
-              >
-                <h2 className="text-lg font-semibold">Visa Information</h2>
-                {openSections.visa ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="pt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="visaType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Visa Type</FormLabel>
-                        <Select
-                          value={field.value || ""}
-                          onValueChange={field.onChange}
-                        >
+                        <SelectContent>
+                          {countries.map((country) => (
+                            <SelectItem key={country.value} value={country.value}>
+                              {country.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="123 Main St" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+1 (555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+              
+              <TabsContent value="academic" className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="visaType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Visa Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select visa type" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="F1">F-1 (Student)</SelectItem>
-                            <SelectItem value="J1">J-1 (Exchange Visitor)</SelectItem>
-                            <SelectItem value="H1B">H-1B (Work)</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="usEntryDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>US Entry Date</FormLabel>
-                        <FormDatePicker 
-                          name="usEntryDate"
-                        />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="passportNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Passport Number</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
                         </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="passportExpiryDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Passport Expiry Date</FormLabel>
-                        <FormDatePicker
-                          name="passportExpiryDate"
+                        <SelectContent>
+                          <SelectItem value="F1">F-1 Student Visa</SelectItem>
+                          <SelectItem value="J1">J-1 Exchange Visitor</SelectItem>
+                          <SelectItem value="H1B">H-1B Work Visa</SelectItem>
+                          <SelectItem value="CPT">Curricular Practical Training (CPT)</SelectItem>
+                          <SelectItem value="OPT">Optional Practical Training (OPT)</SelectItem>
+                          <SelectItem value="STEM_OPT">STEM OPT Extension</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="university"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>University</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Harvard University" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="degreeLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Degree Level</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Bachelor's" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="fieldOfStudy"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Field of Study</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Computer Science" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="isSTEM"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-
-        {/* Academic Information */}
-        <Card>
-          <Collapsible open={openSections.academic}>
-            <CollapsibleTrigger asChild>
-              <div 
-                className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/50"
-                onClick={() => toggleSection("academic")}
-              >
-                <h2 className="text-lg font-semibold">Academic Information</h2>
-                {openSections.academic ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="pt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="university"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>University/Institution</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="courseStartDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Course Start Date</FormLabel>
-                        <FormDatePicker
-                          name="courseStartDate"
-                        />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="degreeLevel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Degree Level</FormLabel>
-                        <Select
-                          value={field.value || ""}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select degree level" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Associates">Associate's</SelectItem>
-                            <SelectItem value="Bachelors">Bachelor's</SelectItem>
-                            <SelectItem value="Masters">Master's</SelectItem>
-                            <SelectItem value="Doctoral">Doctoral</SelectItem>
-                            <SelectItem value="Certificate">Certificate</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="fieldOfStudy"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Field of Study</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="isSTEM"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                          <input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={field.onChange}
-                            className="h-4 w-4 rounded border-gray-300 text-nexed-600 focus:ring-nexed-500"
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Is STEM
+                        </FormLabel>
+                        <FormDescription>
+                          Check if your field of study is a STEM field.
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="courseStartDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Course Start Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date()
+                            }
+                            initialFocus
                           />
-                        </FormControl>
-                        <FormLabel className="font-normal">STEM Designated Program</FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Select the start date of your course.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="usEntryDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>US Entry Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date()
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Select the date you entered the US.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                 <FormField
+                  control={form.control}
+                  name="employmentStartDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Employment Start Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date()
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Select the start date of your employment.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
 
-        {/* Employment Information */}
-        <Card>
-          <Collapsible open={openSections.employment}>
-            <CollapsibleTrigger asChild>
-              <div 
-                className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/50"
-                onClick={() => toggleSection("employment")}
-              >
-                <h2 className="text-lg font-semibold">Employment Information</h2>
-                {openSections.employment ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="pt-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="employmentStartDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Employment Start Date</FormLabel>
-                        <FormDatePicker
-                          name="employmentStartDate"
-                        />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-        
-        <div className="flex justify-end">
-          <Button type="submit" className="nexed-gradient-button">
-            Save Changes
-          </Button>
-        </div>
-      </form>
-    </Form>
+              <TabsContent value="passport" className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="passportNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Passport Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Passport Number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="passportExpiryDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Passport Expiry Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-[240px] pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date()
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Select your passport expiry date.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+              
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                    Saving...
+                  </>
+                ) : "Update Profile"}
+              </Button>
+            </form>
+          </Form>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };

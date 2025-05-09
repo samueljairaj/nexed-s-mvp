@@ -35,7 +35,7 @@ type UserProfile = {
     officeHours?: string;
     contactEmail?: string;
     contactPhone?: string;
-    role?: Database["public"]["Enums"]["dso_role"];
+    role?: "dso_admin" | "dso_viewer";
     university_id?: string;
   };
 };
@@ -66,7 +66,7 @@ type AuthContextType = {
     officeHours?: string;
     contactEmail?: string;
     contactPhone?: string;
-    role?: Database["public"]["Enums"]["dso_role"];
+    role?: "dso_admin" | "dso_viewer";
     university_id?: string;
   };
 };
@@ -127,7 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             officeHours: dsoData.office_hours || undefined,
             contactEmail: dsoData.contact_email || undefined,
             contactPhone: dsoData.contact_phone || undefined,
-            role: dsoData.role || undefined,
+            role: dsoData.role as "dso_admin" | "dso_viewer" || undefined,
             university_id: dsoData.university_id || undefined
           });
           
@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               officeHours: dsoData.office_hours || undefined,
               contactEmail: dsoData.contact_email || undefined,
               contactPhone: dsoData.contact_phone || undefined,
-              role: dsoData.role || undefined,
+              role: dsoData.role as "dso_admin" | "dso_viewer" || undefined,
               university_id: dsoData.university_id || undefined
             },
             universityId: dsoData.university_id // Map university_id to universityId for consistency
@@ -446,14 +446,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     currentUser,
     isAuthenticated: !!currentUser,
     isLoading,
-    isDSO: Boolean(currentUser?.role === "dso"),
-    isAdmin: Boolean(currentUser?.role === "admin"),
-    login: async () => null,
-    signup: async () => null, 
-    logout: async () => {},
+    isDSO,
+    isAdmin,
+    login,
+    signup,
+    logout,
     updateProfile,
-    updateDSOProfile: async () => {},
-    completeOnboarding: async () => {},
+    updateDSOProfile,
+    completeOnboarding,
     session,
     dsoProfile,
   };

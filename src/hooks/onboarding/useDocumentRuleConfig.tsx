@@ -84,13 +84,13 @@ export function useDocumentRuleConfig() {
       // Get DSO profile to get university_id
       const { data: dsoProfile, error: dsoError } = await supabase
         .from('dso_profiles')
-        .select('university_id')
+        .select('*')
         .eq('id', currentUser?.id)
         .single();
       
       if (dsoError) throw dsoError;
       
-      if (!dsoProfile.university_id) {
+      if (!dsoProfile || !dsoProfile.university_id) {
         throw new Error("University ID not found in DSO profile");
       }
       
@@ -103,36 +103,62 @@ export function useDocumentRuleConfig() {
         return acc;
       }, {});
       
+      // We need to use a customized approach since university_document_rules isn't in the types yet
       // Check if rule exists first
-      const { data: existingRules, error: queryError } = await supabase
-        .from('university_document_rules')
-        .select('id')
-        .eq('university_id', dsoProfile.university_id)
-        .eq('visa_type', data.visaType);
+      const { data: existingRules, error: queryError } = await fetch(
+        `${supabase.supabaseUrl}/rest/v1/university_document_rules?university_id=eq.${dsoProfile.university_id}&visa_type=eq.${data.visaType}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabase.supabaseKey,
+            'Authorization': `Bearer ${supabase.supabaseKey}`
+          }
+        }
+      ).then(res => res.json());
       
       if (queryError) throw queryError;
       
       if (existingRules && existingRules.length > 0) {
         // Update existing rule
-        const { error } = await supabase
-          .from('university_document_rules')
-          .update({ 
-            document_requirements: documentRequirements 
-          })
-          .eq('id', existingRules[0].id);
+        const response = await fetch(
+          `${supabase.supabaseUrl}/rest/v1/university_document_rules?id=eq.${existingRules[0].id}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabase.supabaseKey,
+              'Authorization': `Bearer ${supabase.supabaseKey}`,
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ 
+              document_requirements: documentRequirements 
+            })
+          }
+        );
         
-        if (error) throw error;
+        if (!response.ok) throw new Error('Failed to update document requirements');
       } else {
         // Create new rule
-        const { error } = await supabase
-          .from('university_document_rules')
-          .insert({ 
-            university_id: dsoProfile.university_id,
-            visa_type: data.visaType,
-            document_requirements: documentRequirements
-          });
+        const response = await fetch(
+          `${supabase.supabaseUrl}/rest/v1/university_document_rules`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabase.supabaseKey,
+              'Authorization': `Bearer ${supabase.supabaseKey}`,
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ 
+              university_id: dsoProfile.university_id,
+              visa_type: data.visaType,
+              document_requirements: documentRequirements
+            })
+          }
+        );
         
-        if (error) throw error;
+        if (!response.ok) throw new Error('Failed to create document requirements');
       }
       
       toast.success("Document requirements updated successfully!");
