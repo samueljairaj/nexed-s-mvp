@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
-import { getProfileProperty } from "@/utils/propertyMapping";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useUniversityInfo } from "@/hooks/onboarding/useUniversityInfo";
@@ -14,12 +13,13 @@ import { useDsoTeamInvite } from "@/hooks/onboarding/useDsoTeamInvite";
 import { useOnboardingCompletion } from "@/hooks/onboarding/useOnboardingCompletion";
 import { useDsoOnboarding } from "@/hooks/onboarding/useDsoOnboarding";
 
+import { DsoProfileStep } from "@/components/onboarding/DsoProfileStep";
 import UniversityInfoStep from "@/components/onboarding/UniversityInfoStep";
 import VisaTypesStep from "@/components/onboarding/VisaTypesStep";
 import DocumentRulesStep from "@/components/onboarding/DocumentRulesStep";
 import TeamInviteStep from "@/components/onboarding/TeamInviteStep";
 import DashboardTourStep from "@/components/onboarding/DashboardTourStep";
-import { DsoProfileStep } from "@/components/onboarding/DsoProfileStep";
+import { toast } from "sonner";
 
 const DSOOnboarding = () => {
   const navigate = useNavigate();
@@ -81,28 +81,28 @@ const DSOOnboarding = () => {
   const stepNames = ["DSO Profile", "University", "Visa Types", "Documents", "Team", "Dashboard"];
 
   useEffect(() => {
-    console.log("DSOOnboarding: Component mounting. Auth state:", { isAuthenticated, isDSO, isLoading });
-    
-    // Redirect non-DSO users to the student onboarding
-    if (!isLoading && isAuthenticated && !isDSO) {
-      console.log("DSOOnboarding: Redirecting non-DSO user to student onboarding");
-      navigate("/onboarding");
-      return;
-    }
-    
-    // Redirect unauthenticated users to the login page
-    if (!isLoading && !isAuthenticated) {
-      console.log("DSOOnboarding: Redirecting unauthenticated user to university landing");
-      navigate("/university");
-      return;
-    }
-    
-    // Redirect users who completed onboarding
-    const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
-    if (!isLoading && isAuthenticated && currentUser && onboardingComplete) {
-      console.log("DSOOnboarding: Redirecting user who completed onboarding to dashboard");
-      navigate("/app/dso-dashboard");
-      return;
+    // Check if user is authenticated and is a DSO
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        console.log("User not authenticated, redirecting to login");
+        toast.error("Please login to access DSO onboarding");
+        navigate("/university", { replace: true });
+        return;
+      }
+      
+      if (!isDSO) {
+        console.log("Non-DSO user accessing DSO onboarding, redirecting");
+        toast.error("This area is only for DSO users");
+        navigate("/student", { replace: true });
+        return;
+      }
+      
+      // Check if onboarding is already complete
+      if (currentUser?.onboarding_complete) {
+        console.log("Onboarding already complete, redirecting to dashboard");
+        navigate("/app/dso-dashboard", { replace: true });
+        return;
+      }
     }
   }, [isAuthenticated, currentUser, navigate, isLoading, isDSO]);
   
@@ -125,9 +125,7 @@ const DSOOnboarding = () => {
   
   // Handle back to login/landing page
   const handleBackToHome = () => {
-    // Logout the user if they are authenticated
     logout();
-    // Navigate back to landing page
     navigate("/", { replace: true });
   };
   
@@ -172,7 +170,7 @@ const DSOOnboarding = () => {
     console.log("DSOOnboarding: Handling completion step");
     const success = await handleFinish();
     if (success) {
-      // Already redirects in the hook
+      navigate('/app/dso-dashboard', { replace: true });
       return true;
     }
     return false;

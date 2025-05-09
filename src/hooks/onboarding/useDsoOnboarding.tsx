@@ -6,7 +6,7 @@ import { DsoProfileFormData } from "@/components/onboarding/DsoProfileStep";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useDsoOnboarding() {
-  const { updateDSOProfile, currentUser } = useAuth();
+  const { currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dsoProfileData, setDsoProfileData] = useState<Partial<DsoProfileFormData>>({
     title: "",
@@ -17,11 +17,9 @@ export function useDsoOnboarding() {
     contactPhone: ""
   });
 
-  // Simplified version that handles submission with better error recovery
   const handleDsoProfileSetup = async (data: DsoProfileFormData): Promise<boolean> => {
-    // If already submitting, prevent duplicate submissions
+    // Prevent duplicate submissions
     if (isSubmitting) {
-      console.log("Already submitting DSO profile, please wait");
       toast.info("Already submitting your profile. Please wait a moment...");
       return false;
     }
@@ -29,16 +27,13 @@ export function useDsoOnboarding() {
     setDsoProfileData(data);
     setIsSubmitting(true);
     
-    console.log("Updating DSO profile with data:", data);
-    
     try {
       if (!currentUser?.id) {
-        console.error("No current user ID found");
         toast.error("User session not found. Please try logging out and back in.");
         return false;
       }
 
-      // Direct Supabase approach to avoid potential issues
+      // Format the profile data
       const profileData = {
         id: currentUser.id,
         title: data.title,
@@ -49,44 +44,18 @@ export function useDsoOnboarding() {
         contact_phone: data.contactPhone,
         updated_at: new Date().toISOString()
       };
-      
-      // First check if DSO profile exists
-      const { data: existingProfile, error: checkError } = await supabase
+
+      // Upsert the DSO profile (will insert or update)
+      const { error } = await supabase
         .from('dso_profiles')
-        .select('id')
-        .eq('id', currentUser.id)
-        .maybeSingle();
-        
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error("Error checking DSO profile existence:", checkError);
-        toast.error("Error checking your profile. Please try again.");
+        .upsert(profileData);
+      
+      if (error) {
+        console.error("Failed to update DSO profile:", error);
+        toast.error(`Failed to update profile: ${error.message}`);
         return false;
       }
       
-      let updateResult;
-      
-      if (!existingProfile) {
-        // Create profile if it doesn't exist
-        console.log("No DSO profile found, creating one");
-        updateResult = await supabase
-          .from('dso_profiles')
-          .insert(profileData);
-      } else {
-        // Update existing profile
-        console.log("Updating existing DSO profile");
-        updateResult = await supabase
-          .from('dso_profiles')
-          .update(profileData)
-          .eq('id', currentUser.id);
-      }
-      
-      if (updateResult.error) {
-        console.error("Failed to update DSO profile:", updateResult.error);
-        toast.error(`Failed to update profile: ${updateResult.error.message || "Unknown error"}`);
-        return false;
-      }
-      
-      console.log("DSO profile updated successfully");
       toast.success("DSO profile updated successfully");
       return true;
     } catch (error: any) {
@@ -94,7 +63,6 @@ export function useDsoOnboarding() {
       toast.error(`Failed to update profile: ${error.message || "Unknown error"}`);
       return false;
     } finally {
-      // Always reset the submission state
       setIsSubmitting(false);
     }
   };
