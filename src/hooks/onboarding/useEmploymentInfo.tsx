@@ -52,9 +52,9 @@ export function useEmploymentInfo() {
     }
   };
   
-  // Fix: Change parameter type from string to boolean to match what EmploymentStep expects
-  const handleEmploymentStatusChange = (status: boolean) => {
-    setEmploymentData(prev => ({ ...prev, employmentStatus: status ? "Employed" : "Not Employed" }));
+  // Update the parameter type to match what EmploymentStep expects
+  const handleEmploymentStatusChange = (status: string) => {
+    setEmploymentData(prev => ({ ...prev, employmentStatus: status }));
   };
   
   const isF1OrJ1 = (visaType: string) => {

@@ -106,8 +106,9 @@ const Onboarding = () => {
           // For DSOs, use handleDsoProfileSetup instead of handleAcademicInfo
           handleAcademicInfo={isDSO ? handleDsoProfileSetup : handleAcademicInfo}
           handleEmploymentInfo={handleEmploymentInfo}
+          // Make sure we're passing the right parameter type
           handleEmploymentStatusChange={handleEmploymentStatusChange}
-          // Convert function references to actual boolean values to fix type errors
+          // Convert function references to actual boolean values
           isF1OrJ1={typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1}
           isEmployed={typeof isEmployed === 'function' ? isEmployed() : isEmployed}
           isOptOrCpt={typeof isOptOrCpt === 'function' ? isOptOrCpt() : isOptOrCpt}

@@ -1,4 +1,3 @@
-
 import { AccountCreationStep } from "./AccountCreationStep";
 import { PersonalInfoStep } from "./PersonalInfoStep";
 import { VisaStatusStep } from "./VisaStatusStep"; 
@@ -23,7 +22,7 @@ interface OnboardingStepContentProps {
   handleVisaTypeChange: (type: any) => void;
   handleAcademicInfo: (data: any) => Promise<boolean>;
   handleEmploymentInfo: (data: any) => Promise<boolean>;
-  handleEmploymentStatusChange: (status: boolean) => void;
+  handleEmploymentStatusChange: (status: string) => void;
   isF1OrJ1: boolean;
   isEmployed: boolean;
   isOptOrCpt: boolean;
