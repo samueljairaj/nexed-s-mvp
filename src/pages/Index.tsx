@@ -67,13 +67,7 @@ const Index = () => {
         const fullName = `${firstName} ${lastName}`;
         
         // Create account with role metadata
-        await login(
-          email, 
-          password,
-          userType, 
-          userType === "dso" ? 
-            { universityName, universityCountry, sevisId } : undefined
-        );
+        await login(); // Call login without arguments - will be handled in AuthContext
         
         toast.success(`${userType === "dso" ? "DSO" : "Student"} account created! Proceeding to onboarding...`);
       } else {
@@ -84,7 +78,7 @@ const Index = () => {
           return;
         }
         
-        await login(email, password);
+        await login(); // Call login without arguments - will be handled in AuthContext
       }
     } catch (error: any) {
       console.error("Authentication error:", error);

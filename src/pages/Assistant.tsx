@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,11 +16,11 @@ const Assistant = () => {
 
   useEffect(() => {
     const generalPrompt = "Provide concise and accurate information.";
-    prompt = `You are a helpful assistant specialized in international student immigration compliance. ${currentUser ? `The user has a ${getProfileProperty(currentUser, 'visa_type')} visa. ` : ''}${generalPrompt}`;
-    setPrompt(prompt);
+    const initialPrompt = `You are a helpful assistant specialized in international student immigration compliance. ${currentUser ? `The user has a ${getProfileProperty(currentUser, 'visa_type')} visa. ` : ''}${generalPrompt}`;
+    setPrompt(initialPrompt);
   }, [currentUser]);
 
-  const handleInputChange = (e: any) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value);
   };
 

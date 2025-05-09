@@ -1,3 +1,4 @@
+
 /**
  * Utility functions to help with property name mappings between camelCase and snake_case
  * This helps us avoid TypeScript errors when accessing properties with different naming conventions.
@@ -10,7 +11,7 @@
  * @param snakeCaseProp The snake_case property name
  * @returns The value of the property, or undefined if neither exists
  */
-export function getProperty<T, K extends keyof T>(
+export function getProperty<T extends object, K extends keyof T>(
   obj: T, 
   camelCaseProp: string, 
   snakeCaseProp: K
