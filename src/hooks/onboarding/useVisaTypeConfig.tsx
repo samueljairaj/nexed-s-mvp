@@ -9,7 +9,7 @@ export interface VisaTypeConfigFormData {
 }
 
 export function useVisaTypeConfig() {
-  const { dsoProfile } = useAuth();
+  const { currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visaConfigData, setVisaConfigData] = useState<VisaTypeConfigFormData>({
     visaTypes: ["F1", "J1", "H1B", "CPT", "OPT", "STEM_OPT"]

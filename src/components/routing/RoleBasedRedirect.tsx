@@ -40,7 +40,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     }
     
     // Allow access to landing pages without redirection
-    if (currentPath === '/' || currentPath === '/student') {
+    if (currentPath === '/' || currentPath === '/student' || currentPath === '/university') {
       console.log("RoleBasedRedirect: On landing page, no redirection needed");
       return;
     }
@@ -59,6 +59,15 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
           setLastAttemptedPath('/onboarding');
           return;
         }
+      }
+      
+      // Remove DSO-specific path checks
+      // Just redirect any DSO paths to the regular dashboard
+      if (currentPath.includes('/dso')) {
+        navigate('/app/dashboard', { replace: true });
+        setRedirectProcessed(true);
+        setLastAttemptedPath('/app/dashboard');
+        return;
       }
     } else {
       // User is not authenticated

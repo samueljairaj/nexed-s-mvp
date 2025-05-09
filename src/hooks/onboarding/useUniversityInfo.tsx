@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -11,7 +12,7 @@ export interface UniversityInfoFormData {
 }
 
 export function useUniversityInfo() {
-  const { currentUser, updateProfile, updateDSOProfile } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [universityData, setUniversityData] = useState<UniversityInfoFormData>({
     name: "",
@@ -62,12 +63,6 @@ export function useUniversityInfo() {
       await updateProfile({
         university: data.name,
         university_id: universityId
-      });
-      
-      // If the user is a DSO, update their DSO profile as well
-      // We won't add university_id to DSO profile as it doesn't have that column
-      await updateDSOProfile({
-        // No university_id field in the DSO profile
       });
       
       // Update state

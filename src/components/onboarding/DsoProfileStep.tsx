@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -44,19 +43,19 @@ export function DsoProfileStep({
   submitError = null,
   onSkip
 }: DsoProfileStepProps) {
-  const { currentUser, dsoProfile } = useAuth();
+  const { currentUser } = useAuth();
   const [isRetrying, setIsRetrying] = useState(false);
   const [showSkipOption, setShowSkipOption] = useState(false);
   
   const form = useForm<DsoProfileFormData>({
     resolver: zodResolver(dsoProfileSchema),
     defaultValues: {
-      title: dsoProfile?.title || defaultValues.title || "",
-      department: dsoProfile?.department || defaultValues.department || "",
-      officeLocation: dsoProfile?.office_location || defaultValues.officeLocation || "",
-      officeHours: dsoProfile?.office_hours || defaultValues.officeHours || "",
-      contactEmail: dsoProfile?.contact_email || defaultValues.contactEmail || currentUser?.email || "",
-      contactPhone: dsoProfile?.contact_phone || defaultValues.contactPhone || currentUser?.phone || "",
+      title: defaultValues.title || "",
+      department: defaultValues.department || "",
+      officeLocation: defaultValues.officeLocation || "",
+      officeHours: defaultValues.officeHours || "",
+      contactEmail: defaultValues.contactEmail || currentUser?.email || "",
+      contactPhone: defaultValues.contactPhone || currentUser?.phone || "",
     }
   });
 
