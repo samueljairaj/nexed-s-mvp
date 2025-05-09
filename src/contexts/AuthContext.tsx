@@ -60,24 +60,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Keep track of active timeouts to clear them when needed
   const [authTimeoutId, setAuthTimeoutId] = useState<NodeJS.Timeout | null>(null);
-  const [signupInProgress, setSignupInProgress] = useState(false);
 
   useEffect(() => {
     // Setup auth state listeners FIRST before checking session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event, "Session:", !!session);
-        setSession(session);
-
+        
         if (session) {
+          setSession(session);
           setIsAuthenticated(true);
           await loadUser(session?.user);
         } else {
+          setSession(null);
           setIsAuthenticated(false);
           setCurrentUser(null);
           setIsDSO(false);
           setDsoProfile(null);
-          // Always make sure loading is false even when session is null
           setIsLoading(false);
         }
       }
@@ -94,9 +93,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           throw error;
         }
 
-        setSession(session);
-
         if (session) {
+          setSession(session);
           setIsAuthenticated(true);
           await loadUser(session?.user);
         } else {
@@ -105,12 +103,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setCurrentUser(null);
           setIsDSO(false);
           setDsoProfile(null);
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error loading session:", error);
-        toast.error("Failed to load session");
-      } finally {
-        // CRITICAL: Always set loading to false, even on error
         setIsLoading(false);
       }
     };
@@ -153,7 +149,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (profile) {
         setCurrentUser(profile);
-        setIsAuthenticated(true);
 
         // Debug the user profile
         debugAuthState(profile);
@@ -184,26 +179,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Check if user is admin (optional)
         setIsAdmin(profile?.role === 'admin');
       } else {
-        console.log("User profile not found, creating new profile");
-        
-        // We don't need to create a profile here anymore since we've set up a trigger
-        // Just log the issue and set loading to false
-        console.log("Profile should have been created by database trigger");
+        console.log("User profile not found, should have been created by database trigger");
         setCurrentUser(null);
-        setIsAuthenticated(true); // Still authenticated even if profile not found
       }
     } catch (error) {
       console.error("Error loading user data:", error);
-      toast.error("Failed to load user data");
     } finally {
-      // CRITICAL: Always set loading to false when done
+      // Always set loading to false when done
       setIsLoading(false);
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      // Use email/password authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -218,7 +206,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return;
     } catch (error: any) {
       console.error("Login failed:", error.message);
-      toast.error(`Login failed: ${error.message}`);
+      
+      // Provide user-friendly error messages
+      let errorMessage = "Login failed";
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Please verify your email before logging in";
+      } else {
+        errorMessage = `Login failed: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
       throw error; // Re-throw so calling code can handle it
     }
   };
@@ -229,6 +228,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw error;
       setIsAuthenticated(false);
       setCurrentUser(null);
+      setSession(null);
       setIsDSO(false);
       setDsoProfile(null);
       navigate("/");
@@ -240,15 +240,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Simplified signUp function with better error handling
   const signUp = async (data: any) => {
-    // Prevent multiple simultaneous signup attempts
-    if (signupInProgress) {
-      console.log("Already processing a signup, please wait");
-      toast.error("A signup is already in progress. Please wait or refresh the page.");
-      return false;
-    }
-    
     try {
-      setSignupInProgress(true);
       console.log("Starting signUp process with data:", { 
         email: data.email, 
         role: data.role, 
@@ -275,8 +267,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (authError) {
-        console.error("Auth signup error:", authError);
-        
         // Provide more specific error messages
         if (authError.message.includes("already registered")) {
           toast.error("This email is already registered. Please use a different email or try logging in.");
@@ -289,7 +279,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.log("Auth user created successfully:", !!authData.user);
       
       // If we got here, the signup was successful
-      // The auth state change listener will handle the session update and redirection
       toast.success("Account created successfully!");
       return true;
       
@@ -297,8 +286,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       console.error("Signup failed:", error.message);
       toast.error(`Signup failed: ${error.message}`);
       return false;
-    } finally {
-      setSignupInProgress(false);
     }
   };
 
