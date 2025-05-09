@@ -8,6 +8,8 @@ import { AppLayout } from "./layouts/AppLayout";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleBasedRedirect } from "./components/routing/RoleBasedRedirect";
 import Index from "./pages/Index";
+import StudentLanding from "./pages/StudentLanding";
+import UniversityLanding from "./pages/UniversityLanding";
 import Dashboard from "./pages/Dashboard";
 import DSODashboard from "./pages/DSODashboard";
 import DSOProfile from "./pages/DSOProfile";
@@ -32,6 +34,8 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/student" element={<StudentLanding />} />
+              <Route path="/university" element={<UniversityLanding />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/dso-onboarding" element={<DSOOnboarding />} />
               <Route path="/app" element={<AppLayout />}>

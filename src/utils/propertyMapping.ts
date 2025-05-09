@@ -1,33 +1,25 @@
 
+// This file contains utility functions for mapping properties from user profiles
+
 /**
- * Get a property from a profile object, handling possible missing values.
- * This function safely accesses profile properties, including those in the "meta" object.
- * 
- * @param profile The profile object or null/undefined
- * @param property The property name to retrieve
- * @returns The property value or undefined if not found or profile is null
+ * Gets a property from a user profile object with null safety
+ * @param profile The user profile object
+ * @param property The property to get
+ * @returns The property value or undefined if not found
  */
-export function getProfileProperty<T extends object>(profile: T | null | undefined, property: string): any {
+export function getProfileProperty(profile: any, property: string): any {
   if (!profile) return undefined;
-  
-  // Direct property access
-  if (property in profile) {
-    return (profile as any)[property];
-  }
-  
-  // Check in a meta property if it exists
-  if ('meta' in profile && profile.meta && typeof profile.meta === 'object') {
-    if (property in profile.meta) {
-      return (profile.meta as any)[property];
-    }
-  }
-  
-  // Check in a raw_user_meta_data property if it exists
-  if ('raw_user_meta_data' in profile && profile.raw_user_meta_data && typeof profile.raw_user_meta_data === 'object') {
-    if (property in profile.raw_user_meta_data) {
-      return (profile.raw_user_meta_data as any)[property];
-    }
-  }
-  
-  return undefined;
+  return profile[property];
+}
+
+/**
+ * Sets a property on a user profile object
+ * @param profile The user profile object
+ * @param property The property to set
+ * @param value The value to set
+ * @returns A new object with the property set
+ */
+export function setProfileProperty(profile: any, property: string, value: any): any {
+  if (!profile) return { [property]: value };
+  return { ...profile, [property]: value };
 }

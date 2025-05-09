@@ -19,45 +19,71 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       if (currentUser) {
         // Get onboarding completion status
         const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
+        const currentPath = window.location.pathname;
+        
+        // Handle landing pages - authenticated users shouldn't be on them
+        if (currentPath === '/' || currentPath === '/student' || currentPath === '/university') {
+          if (onboardingComplete) {
+            navigate(isDSO ? '/app/dso-dashboard' : '/app/dashboard');
+            return;
+          } else {
+            navigate(isDSO ? '/dso-onboarding' : '/onboarding');
+            return;
+          }
+        }
         
         // Redirect based on user role and path
-        if (isDSO && window.location.pathname === '/app/dashboard') {
+        if (isDSO && currentPath === '/app/dashboard') {
           navigate('/app/dso-dashboard');
           return;
-        } else if (!isDSO && window.location.pathname === '/app/dso-dashboard') {
+        } else if (!isDSO && currentPath === '/app/dso-dashboard') {
           navigate('/app/dashboard');
           return;
         }
         
         // Handle onboarding for DSOs
-        if (isDSO && !onboardingComplete && !window.location.pathname.includes("/dso-onboarding") && window.location.pathname !== '/') {
+        if (isDSO && !onboardingComplete && !currentPath.includes("/dso-onboarding")) {
           navigate('/dso-onboarding');
           return;
         }
         
         // Handle onboarding for students
-        if (!isDSO && !onboardingComplete && 
-            !window.location.pathname.includes("/onboarding") && 
-            window.location.pathname !== '/') {
+        if (!isDSO && !onboardingComplete && !currentPath.includes("/onboarding")) {
           navigate('/onboarding');
           return;
         }
         
         // Redirect to appropriate onboarding based on role if on wrong onboarding page
-        if (isDSO && window.location.pathname === '/onboarding') {
+        if (isDSO && currentPath === '/onboarding') {
           navigate('/dso-onboarding');
           return;
-        } else if (!isDSO && window.location.pathname === '/dso-onboarding') {
+        } else if (!isDSO && currentPath === '/dso-onboarding') {
           navigate('/onboarding');
           return;
         }
         
         // Prevent access to DSO-specific routes for non-DSO users
         if (!isDSO && (
-          window.location.pathname === '/app/dso-dashboard' || 
-          window.location.pathname === '/app/dso-profile'
+          currentPath === '/app/dso-dashboard' || 
+          currentPath === '/app/dso-profile'
         )) {
           navigate('/app/dashboard');
+          return;
+        }
+      } else {
+        // User is not authenticated
+        const currentPath = window.location.pathname;
+        
+        // Protect authenticated routes
+        if (currentPath.startsWith('/app/') || 
+            currentPath === '/onboarding' || 
+            currentPath === '/dso-onboarding') {
+          // Redirect based on the path to the appropriate landing page
+          if (currentPath.includes('dso') || currentPath === '/dso-onboarding') {
+            navigate('/university');
+          } else {
+            navigate('/student');
+          }
           return;
         }
       }
