@@ -3,9 +3,10 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { DsoProfileFormData } from "@/components/onboarding/DsoProfileStep";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useDsoOnboarding() {
-  const { updateDSOProfile } = useAuth();
+  const { updateDSOProfile, currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionTimeoutId, setSubmissionTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [dsoProfileData, setDsoProfileData] = useState<Partial<DsoProfileFormData>>({
@@ -13,7 +14,7 @@ export function useDsoOnboarding() {
     department: "",
     officeLocation: "",
     officeHours: "",
-    contactEmail: "",
+    contactEmail: currentUser?.email || "",
     contactPhone: ""
   });
 
@@ -33,6 +34,8 @@ export function useDsoOnboarding() {
     
     setDsoProfileData(data);
     setIsSubmitting(true);
+    
+    console.log("Updating DSO profile with data:", data);
     
     // Create a promise that will automatically resolve/reject after a timeout
     const timeoutPromise = new Promise<boolean>((_, reject) => {

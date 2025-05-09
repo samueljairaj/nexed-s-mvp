@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, FileCheck, FolderArchive, ChevronRight } from "lucide-react";
+import { User, FileCheck, FolderArchive, ChevronRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getProfileProperty } from "@/utils/propertyMapping";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const UniversityLanding = () => {
   const { isAuthenticated, login, currentUser, isLoading, signUp, isDSO } = useAuth();
@@ -27,6 +28,7 @@ const UniversityLanding = () => {
   const [submissionTimeoutId, setSubmissionTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [submissionProgress, setSubmissionProgress] = useState(0);
   const [submissionStep, setSubmissionStep] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
@@ -71,8 +73,9 @@ const UniversityLanding = () => {
         setSubmissionProgress(0);
         setSubmissionStep("");
         clearInterval(progressInterval);
+        setErrorMessage("Request timed out. Please try again with a stronger internet connection or refresh the page.");
         toast.error("Request timed out. Please try again with a stronger internet connection or refresh the page.");
-      }, 20000); // Increased to 20 second timeout for more processing time
+      }, 20000); // 20 second timeout for more processing time
       
       setSubmissionTimeoutId(timeoutId);
       
@@ -87,6 +90,49 @@ const UniversityLanding = () => {
     };
   }, [isSubmitting]);
 
+  const resetForm = () => {
+    setErrorMessage("");
+    setSubmissionStep("");
+    setSubmissionProgress(0);
+  };
+
+  const validateInputs = () => {
+    resetForm();
+    
+    if (isSignup) {
+      // Basic validation
+      if (!email || !password || !confirmPassword || !firstName || !lastName || !universityName || !sevisId) {
+        const message = "Please fill out all required fields";
+        setErrorMessage(message);
+        toast.error(message);
+        return false;
+      }
+      
+      if (password !== confirmPassword) {
+        const message = "Passwords do not match";
+        setErrorMessage(message);
+        toast.error(message);
+        return false;
+      }
+      
+      if (password.length < 8) {
+        const message = "Password must be at least 8 characters";
+        setErrorMessage(message);
+        toast.error(message);
+        return false;
+      }
+    } else {
+      if (!email || !password) {
+        const message = "Please enter both email and password";
+        setErrorMessage(message);
+        toast.error(message);
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -96,40 +142,23 @@ const UniversityLanding = () => {
       return;
     }
     
+    // Validate inputs
+    if (!validateInputs()) {
+      return;
+    }
+    
     setIsSubmitting(true);
     setSubmissionProgress(10);
     
     try {
       if (isSignup) {
-        // Basic validation
-        if (!email || !password || !confirmPassword || !firstName || !lastName || !universityName || !sevisId) {
-          toast.error("Please fill out all required fields");
-          setIsSubmitting(false);
-          setSubmissionProgress(0);
-          return;
-        }
-        
-        if (password !== confirmPassword) {
-          toast.error("Passwords do not match");
-          setIsSubmitting(false);
-          setSubmissionProgress(0);
-          return;
-        }
-        
-        if (password.length < 8) {
-          toast.error("Password must be at least 8 characters");
-          setIsSubmitting(false);
-          setSubmissionProgress(0);
-          return;
-        }
-        
         setSubmissionStep("Creating DSO account...");
         setSubmissionProgress(20);
         
+        const fullName = `${firstName} ${lastName}`;
         console.log("Creating DSO account with data:", {
           email,
-          firstName,
-          lastName,
+          fullName,
           role: "dso",
           universityName,
           universityCountry,
@@ -142,6 +171,7 @@ const UniversityLanding = () => {
           password,
           firstName,
           lastName,
+          name: fullName,
           role: "dso", // Important: Set role to DSO
           universityName,
           universityCountry,
@@ -159,6 +189,7 @@ const UniversityLanding = () => {
             navigate('/dso-onboarding', { replace: true });
           }, 1500);
         } else {
+          setErrorMessage("Failed to create account. Please try again.");
           toast.error("Failed to create account. Please try again.");
           setSubmissionProgress(0);
         }
@@ -166,13 +197,6 @@ const UniversityLanding = () => {
         setSubmissionStep("Signing in...");
         
         // Login with email and password
-        if (!email || !password) {
-          toast.error("Please enter both email and password");
-          setIsSubmitting(false);
-          setSubmissionProgress(0);
-          return;
-        }
-        
         await login(email, password);
         setSubmissionProgress(100);
         
@@ -186,7 +210,9 @@ const UniversityLanding = () => {
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
-      toast.error(`Authentication failed: ${error.message}`);
+      const errorMsg = error.message || "Unknown error occurred";
+      setErrorMessage(`Authentication failed: ${errorMsg}`);
+      toast.error(`Authentication failed: ${errorMsg}`);
     } finally {
       // Always reset submitting state
       setIsSubmitting(false);
@@ -198,8 +224,7 @@ const UniversityLanding = () => {
     // Clear passwords when toggling
     setPassword("");
     setConfirmPassword("");
-    setSubmissionProgress(0);
-    setSubmissionStep("");
+    resetForm();
   };
 
   const handleDemoLogin = () => {
@@ -265,6 +290,13 @@ const UniversityLanding = () => {
                         {isSignup ? "Create University DSO Account" : "Sign In"}
                       </h2>
                       
+                      {errorMessage && (
+                        <Alert variant="destructive" className="mb-4">
+                          <AlertCircle className="h-4 w-4 mr-2" />
+                          <AlertDescription>{errorMessage}</AlertDescription>
+                        </Alert>
+                      )}
+                      
                       {isSignup && (
                         <>
                           <div className="grid grid-cols-2 gap-4">
@@ -300,9 +332,9 @@ const UniversityLanding = () => {
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="universityCountry">Country</Label>
+                              <Label htmlFor="country">Country</Label>
                               <Input
-                                id="universityCountry"
+                                id="country"
                                 value={universityCountry}
                                 onChange={(e) => setUniversityCountry(e.target.value)}
                                 placeholder="United States"
@@ -314,7 +346,7 @@ const UniversityLanding = () => {
                                 id="sevisId"
                                 value={sevisId}
                                 onChange={(e) => setSevisId(e.target.value)}
-                                placeholder="e.g. ABC123456789"
+                                placeholder="EX1234567890"
                               />
                             </div>
                           </div>
@@ -322,23 +354,24 @@ const UniversityLanding = () => {
                       )}
                       
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email">Email Address</Label>
                         <Input
                           id="email"
                           type="email"
-                          placeholder="dso@university.edu"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your.name@university.edu"
                         />
                       </div>
+                      
                       <div className="space-y-2">
                         <Label htmlFor="password">Password</Label>
                         <Input
                           id="password"
                           type="password"
-                          placeholder="••••••••"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
+                          placeholder={isSignup ? "Create a password" : "Enter your password"}
                         />
                       </div>
                       
@@ -348,72 +381,63 @@ const UniversityLanding = () => {
                           <Input
                             id="confirmPassword"
                             type="password"
-                            placeholder="••••••••"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm your password"
                           />
                         </div>
                       )}
-
-                      {/* Progress indicator */}
+                      
                       {isSubmitting && (
-                        <div className="space-y-2">
-                          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                        <div className="mt-4 space-y-2">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div 
-                              className="h-full bg-nexed-500 transition-all duration-300 ease-out" 
+                              className="bg-primary h-2.5 rounded-full transition-all duration-500" 
                               style={{ width: `${submissionProgress}%` }}
                             ></div>
                           </div>
-                          {submissionStep && (
-                            <p className="text-sm text-center text-gray-600">{submissionStep}</p>
-                          )}
+                          <p className="text-sm text-center text-gray-600">{submissionStep}</p>
                         </div>
                       )}
                       
-                      <Button 
-                        type="submit" 
-                        className="w-full nexed-gradient"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <span className="flex items-center">
-                            <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                            {isSignup ? "Creating Account..." : "Signing In..."}
-                          </span>
-                        ) : (
-                          isSignup ? "Create University DSO Account" : "Sign In"
-                        )}
-                      </Button>
-                      
-                      <div className="text-center space-y-2">
-                        <p className="text-sm text-gray-500">
-                          {isSignup ? "Already have an account?" : "Don't have an account?"}
-                        </p>
-                        <Button 
-                          type="button" 
-                          variant="link" 
-                          onClick={toggleAuthMode}
-                          className="text-nexed-600"
+                      <div className="flex flex-col space-y-3 pt-2">
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={isSubmitting}
                         >
-                          {isSignup ? "Sign In" : "Create Account"}
+                          {isSubmitting ? (
+                            <>
+                              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
+                              {isSignup ? "Creating Account..." : "Signing In..."}
+                            </>
+                          ) : (
+                            isSignup ? "Create Account" : "Sign In"
+                          )}
                         </Button>
-                      </div>
-                      
-                      {!isSignup && (
-                        <div className="pt-2 border-t">
-                          <p className="text-center text-sm text-gray-500 mt-2">
-                            Demo account: dso@example.com / Password123!
-                          </p>
-                          <Button 
-                            type="button" 
-                            variant="link"
-                            className="text-nexed-600 w-full"
+                        
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={toggleAuthMode}
+                          disabled={isSubmitting}
+                        >
+                          {isSignup ? "Already have an account? Sign In" : "New DSO? Create Account"}
+                        </Button>
+                        
+                        {!isSignup && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full"
                             onClick={handleDemoLogin}
+                            disabled={isSubmitting}
                           >
-                            Use demo account
+                            Demo Login
                           </Button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </form>
                   </CardContent>
                 </Card>
@@ -422,35 +446,41 @@ const UniversityLanding = () => {
           </div>
         </section>
 
-        {/* Feature Section */}
-        <section className="py-16 bg-gray-50">
+        {/* Features Section */}
+        <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">
-              Powerful DSO Management Tools
-            </h2>
+            <h2 className="text-3xl font-bold text-center mb-12">Why Choose neXed for DSOs</h2>
+            
             <div className="grid md:grid-cols-3 gap-8">
-              <FeatureCard
-                icon={<User size={32} className="text-nexed-600" />}
-                title="Student Management"
-                description="Efficiently track and manage all your international students in one centralized dashboard."
-              />
-              <FeatureCard
-                icon={<FileCheck size={32} className="text-nexed-600" />}
-                title="Compliance Monitoring"
-                description="Automate compliance tracking and get alerts about upcoming deadlines and potential issues."
-              />
-              <FeatureCard
-                icon={<FolderArchive size={32} className="text-nexed-600" />}
-                title="Document Verification"
-                description="Streamline document collection and verification processes for your international students."
-              />
+              <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <User className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Student Management</h3>
+                <p className="text-gray-600">Comprehensive student profiles with visa status tracking, document verification, and automated compliance checks.</p>
+              </div>
+              
+              <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <FileCheck className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Compliance Automation</h3>
+                <p className="text-gray-600">Automatic alerts for approaching deadlines, expired documents, and status changes to ensure full compliance.</p>
+              </div>
+              
+              <div className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                  <FolderArchive className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Document Repository</h3>
+                <p className="text-gray-600">Securely store, organize, and retrieve important documents with built-in version control and audit trails.</p>
+              </div>
             </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-10">
+      <footer className="bg-gray-900 text-white py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">
@@ -459,27 +489,14 @@ const UniversityLanding = () => {
               </div>
               <span className="ml-2 text-xl font-bold">neXed</span>
             </div>
-            <p className="text-gray-400 text-sm">
-              © 2025 neXed. All rights reserved.
-            </p>
+            <div className="text-sm text-gray-400">
+              &copy; {new Date().getFullYear()} neXed. All rights reserved.
+            </div>
           </div>
         </div>
       </footer>
     </div>
   );
 };
-
-const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
-  <div className="nexed-card flex flex-col items-center text-center p-8">
-    <div className="mb-4">{icon}</div>
-    <h3 className="text-xl font-semibold mb-3 text-gray-900">{title}</h3>
-    <p className="text-gray-600">{description}</p>
-    <div className="mt-6">
-      <Button variant="ghost" className="text-nexed-600 hover:text-nexed-700 group">
-        Learn more <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
-      </Button>
-    </div>
-  </div>
-);
 
 export default UniversityLanding;
