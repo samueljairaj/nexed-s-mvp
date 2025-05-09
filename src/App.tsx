@@ -17,6 +17,7 @@ import Assistant from "./pages/Assistant";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
+import DSOOnboarding from "./pages/DSOOnboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/dso-onboarding" element={<DSOOnboarding />} />
               <Route path="/app" element={<AppLayout />}>
                 <Route index element={<Navigate to="/app/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />

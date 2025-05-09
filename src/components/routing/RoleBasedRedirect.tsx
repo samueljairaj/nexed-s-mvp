@@ -21,7 +21,21 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       }
       
       // Handle onboarding for DSOs
-      if (isDSO && !currentUser.onboardingComplete && !window.location.pathname.includes("/onboarding")) {
+      if (isDSO && !currentUser.onboardingComplete && !window.location.pathname.includes("/dso-onboarding")) {
+        navigate('/dso-onboarding');
+      }
+      
+      // Handle onboarding for students
+      if (!isDSO && !currentUser.onboardingComplete && 
+          !window.location.pathname.includes("/onboarding") && 
+          window.location.pathname !== '/') {
+        navigate('/onboarding');
+      }
+      
+      // Redirect to appropriate onboarding based on role if on wrong onboarding page
+      if (isDSO && window.location.pathname === '/onboarding') {
+        navigate('/dso-onboarding');
+      } else if (!isDSO && window.location.pathname === '/dso-onboarding') {
         navigate('/onboarding');
       }
       

@@ -1,230 +1,346 @@
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, Users, FileCheck, Bell, Search, Filter, Download } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, Clock, FilePlus, Users } from "lucide-react";
 
-interface StudentData {
-  id: string;
-  name: string;
-  visaType: string;
-  complianceRate: number;
-  documentsUploaded: number;
-  documentsRequired: number;
-  tasksCompleted: number;
-  tasksTotal: number;
-  riskLevel: "low" | "medium" | "high";
-}
+// Mock data for the dashboard
+const MOCK_STUDENTS = [
+  {
+    id: "1",
+    name: "Alice Johnson",
+    email: "alice@university.edu",
+    visaType: "F1",
+    status: "Active",
+    compliance: 100,
+    lastUpdated: "2025-04-28"
+  },
+  {
+    id: "2",
+    name: "Bob Smith",
+    email: "bob@university.edu",
+    visaType: "F1",
+    status: "Active",
+    compliance: 86,
+    lastUpdated: "2025-04-25"
+  },
+  {
+    id: "3",
+    name: "Charlie Chen",
+    email: "charlie@university.edu",
+    visaType: "OPT",
+    status: "Active",
+    compliance: 92,
+    lastUpdated: "2025-04-26"
+  },
+  {
+    id: "4",
+    name: "Diana Rodriguez",
+    email: "diana@university.edu",
+    visaType: "F1",
+    status: "Active",
+    compliance: 65,
+    lastUpdated: "2025-04-20"
+  },
+  {
+    id: "5",
+    name: "Eduardo Gomez",
+    email: "eduardo@university.edu",
+    visaType: "CPT",
+    status: "Warning",
+    compliance: 54,
+    lastUpdated: "2025-04-15"
+  },
+];
 
-const DSODashboard = () => {
-  const { currentUser, isDSO } = useAuth();
-  const [students, setStudents] = useState<StudentData[]>([]);
-  const [universityStats, setUniversityStats] = useState({
-    studentCount: 0,
-    documentsCompliance: 0,
-    tasksCompliance: 0,
-    highRiskCount: 0
-  });
-  const [isLoading, setIsLoading] = useState(true);
+export default function DSODashboard() {
+  const { currentUser, isLoading, isDSO } = useAuth();
+  const navigate = useNavigate();
+  const [universityName, setUniversityName] = useState<string>("");
+  const [isShowingOnboarding, setIsShowingOnboarding] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [visaFilter, setVisaFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [students, setStudents] = useState(MOCK_STUDENTS);
 
+  // Get university information
   useEffect(() => {
-    const fetchDSOData = async () => {
-      if (!currentUser?.id || !isDSO) return;
-
-      setIsLoading(true);
-      try {
-        // Fetch students from the same university
-        const { data: studentsData, error: studentsError } = await supabase
-          .from('profiles')
-          .select('id, name, visa_type')
-          .eq('university_id', currentUser.universityId)
-          .eq('role', 'student');
-
-        if (studentsError) throw studentsError;
-
-        // Map and enrich student data with compliance information
-        const enrichedStudents: StudentData[] = [];
-        let totalDocumentsCompliance = 0;
-        let totalTasksCompliance = 0;
-        let highRiskStudents = 0;
-
-        if (studentsData) {
-          for (const student of studentsData) {
-            // Get document counts
-            const { data: documents, error: documentsError } = await supabase
-              .from('documents')
-              .select('*')
-              .eq('user_id', student.id);
-
-            if (documentsError) throw documentsError;
-
-            const requiredDocs = 10; // Replace with dynamic calculation based on visa type
-            const documentsUploaded = documents?.length || 0;
-
-            // Get task completion rate
-            const { data: tasks, error: tasksError } = await supabase
-              .from('compliance_tasks')
-              .select('*')
-              .eq('user_id', student.id);
-
-            if (tasksError) throw tasksError;
-
-            const tasksTotal = tasks?.length || 0;
-            const tasksCompleted = tasks?.filter(task => task.is_completed)?.length || 0;
-
-            // Calculate compliance rate
-            const docsComplianceRate = requiredDocs ? (documentsUploaded / requiredDocs) * 100 : 0;
-            const tasksComplianceRate = tasksTotal ? (tasksCompleted / tasksTotal) * 100 : 0;
-            const overallCompliance = (docsComplianceRate + tasksComplianceRate) / 2;
-
-            // Determine risk level
-            let riskLevel: "low" | "medium" | "high" = "low";
-            if (overallCompliance < 40) {
-              riskLevel = "high";
-              highRiskStudents++;
-            } else if (overallCompliance < 70) {
-              riskLevel = "medium";
-            }
-
-            enrichedStudents.push({
-              id: student.id,
-              name: student.name || "Unknown Student",
-              visaType: student.visa_type || "Unknown",
-              complianceRate: Math.round(overallCompliance),
-              documentsUploaded,
-              documentsRequired: requiredDocs,
-              tasksCompleted,
-              tasksTotal,
-              riskLevel
-            });
-
-            totalDocumentsCompliance += docsComplianceRate;
-            totalTasksCompliance += tasksComplianceRate;
-          }
-        }
-
-        setStudents(enrichedStudents);
-        setUniversityStats({
-          studentCount: enrichedStudents.length,
-          documentsCompliance: Math.round(enrichedStudents.length ? totalDocumentsCompliance / enrichedStudents.length : 0),
-          tasksCompliance: Math.round(enrichedStudents.length ? totalTasksCompliance / enrichedStudents.length : 0),
-          highRiskCount: highRiskStudents
-        });
-      } catch (error) {
-        console.error("Error fetching DSO dashboard data:", error);
-      } finally {
-        setIsLoading(false);
+    const getUniversityInfo = async () => {
+      if (currentUser) {
+        // Get university name from profile or dso_profiles
+        setUniversityName(currentUser.university || "Your University");
       }
     };
+    
+    getUniversityInfo();
+    
+    // Check if this is first login after onboarding
+    const checkOnboardingStatus = () => {
+      const onboardingComplete = sessionStorage.getItem("onboardingJustCompleted");
+      if (onboardingComplete) {
+        setIsShowingOnboarding(true);
+        // Clear the flag after showing the tour
+        setTimeout(() => {
+          sessionStorage.removeItem("onboardingJustCompleted");
+          setIsShowingOnboarding(false);
+        }, 2000);
+      }
+    };
+    
+    checkOnboardingStatus();
+  }, [currentUser]);
 
-    fetchDSOData();
-  }, [currentUser, isDSO]);
+  // Redirect non-DSO users
+  useEffect(() => {
+    if (!isLoading && !isDSO) {
+      navigate("/app/dashboard");
+    }
+  }, [isDSO, isLoading, navigate]);
 
-  if (!isDSO) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-lg text-gray-600">You do not have DSO access.</p>
-      </div>
+  // Filter students based on search and filters
+  useEffect(() => {
+    let filteredStudents = [...MOCK_STUDENTS];
+    
+    if (searchQuery) {
+      filteredStudents = filteredStudents.filter(student => 
+        student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        student.email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    if (visaFilter !== "all") {
+      filteredStudents = filteredStudents.filter(student => 
+        student.visaType === visaFilter
+      );
+    }
+    
+    if (statusFilter !== "all") {
+      filteredStudents = filteredStudents.filter(student => 
+        student.status === statusFilter
+      );
+    }
+    
+    setStudents(filteredStudents);
+  }, [searchQuery, visaFilter, statusFilter]);
+
+  // Calculate overall compliance
+  const calculateOverallCompliance = () => {
+    if (students.length === 0) return 0;
+    return Math.round(
+      students.reduce((acc, student) => acc + student.compliance, 0) / students.length
     );
-  }
-
+  };
+  
+  // Calculate document stats
+  const documentStats = {
+    verified: 45,
+    pending: 18,
+    expired: 7,
+    missing: 12
+  };
+  
+  // If still loading
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nexed-500"></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div>
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold">DSO Dashboard</h1>
-        <p className="text-gray-600 mt-2">
-          Monitor student compliance and visa statuses at {currentUser?.university || "your university"}
-        </p>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Dashboard Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Building2 className="h-8 w-8 text-primary" />
+            {universityName}
+          </h1>
+          <p className="text-muted-foreground">DSO Dashboard</p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="flex items-center gap-1">
+            <Bell className="h-4 w-4" />
+            Notifications
+          </Button>
+          
+          <Button size="sm" className="flex items-center gap-1">
+            <Download className="h-4 w-4" />
+            Export Data
+          </Button>
+        </div>
+      </div>
+      
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium flex items-center">
-              <Users className="mr-2 h-5 w-5 text-nexed-600" />
-              Students
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Overall Compliance
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{universityStats.studentCount}</p>
-            <p className="text-sm text-gray-500">Total enrolled students</p>
+            <div className="flex items-baseline justify-between">
+              <div className="text-3xl font-bold">
+                {calculateOverallCompliance()}%
+              </div>
+              <Progress 
+                value={calculateOverallCompliance()} 
+                className="h-2 w-[60%]" 
+              />
+            </div>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium flex items-center">
-              <FilePlus className="mr-2 h-5 w-5 text-nexed-600" />
-              Documents
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Student Records
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{universityStats.documentsCompliance}%</p>
-            <Progress value={universityStats.documentsCompliance} className="h-2 mt-2" />
-            <p className="text-sm text-gray-500 mt-1">Overall document compliance</p>
+            <div className="flex items-center justify-between">
+              <div className="text-3xl font-bold">
+                {students.length}
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                <span className="text-muted-foreground">Active Students</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
-
+        
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium flex items-center">
-              <Clock className="mr-2 h-5 w-5 text-nexed-600" />
-              Tasks
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Document Status
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{universityStats.tasksCompliance}%</p>
-            <Progress value={universityStats.tasksCompliance} className="h-2 mt-2" />
-            <p className="text-sm text-gray-500 mt-1">Overall task completion</p>
-          </CardContent>
-        </Card>
-
-        <Card className={universityStats.highRiskCount > 0 ? "border-red-200 bg-red-50" : ""}>
-          <CardHeader className="pb-2">
-            <CardTitle className={`text-lg font-medium flex items-center ${universityStats.highRiskCount > 0 ? "text-red-600" : ""}`}>
-              <AlertTriangle className={`mr-2 h-5 w-5 ${universityStats.highRiskCount > 0 ? "text-red-600" : "text-amber-600"}`} />
-              Risk Assessment
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className={`text-3xl font-bold ${universityStats.highRiskCount > 0 ? "text-red-600" : ""}`}>
-              {universityStats.highRiskCount}
-            </p>
-            <p className="text-sm text-gray-500 mt-1">Students at high risk</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                <span>Verified: {documentStats.verified}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded-full bg-amber-500"></div>
+                <span>Pending: {documentStats.pending}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                <span>Expired: {documentStats.expired}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded-full bg-gray-300"></div>
+                <span>Missing: {documentStats.missing}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
-
-      <Card className="mb-8">
+      
+      {/* Student Management */}
+      <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Student Compliance Status</CardTitle>
-          <CardDescription>View and manage student visa compliance</CardDescription>
+          <CardTitle>Student Management</CardTitle>
+          <CardDescription>
+            View, filter and manage all students at your university
+          </CardDescription>
         </CardHeader>
+        
         <CardContent>
-          {students.length === 0 ? (
-            <p className="text-center py-8 text-gray-500">No students found in your university.</p>
-          ) : (
+          {/* Search and Filters */}
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search by name or email..." 
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">Filters:</span>
+              </div>
+              
+              <Select value={visaFilter} onValueChange={setVisaFilter}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Visa Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="F1">F1</SelectItem>
+                  <SelectItem value="OPT">OPT</SelectItem>
+                  <SelectItem value="CPT">CPT</SelectItem>
+                  <SelectItem value="H1B">H1B</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Warning">Warning</SelectItem>
+                  <SelectItem value="Expired">Expired</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Student Table */}
+          <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student Name</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Visa Type</TableHead>
-                  <TableHead>Documents</TableHead>
-                  <TableHead>Tasks</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Compliance</TableHead>
-                  <TableHead>Risk Level</TableHead>
+                  <TableHead>Last Updated</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -232,39 +348,77 @@ const DSODashboard = () => {
                 {students.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">{student.name}</TableCell>
+                    <TableCell>{student.email}</TableCell>
                     <TableCell>{student.visaType}</TableCell>
                     <TableCell>
-                      {student.documentsUploaded}/{student.documentsRequired}
-                    </TableCell>
-                    <TableCell>
-                      {student.tasksCompleted}/{student.tasksTotal}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Progress value={student.complianceRate} className="h-2 w-24" />
-                        <span>{student.complianceRate}%</span>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className={`h-2 w-2 rounded-full ${
+                            student.status === "Active" ? "bg-green-500" : 
+                            student.status === "Warning" ? "bg-amber-500" : "bg-red-500"
+                          }`} 
+                        />
+                        {student.status}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className={`rounded-full px-2 py-1 text-xs font-medium
-                        ${student.riskLevel === 'high' ? 'bg-red-100 text-red-800' : 
-                          student.riskLevel === 'medium' ? 'bg-amber-100 text-amber-800' : 
-                          'bg-green-100 text-green-800'}`}>
-                        {student.riskLevel.charAt(0).toUpperCase() + student.riskLevel.slice(1)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <Progress 
+                          value={student.compliance} 
+                          className="h-2 w-[60px]"
+                        />
+                        <span className="text-sm">{student.compliance}%</span>
+                      </div>
                     </TableCell>
+                    <TableCell>{student.lastUpdated}</TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline">View Details</Button>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <FileCheck className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
+                
+                {students.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                      No students found matching your criteria
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
-          )}
+          </div>
         </CardContent>
       </Card>
+      
+      {/* Tour Overlay */}
+      {isShowingOnboarding && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-lg">
+            <CardHeader>
+              <CardTitle>Welcome to Your DSO Dashboard!</CardTitle>
+              <CardDescription>
+                You've successfully completed the onboarding process.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4">
+                Here you can manage all your international students, verify documents, 
+                and ensure compliance with visa regulations.
+              </p>
+              <p>
+                Explore the features and functionalities to get the most out of the neXed platform.
+              </p>
+            </CardContent>
+            <div className="p-4 flex justify-end">
+              <Button onClick={() => setIsShowingOnboarding(false)}>
+                Get Started
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
-};
-
-export default DSODashboard;
+}

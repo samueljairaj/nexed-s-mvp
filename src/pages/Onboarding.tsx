@@ -53,9 +53,13 @@ const Onboarding = () => {
   const stepNames = isDSO ? dsoStepNames : studentStepNames;
 
   useEffect(() => {
+    // If user is authenticated and has completed onboarding, redirect to dashboard
     if (isAuthenticated && currentUser?.onboardingComplete) {
       // Redirect to the appropriate dashboard based on role
       navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
+    } else if (isAuthenticated && isDSO) {
+      // If DSO, redirect to DSO onboarding
+      navigate("/dso-onboarding");
     } else if (isAuthenticated && currentStep === 0) {
       // If user is already authenticated, skip the account creation step
       setCurrentStep(1);

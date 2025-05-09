@@ -31,7 +31,7 @@ const Index = () => {
         navigate(currentUser.role === "dso" ? "/app/dso-dashboard" : "/app/dashboard");
       } else {
         // The onboarding page will handle redirecting based on role
-        navigate("/onboarding");
+        navigate(currentUser.role === "dso" ? "/dso-onboarding" : "/onboarding");
       }
     }
   }, [isAuthenticated, currentUser, navigate]);
