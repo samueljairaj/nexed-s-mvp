@@ -4,110 +4,107 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export interface UniversityFormData {
+export interface UniversityInfoFormData {
   name: string;
-  location: string;
-  sevisId: string;
-  action: "create" | "join";
-  existingUniversityId?: string;
+  country: string;
+  website?: string;
+  sevisId?: string;
 }
 
 export function useUniversityInfo() {
-  const { currentUser, updateProfile } = useAuth();
+  const { currentUser, updateProfile, dsoProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [universities, setUniversities] = useState<any[]>([]);
-  const [universityData, setUniversityData] = useState<Partial<UniversityFormData>>({
+  const [universityData, setUniversityData] = useState<Partial<UniversityInfoFormData>>({
     name: "",
-    location: "",
-    sevisId: "",
-    action: "create"
+    country: "United States",
+    website: "",
+    sevisId: ""
   });
   
-  // Fetch existing universities
-  const fetchUniversities = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('universities')
-        .select('id, name, country, sevis_id');
-      
-      if (error) throw error;
-      setUniversities(data || []);
-      return data;
-    } catch (error: any) {
-      console.error("Error fetching universities:", error);
-      return [];
-    }
-  };
-
-  // Handle university setup - either create new or join existing
-  const handleUniversityInfoSetup = async (data: UniversityFormData): Promise<boolean> => {
+  const handleUniversityInfoSetup = async (data: UniversityInfoFormData): Promise<boolean> => {
     setUniversityData(data);
     setIsSubmitting(true);
     
     try {
-      let universityId: string;
+      // First check if the university already exists by name
+      const { data: existingUniversities, error: searchError } = await supabase
+        .from('universities')
+        .select('*')
+        .ilike('name', data.name)
+        .limit(1);
+        
+      if (searchError) {
+        throw searchError;
+      }
       
-      // Create or join university based on action
-      if (data.action === "create") {
-        // Create new university
-        const { data: newUniversity, error } = await supabase
+      let universityId;
+      
+      if (existingUniversities && existingUniversities.length > 0) {
+        // University exists, use the existing ID
+        universityId = existingUniversities[0].id;
+      } else {
+        // Create a new university
+        const { data: newUniversity, error: createError } = await supabase
           .from('universities')
           .insert({
             name: data.name,
-            country: data.location,
+            country: data.country,
+            website: data.website,
             sevis_id: data.sevisId
           })
           .select('id')
           .single();
-        
-        if (error) throw error;
-        universityId = newUniversity.id;
-        
-        // Create university config
-        await supabase
-          .from('university_configs')
-          .insert({
-            id: universityId,
-            visa_types_supported: ['F1']
-          });
           
-      } else {
-        // Join existing university
-        universityId = data.existingUniversityId || '';
+        if (createError) {
+          throw createError;
+        }
         
-        // Create join request if not admin
-        await supabase
-          .from('university_join_requests')
-          .insert({
-            university_id: universityId,
-            user_id: currentUser?.id || '',
-            requested_role: 'dso_viewer',
-            status: 'pending'
-          });
+        universityId = newUniversity.id;
       }
       
-      // Update DSO profile with university_id
-      const { error: profileError } = await supabase
-        .from('dso_profiles')
-        .update({ 
-          university_id: universityId,
-          role: 'dso_admin' // First user for a university is always admin
-        })
-        .eq('id', currentUser?.id);
+      // Update the user's profile with the university ID and name
+      await updateProfile({
+        university: data.name,
+        university_id: universityId
+      });
       
-      if (profileError) throw profileError;
+      // If we couldn't establish a direct connection, send a request to admins
+      if (dsoProfile) {
+        // Directly use fetch API as university_join_requests table may not be in the types
+        const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://dmmyriqbltjrtvvpllmz.supabase.co';
+        const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtbXlyaXFibHRqcnR2dnBsbG16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1NzY2OTAsImV4cCI6MjA2MjE1MjY5MH0.xw4zI0aDw9tYU7cJwSa9RcaE2nhl-juZpXTcnbsgfrU';
       
-      // Update user profile
-      await updateProfile({ university: data.name });
+        // This is a fallback for tables that might not be in the schema yet
+        try {
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/university_join_requests`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Prefer': 'return=minimal'
+              },
+              body: JSON.stringify({
+                user_id: currentUser?.id,
+                university_id: universityId,
+                status: 'pending',
+                created_at: new Date().toISOString()
+              })
+            }
+          );
+        } catch (fetchError) {
+          console.warn("Could not create university join request:", fetchError);
+          // Non-critical error, continue
+        }
+      }
       
-      toast.success(data.action === "create" 
-        ? "University created successfully!" 
-        : "University join request submitted!");
-      
+      toast.success(`Successfully set up university information for ${data.name}`);
       return true;
     } catch (error: any) {
-      console.error("Failed to setup university:", error);
-      toast.error(`Failed to ${data.action} university: ${error.message}`);
+      console.error("Failed to set up university information:", error);
+      toast.error(`Failed to set up university information: ${error.message}`);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -118,8 +115,6 @@ export function useUniversityInfo() {
     universityData,
     setUniversityData,
     handleUniversityInfoSetup,
-    fetchUniversities,
-    universities,
     isSubmitting
   };
 }

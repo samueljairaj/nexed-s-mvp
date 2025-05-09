@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,7 +8,19 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
-import { DsoProfile } from "@/types/dso";
+
+export interface DsoProfile {
+  id: string;
+  title?: string;
+  department?: string;
+  office_location?: string;
+  office_hours?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  university_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -15,12 +28,14 @@ interface AuthContextType {
   currentUser: Database["public"]["Tables"]["profiles"]["Row"] | null;
   session: Session | null;
   isDSO: boolean;
+  isAdmin?: boolean; // Make optional for backward compatibility
   dsoProfile: DsoProfile | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   signUp: (data: any) => Promise<any>;
   updateProfile: (data: any) => Promise<void>;
   updateDSOProfile: (data: any) => Promise<void>;
+  completeOnboarding?: () => Promise<boolean>; // Add this missing method for compatibility 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,6 +50,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentUser, setCurrentUser] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isDSO, setIsDSO] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [dsoProfile, setDsoProfile] = useState<DsoProfile | null>(null);
   const navigate = useNavigate();
 
@@ -117,13 +133,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           console.error("Error fetching DSO profile:", dsoError);
           setDsoProfile(null);
         } else {
-          // setDsoProfile(dsoData);
           setDsoProfile(dsoData as DsoProfile);
         }
       } else {
         setIsDSO(false);
         setDsoProfile(null);
       }
+      
+      // Check if user is admin (optional)
+      setIsAdmin(profile?.role === 'admin');
     } catch (error) {
       console.error("Error loading user data:", error);
       toast.error("Failed to load user data");
@@ -217,7 +235,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       const { error } = await supabase
         .from('profiles')
-        .upsert(updates, { returning: 'minimal' });
+        .upsert(updates);
 
       if (error) {
         throw error;
@@ -257,7 +275,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       const { error } = await supabase
         .from('dso_profiles')
-        .upsert(updates, { returning: 'minimal' });
+        .upsert(updates);
 
       if (error) {
         throw error;
@@ -282,6 +300,35 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       toast.error(`DSO Profile update failed: ${error.message}`);
     }
   };
+  
+  // Add the completeOnboarding method
+  const completeOnboarding = async (): Promise<boolean> => {
+    try {
+      if (!currentUser?.id) {
+        toast.error("User ID not found. Please log in again.");
+        return false;
+      }
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ onboarding_complete: true })
+        .eq('id', currentUser.id);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setCurrentUser({
+        ...currentUser,
+        onboarding_complete: true
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error("Error completing onboarding:", error);
+      toast.error(`Failed to complete onboarding: ${error.message}`);
+      return false;
+    }
+  };
 
   const value = {
     isAuthenticated,
@@ -289,12 +336,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     currentUser,
     session,
     isDSO,
+    isAdmin,
     dsoProfile,
     login,
     logout,
     signUp,
     updateProfile,
     updateDSOProfile,
+    completeOnboarding,
   };
 
   return (

@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 export interface DocumentRequirement {
   id: string;
@@ -86,7 +85,7 @@ export function useDocumentRuleConfig() {
     setIsSubmitting(true);
     
     try {
-      if (!dsoProfile?.university_id) {
+      if (!dsoProfile || !dsoProfile.university_id) {
         throw new Error("University information not found");
       }
       

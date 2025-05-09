@@ -8,7 +8,7 @@ interface RoleBasedRedirectProps {
 }
 
 export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
-  const { currentUser, isLoading, isDSO, isAdmin } = useAuth();
+  const { currentUser, isLoading, isDSO } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,12 +21,12 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       }
       
       // Handle onboarding for DSOs
-      if (isDSO && !currentUser.onboardingComplete && !window.location.pathname.includes("/dso-onboarding")) {
+      if (isDSO && !currentUser.onboarding_complete && !window.location.pathname.includes("/dso-onboarding")) {
         navigate('/dso-onboarding');
       }
       
       // Handle onboarding for students
-      if (!isDSO && !currentUser.onboardingComplete && 
+      if (!isDSO && !currentUser.onboarding_complete && 
           !window.location.pathname.includes("/onboarding") && 
           window.location.pathname !== '/') {
         navigate('/onboarding');
@@ -47,7 +47,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         navigate('/app/dashboard');
       }
     }
-  }, [currentUser, isLoading, isDSO, isAdmin, navigate]);
+  }, [currentUser, isLoading, isDSO, navigate]);
 
   return <>{children}</>;
 };

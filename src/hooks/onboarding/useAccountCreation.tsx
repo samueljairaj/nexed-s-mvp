@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { AccountCreationFormData } from "@/components/onboarding/AccountCreationStep";
 
 export function useAccountCreation() {
-  const { isAuthenticated, updateProfile, signup } = useAuth();
+  const { isAuthenticated, updateProfile, signUp } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [accountData, setAccountData] = useState<Partial<AccountCreationFormData>>({
     firstName: "",
@@ -22,10 +22,11 @@ export function useAccountCreation() {
     if (!isAuthenticated) {
       setIsSubmitting(true);
       try {
-        await signup(data.email, data.password);
-        // Update the profile with name
-        await updateProfile({ 
-          name: `${data.firstName} ${data.lastName}` 
+        await signUp({
+          email: data.email,
+          password: data.password,
+          firstName: data.firstName,
+          lastName: data.lastName
         });
         toast.success("Account created successfully!");
         return true;

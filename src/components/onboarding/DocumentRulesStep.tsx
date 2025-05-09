@@ -87,13 +87,13 @@ export const DocumentRulesStep = ({
     visaType => availableVisaTypes.includes(visaType.id)
   );
 
-  // Ensure we have proper default values with required id property
+  // Ensure we have proper default values with required properties
   const getFormattedDefaultDocuments = (): DocumentRequirement[] => {
     if (defaultValues.documentRequirements && defaultValues.documentRequirements.length > 0) {
       return defaultValues.documentRequirements.map(doc => ({
         id: doc.id || `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: doc.name,
-        required: doc.required,
+        name: doc.name || "", // Ensure name is always a string
+        required: doc.required || false,
         description: doc.description
       }));
     }
@@ -119,10 +119,12 @@ export const DocumentRulesStep = ({
   }, [activeVisaType, form, getDefaultDocuments, onVisaTypeChange]);
   
   const handleSubmit = form.handleSubmit(async (data) => {
-    // Ensure all documents have an ID
+    // Ensure all documents have required properties
     const validDocuments = data.documentRequirements.map(doc => ({
-      ...doc,
-      id: doc.id || `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      id: doc.id || `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: doc.name, // name is already required by the schema
+      required: doc.required,
+      description: doc.description
     }));
     
     const result = await onSubmit({

@@ -5,15 +5,15 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 export function useOnboardingCompletion() {
-  const { completeOnboarding, isDSO } = useAuth();
+  const { updateProfile, isDSO } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleFinish = async (): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      // Call completeOnboarding() without checking its return value
-      await completeOnboarding();
+      // Update profile with onboarding_complete = true
+      await updateProfile({ onboarding_complete: true });
       
       // Assume success if no error was thrown
       toast.success("Onboarding completed successfully!");
