@@ -4,18 +4,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-interface VisaConfigData {
+export interface VisaTypeConfigFormData {
   visaTypes: string[];
 }
 
 export function useVisaTypeConfig() {
   const { dsoProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [visaConfigData, setVisaConfigData] = useState<VisaConfigData>({
+  const [visaConfigData, setVisaConfigData] = useState<VisaTypeConfigFormData>({
     visaTypes: ["F1", "J1", "H1B", "CPT", "OPT", "STEM_OPT"]
   });
 
-  const handleVisaTypeConfig = async (data: VisaConfigData): Promise<boolean> => {
+  const handleVisaTypeConfig = async (data: VisaTypeConfigFormData): Promise<boolean> => {
     setIsSubmitting(true);
     
     try {

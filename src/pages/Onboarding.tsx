@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOnboardingState } from "../hooks/useOnboardingState";
@@ -8,6 +7,7 @@ import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUniversityInfo } from "@/hooks/onboarding/useUniversityInfo";
+import { getProfileProperty } from "@/utils/propertyMapping";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ const Onboarding = () => {
 
   useEffect(() => {
     // If user is authenticated and has completed onboarding, redirect to dashboard
-    if (isAuthenticated && currentUser?.onboardingComplete) {
+    if (isAuthenticated && getProfileProperty(currentUser, 'onboarding_complete')) {
       // Redirect to the appropriate dashboard based on role
       navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
     } else if (isAuthenticated && isDSO) {

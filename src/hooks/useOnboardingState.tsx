@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useAccountCreation } from "./onboarding/useAccountCreation";
@@ -8,6 +7,7 @@ import { useAcademicInfo } from "./onboarding/useAcademicInfo";
 import { useEmploymentInfo } from "./onboarding/useEmploymentInfo";
 import { useOnboardingCompletion } from "./onboarding/useOnboardingCompletion";
 import { useOnboardingNavigation } from "./onboarding/useOnboardingNavigation";
+import { getProfileProperty } from "@/utils/propertyMapping";
 
 export function useOnboardingState() {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
@@ -34,8 +34,8 @@ export function useOnboardingState() {
         personalInfo.setPersonalData(prev => ({ ...prev, country: currentUser.country || "" }));
       }
       
-      if (currentUser.visaType) {
-        visaStatus.setVisaData(prev => ({ ...prev, visaType: currentUser.visaType }));
+      if (getProfileProperty(currentUser, 'visa_type')) {
+        visaStatus.setVisaData(prev => ({ ...prev, visaType: getProfileProperty(currentUser, 'visa_type') }));
       }
       
       if (currentUser.university) {

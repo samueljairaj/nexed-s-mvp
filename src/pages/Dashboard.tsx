@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,7 @@ import UpcomingDeadlines from "@/components/dashboard/UpcomingDeadlines";
 import QuickLinksCard from "@/components/dashboard/QuickLinksCard";
 import RecentActivities from "@/components/dashboard/RecentActivities";
 import TipsAndReminders from "@/components/dashboard/TipsAndReminders";
+import { getProfileProperty } from "@/utils/propertyMapping";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [tasksCount, setTasksCount] = useState({ total: 0, completed: 0 });
   const [deadlines, setDeadlines] = useState([]);
+  const userVisaType = currentUser ? getProfileProperty(currentUser, 'visa_type') : null;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,7 +123,7 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <RecentActivities currentUser={currentUser} />
-        <TipsAndReminders visaType={currentUser?.visaType} />
+        <TipsAndReminders visaType={userVisaType} />
       </div>
     </div>
   );

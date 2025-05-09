@@ -1,124 +1,91 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface UniversityInfoFormData {
-  action: "create" | "join";
   name: string;
-  location: string;
-  sevisId: string;
-  existingUniversityId?: string;
+  country: string;
+  website?: string;
+  sevisId?: string;
 }
 
 export function useUniversityInfo() {
-  const { currentUser, updateProfile, isDSO, dsoProfile, updateDSOProfile } = useAuth();
+  const { currentUser, updateProfile, updateDSOProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [universityData, setUniversityData] = useState<Partial<UniversityInfoFormData>>({
-    action: "create",
+  const [universityData, setUniversityData] = useState<UniversityInfoFormData>({
     name: "",
-    location: "",
-    sevisId: ""
+    country: "",
+    website: "",
+    sevisId: "",
   });
 
   const handleUniversityInfoSetup = async (data: UniversityInfoFormData): Promise<boolean> => {
     setIsSubmitting(true);
     
     try {
-      // Joining an existing university
-      if (data.action === "join" && data.existingUniversityId) {
-        // First update profile with university_id
-        if (!isDSO) {
-          // For student users
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({
-              university_id: data.existingUniversityId,
-              university: data.name // Store university name for display purposes
-            })
-            .eq('id', currentUser?.id);
-            
-          if (profileError) {
-            throw profileError;
-          }
-        } else {
-          // For DSO users, update the DSO profile
-          const { error: dsoProfileError } = await supabase
-            .from('dso_profiles')
-            .update({
-              university_id: data.existingUniversityId
-            })
-            .eq('id', currentUser?.id);
-            
-          if (dsoProfileError) {
-            throw dsoProfileError;
-          }
-        }
+      // First, create or get the university record
+      let universityId: string;
+      
+      // Check if the university already exists
+      const { data: existingUniversity, error: existingError } = await supabase
+        .from('universities')
+        .select('id')
+        .eq('name', data.name)
+        .single();
         
-        // Since university_join_requests table doesn't exist in our schema,
-        // we'll create an entry in the existing tables
-        if (isDSO) {
-          // For DSOs, update their profiles directly since they would typically be approved automatically
-          await updateDSOProfile({ 
-            university_id: data.existingUniversityId 
-          });
-        }
-        
-        toast.success("University join request submitted successfully!");
-        setUniversityData(data);
-        return true;
-      } 
-      // Creating a new university
-      else if (data.action === "create") {
-        // Create new university
-        const { data: newUniversity, error: universityError } = await supabase
+      if (existingError && existingError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        throw existingError;
+      }
+      
+      if (existingUniversity) {
+        // University already exists, use its ID
+        universityId = existingUniversity.id;
+      } else {
+        // Create a new university record
+        const { data: newUniversity, error: createError } = await supabase
           .from('universities')
           .insert({
             name: data.name,
-            country: data.location,
+            country: data.country,
+            website: data.website,
             sevis_id: data.sevisId
           })
-          .select()
+          .select('id')
           .single();
           
-        if (universityError) {
-          throw universityError;
-        }
-        
-        // Update the user profile with the new university
-        if (isDSO) {
-          // For DSO, update the DSO profile
-          await updateDSOProfile({ 
-            university_id: newUniversity.id 
-          });
-        } else {
-          // For student
-          await updateProfile({
-            university_id: newUniversity.id,
-            university: data.name
-          });
-        }
-        
-        toast.success("University created successfully!");
-        setUniversityData(data);
-        return true;
+        if (createError) throw createError;
+        universityId = newUniversity.id;
       }
       
-      return false;
+      // Update the user's profile with the university information
+      await updateProfile({
+        university: data.name,
+        university_id: universityId
+      });
+      
+      // If the user is a DSO, update their DSO profile as well
+      // We won't add university_id to DSO profile as it doesn't have that column
+      await updateDSOProfile({
+        // No university_id field in the DSO profile
+      });
+      
+      // Update state
+      setUniversityData(data);
+      toast.success("University information saved successfully!");
+      return true;
     } catch (error) {
-      console.error("Error with university setup:", error);
-      toast.error("University setup failed. Please try again.");
+      console.error("Error in university info setup:", error);
+      toast.error("Failed to set up university information");
       return false;
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   return {
     universityData,
-    setUniversityData,
     handleUniversityInfoSetup,
-    isSubmitting
+    isSubmitting,
   };
 }

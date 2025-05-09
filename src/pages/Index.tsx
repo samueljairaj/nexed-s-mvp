@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileCheck, FolderArchive, MessageCircle, ChevronRight, User, Building2, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
+import { getProfileProperty } from "@/utils/propertyMapping";
 
 const Index = () => {
-  const { isAuthenticated, currentUser, login } = useAuth();
+  const { isAuthenticated, login, currentUser, isLoading, isDSO } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("demo@example.com");
   const [password, setPassword] = useState("Password123!");
@@ -25,13 +26,9 @@ const Index = () => {
   const [sevisId, setSevisId] = useState("");
 
   useEffect(() => {
-    if (isAuthenticated) {
-      if (currentUser?.onboardingComplete) {
-        navigate(currentUser.role === "dso" ? "/app/dso-dashboard" : "/app/dashboard");
-      } else {
-        // The onboarding page will handle redirecting based on role
-        navigate(currentUser.role === "dso" ? "/dso-onboarding" : "/onboarding");
-      }
+    if (isAuthenticated && currentUser && getProfileProperty(currentUser, 'onboarding_complete')) {
+      navigate(isDSO ? '/app/dso-dashboard' : '/app/dashboard');
+      return;
     }
   }, [isAuthenticated, currentUser, navigate]);
 
@@ -107,6 +104,16 @@ const Index = () => {
   const handleSignUp = () => {
     // Replace this with a redirect to the signup page
     // or use the login method that is available
+    login();
+  };
+
+  const handleDemoSignup = () => {
+    // Instead of passing arguments to login, just call it directly as it shows in the interface
+    login();
+  };
+
+  const handleDemoLogin = () => {
+    // Instead of passing arguments to login, just call it directly as it shows in the interface
     login();
   };
 

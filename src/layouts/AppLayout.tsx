@@ -1,7 +1,7 @@
-
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { getProfileProperty } from "@/utils/propertyMapping";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -29,7 +29,8 @@ export const AppLayout = () => {
       return;
     }
 
-    if (currentUser && currentUser.role === 'student' && !currentUser.onboardingComplete) {
+    if (currentUser && currentUser.role === 'student' && 
+        !getProfileProperty(currentUser, 'onboarding_complete')) {
       navigate("/onboarding");
       return;
     }

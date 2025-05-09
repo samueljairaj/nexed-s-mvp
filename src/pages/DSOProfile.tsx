@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+
+import { getProfileProperty } from "@/utils/propertyMapping";
 
 const dsoProfileSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -29,12 +30,12 @@ const DSOProfile = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const defaultValues: Partial<DSOProfileFormValues> = {
-    title: dsoProfile?.title || "",
-    department: dsoProfile?.department || "",
-    officeLocation: dsoProfile?.officeLocation || "",
-    officeHours: dsoProfile?.officeHours || "",
-    contactEmail: dsoProfile?.contactEmail || currentUser?.email || "",
-    contactPhone: dsoProfile?.contactPhone || currentUser?.phone || "",
+    title: getProfileProperty(dsoProfile, 'title') || "",
+    department: getProfileProperty(dsoProfile, 'department') || "",
+    officeLocation: getProfileProperty(dsoProfile, 'office_location') || "",
+    officeHours: getProfileProperty(dsoProfile, 'office_hours') || "",
+    contactEmail: getProfileProperty(dsoProfile, 'contact_email') || currentUser?.email || "",
+    contactPhone: getProfileProperty(dsoProfile, 'contact_phone') || currentUser?.phone || "",
   };
 
   const form = useForm<DSOProfileFormValues>({
