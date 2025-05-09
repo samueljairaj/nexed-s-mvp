@@ -1,21 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { UserTypeToggle } from "@/components/landing/UserTypeToggle";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
-    // Just delay a bit to prevent immediate redirects that might cause loops
-    const timer = setTimeout(() => {
-      navigate('/student');
-      setIsLoading(false);
-    }, 100);
-    
-    return () => clearTimeout(timer);
+    // Direct users to student landing page from the root
+    navigate('/student', { replace: true });
   }, [navigate]);
 
   return (
@@ -37,11 +31,7 @@ const Index = () => {
         <div className="flex-1 flex justify-center items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
-      ) : (
-        <div className="flex-1 flex justify-center items-center">
-          <Button onClick={() => navigate('/student')}>Go to Student Portal</Button>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 };

@@ -19,17 +19,17 @@ export const UserTypeToggle = () => {
   }, [location.pathname]);
 
   const handleToggleChange = (value: string) => {
-    if (!value) return; // Don't navigate if no value (prevents errors)
+    if (!value || value === userType) return; // Don't navigate if no value or same page
     
     if (value === "university") {
-      navigate('/university');
+      navigate('/university', { replace: true });
     } else {
-      navigate('/student');
+      navigate('/student', { replace: true });
     }
   };
 
   return (
-    <div className="flex justify-center mb-4">
+    <div className="flex justify-center">
       <ToggleGroup type="single" value={userType} onValueChange={handleToggleChange}>
         <ToggleGroupItem value="student" aria-label="Student" className="flex items-center gap-2 px-4">
           <GraduationCap className="h-4 w-4" />
