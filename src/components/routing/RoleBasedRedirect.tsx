@@ -16,6 +16,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
   useEffect(() => {
     // Skip redirection logic if we're still loading auth state
     if (isLoading) {
+      console.log("RoleBasedRedirect: Still loading auth state, skipping redirection");
       return;
     }
 
@@ -25,6 +26,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     
     // Allow access to landing pages without redirection
     if (currentPath === '/' || currentPath === '/student' || currentPath === '/university') {
+      console.log("RoleBasedRedirect: On landing page, no redirection needed");
       return;
     }
 
@@ -33,44 +35,50 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
       console.log("RoleBasedRedirect: Onboarding complete:", onboardingComplete);
       
-      // Handle authenticated users on landing pages
+      // Special handling for authenticated users on landing pages to prevent unnecessary redirects
       if (currentPath === '/' || currentPath === '/student' || currentPath === '/university') {
+        console.log("RoleBasedRedirect: Authenticated user on landing page, checking onboarding status");
         if (onboardingComplete) {
           navigate(isDSO ? '/app/dso-dashboard' : '/app/dashboard', { replace: true });
-          return;
         } else {
           navigate(isDSO ? '/dso-onboarding' : '/onboarding', { replace: true });
-          return;
         }
-      }
-      
-      // Redirect based on user role and path
-      if (isDSO && currentPath === '/app/dashboard') {
-        navigate('/app/dso-dashboard', { replace: true });
-        return;
-      } else if (!isDSO && currentPath === '/app/dso-dashboard') {
-        navigate('/app/dashboard', { replace: true });
         return;
       }
       
-      // Handle onboarding for DSOs
+      // Handle onboarding for DSOs - redirect to DSO-specific onboarding
       if (isDSO && !onboardingComplete && !currentPath.includes("/dso-onboarding")) {
+        console.log("RoleBasedRedirect: DSO needs to complete onboarding");
         navigate('/dso-onboarding', { replace: true });
         return;
       }
       
-      // Handle onboarding for students
+      // Handle onboarding for students - redirect to student onboarding
       if (!isDSO && !onboardingComplete && !currentPath.includes("/onboarding")) {
+        console.log("RoleBasedRedirect: Student needs to complete onboarding");
         navigate('/onboarding', { replace: true });
         return;
       }
       
       // Redirect to appropriate onboarding based on role if on wrong onboarding page
       if (isDSO && currentPath === '/onboarding') {
+        console.log("RoleBasedRedirect: DSO on student onboarding page, redirecting");
         navigate('/dso-onboarding', { replace: true });
         return;
       } else if (!isDSO && currentPath === '/dso-onboarding') {
+        console.log("RoleBasedRedirect: Student on DSO onboarding page, redirecting");
         navigate('/onboarding', { replace: true });
+        return;
+      }
+      
+      // Redirect based on user role and protected dashboard paths
+      if (isDSO && currentPath === '/app/dashboard') {
+        console.log("RoleBasedRedirect: DSO on student dashboard, redirecting to DSO dashboard");
+        navigate('/app/dso-dashboard', { replace: true });
+        return;
+      } else if (!isDSO && currentPath === '/app/dso-dashboard') {
+        console.log("RoleBasedRedirect: Student on DSO dashboard, redirecting to student dashboard");
+        navigate('/app/dashboard', { replace: true });
         return;
       }
       
@@ -79,16 +87,20 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         currentPath === '/app/dso-dashboard' || 
         currentPath === '/app/dso-profile'
       )) {
+        console.log("RoleBasedRedirect: Non-DSO user trying to access DSO routes");
         navigate('/app/dashboard', { replace: true });
         return;
       }
     } else {
       // User is not authenticated
+      console.log("RoleBasedRedirect: User is not authenticated");
+      
       // Protected routes need authentication
       if (currentPath.startsWith('/app/') || 
           currentPath === '/onboarding' || 
           currentPath === '/dso-onboarding') {
         
+        console.log("RoleBasedRedirect: Unauthenticated user trying to access protected route");
         // Redirect based on the path to the appropriate landing page
         if (currentPath.includes('dso') || currentPath === '/dso-onboarding') {
           navigate('/university', { replace: true });

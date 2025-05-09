@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +11,7 @@ import { toast } from "sonner";
 import { getProfileProperty } from "@/utils/propertyMapping";
 
 const UniversityLanding = () => {
-  const { isAuthenticated, login, currentUser, isLoading, signUp } = useAuth();
+  const { isAuthenticated, login, currentUser, isLoading, signUp, isDSO } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,13 +27,21 @@ const UniversityLanding = () => {
   useEffect(() => {
     if (isAuthenticated && currentUser) {
       const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
-      if (onboardingComplete) {
-        navigate('/app/dso-dashboard');
+      console.log("UniversityLanding: User authenticated, isDSO:", isDSO, "onboarding complete:", onboardingComplete);
+      
+      // If authenticated user is a DSO
+      if (isDSO) {
+        if (onboardingComplete) {
+          navigate('/app/dso-dashboard', { replace: true });
+        } else {
+          navigate('/dso-onboarding', { replace: true });
+        }
       } else {
-        navigate('/dso-onboarding');
+        // If somehow a student user reached this page, redirect them appropriately
+        navigate('/student', { replace: true });
       }
     }
-  }, [isAuthenticated, currentUser, navigate]);
+  }, [isAuthenticated, currentUser, navigate, isDSO]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,13 +74,15 @@ const UniversityLanding = () => {
           password,
           firstName,
           lastName,
-          role: "dso",
+          role: "dso", // Important: Set role to DSO
           universityName,
           universityCountry,
           sevisId
         });
         
         toast.success("DSO account created! Proceeding to onboarding...");
+        
+        // After successful signup and creating the profile, we'll let the auth state change handle redirection
       } else {
         // Login with email and password
         if (!email || !password) {
@@ -83,6 +92,7 @@ const UniversityLanding = () => {
         }
         
         await login(email, password);
+        // After successful login, we'll let the auth state change handle redirection
       }
     } catch (error: any) {
       console.error("Authentication error:", error);

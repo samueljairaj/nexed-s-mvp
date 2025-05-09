@@ -191,13 +191,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signUp = async (data: any) => {
     try {
+      // Determine if this is a DSO signup based on role field
+      const isDsoSignup = data.role === 'dso';
+      
       const { data: { user }, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
             name: `${data.firstName} ${data.lastName}`,
-            role: 'student',
+            role: isDsoSignup ? 'dso' : 'student',
           }
         }
       });
@@ -215,12 +218,37 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               id: user.id,
               name: `${data.firstName} ${data.lastName}`,
               email: data.email,
-              role: 'student',
+              role: isDsoSignup ? 'dso' : 'student',
+              // Add DSO-specific fields if the user is signing up as a DSO
+              ...(isDsoSignup && {
+                university_name: data.universityName,
+                university_country: data.universityCountry,
+                sevis_id: data.sevisId
+              })
             },
           ]);
 
         if (profileError) {
           throw profileError;
+        }
+
+        // If this is a DSO signup, also create a DSO profile entry
+        if (isDsoSignup && data.universityName) {
+          const { error: dsoProfileError } = await supabase
+            .from('dso_profiles')
+            .insert([
+              {
+                id: user.id,
+                university_name: data.universityName,
+                university_country: data.universityCountry,
+                sevis_id: data.sevisId
+              },
+            ]);
+
+          if (dsoProfileError) {
+            console.error("Error creating DSO profile:", dsoProfileError);
+            // Don't throw here, allow the signup to continue even if the DSO profile creation fails
+          }
         }
       }
 
