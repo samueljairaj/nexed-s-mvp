@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,19 +48,23 @@ export type EmploymentFormData = z.infer<typeof employmentSchema>;
 interface EmploymentStepProps {
   defaultValues: Partial<EmploymentFormData>;
   onSubmit: (data: EmploymentFormData) => void;
-  visaType: string;
   onEmploymentStatusChange: (status: string) => void;
-  employmentStatus: string;
   isSubmitting?: boolean;
+  isOptOrCpt: boolean;
+  isEmployed: boolean;
+  isStemOpt: boolean;
+  isF1OrJ1: boolean;
 }
 
 export function EmploymentStep({ 
   defaultValues,
   onSubmit,
-  visaType,
   onEmploymentStatusChange,
-  employmentStatus,
-  isSubmitting = false 
+  isSubmitting = false,
+  isOptOrCpt,
+  isEmployed,
+  isStemOpt,
+  isF1OrJ1
 }: EmploymentStepProps) {
   const form = useForm<EmploymentFormData>({
     resolver: zodResolver(employmentSchema),
@@ -72,31 +75,17 @@ export function EmploymentStep({
   });
 
   // Determine if showing employment details is needed based on status
-  const showEmploymentDetails = employmentStatus && employmentStatus !== "Not_Employed";
-  
-  // Determine if we need to show OPT/CPT specific fields
-  const isOptCpt = employmentStatus === "OPT" || employmentStatus === "STEM_OPT" || employmentStatus === "CPT";
+  const showEmploymentDetails = isEmployed;
   
   // Determine status options based on visa type
   const getStatusOptions = () => {
-    if (visaType === "F-1") {
+    if (isF1OrJ1) {
       return [
         { value: "Not_Employed", label: "Not Currently Employed" },
         { value: "On_Campus", label: "On-Campus Employment" },
         { value: "CPT", label: "Curricular Practical Training (CPT)" },
         { value: "OPT", label: "Optional Practical Training (OPT)" },
         { value: "STEM_OPT", label: "STEM OPT Extension" },
-      ];
-    } else if (visaType === "J-1") {
-      return [
-        { value: "Not_Employed", label: "Not Currently Employed" },
-        { value: "Academic_Training", label: "Academic Training" },
-        { value: "On_Campus", label: "On-Campus Employment" },
-      ];
-    } else if (visaType === "H-1B") {
-      return [
-        { value: "H1B_Employed", label: "H-1B Employment" },
-        { value: "H1B_Between_Jobs", label: "Between H-1B Jobs" },
       ];
     } else {
       return [
@@ -286,7 +275,7 @@ export function EmploymentStep({
                 />
               </div>
               
-              {isOptCpt && (
+              {isOptOrCpt && (
                 <>
                   <FormField
                     control={form.control}
@@ -337,7 +326,7 @@ export function EmploymentStep({
                       name="authorizationStartDate"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel>{employmentStatus} Authorization Start Date</FormLabel>
+                          <FormLabel>{form.getValues().employmentStatus} Authorization Start Date</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
@@ -374,7 +363,7 @@ export function EmploymentStep({
                       name="authorizationEndDate"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel>{employmentStatus} Authorization End Date</FormLabel>
+                          <FormLabel>{form.getValues().employmentStatus} Authorization End Date</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
@@ -409,7 +398,7 @@ export function EmploymentStep({
                 </>
               )}
               
-              {(employmentStatus === "OPT" || employmentStatus === "STEM_OPT") && (
+              {(form.getValues().employmentStatus === "OPT" || form.getValues().employmentStatus === "STEM_OPT") && (
                 <>
                   <FormField
                     control={form.control}
@@ -426,7 +415,7 @@ export function EmploymentStep({
                           />
                         </FormControl>
                         <FormDescription>
-                          {employmentStatus === "OPT" ? 
+                          {form.getValues().employmentStatus === "OPT" ? 
                             "Regular OPT allows up to 90 days of unemployment." : 
                             "STEM OPT allows up to 150 days of unemployment (including days used during regular OPT)."
                           }
@@ -456,7 +445,7 @@ export function EmploymentStep({
                 </>
               )}
               
-              {employmentStatus === "STEM_OPT" && (
+              {form.getValues().employmentStatus === "STEM_OPT" && (
                 <FormField
                   control={form.control}
                   name="eVerifyNumber"
