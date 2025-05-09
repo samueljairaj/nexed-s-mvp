@@ -1,11 +1,12 @@
 
-import React from "react";
-import { AccountCreationStep } from "@/components/onboarding/AccountCreationStep";
-import { PersonalInfoStep } from "@/components/onboarding/PersonalInfoStep";
-import { VisaStatusStep } from "@/components/onboarding/VisaStatusStep";
-import { AcademicInfoStep } from "@/components/onboarding/AcademicInfoStep";
-import { EmploymentInfoStep } from "@/components/onboarding/EmploymentInfoStep";
-import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
+import { AccountCreationStep } from "./AccountCreationStep";
+import { PersonalInfoStep } from "./PersonalInfoStep";
+import { VisaStatusStep } from "./VisaStatusStep"; 
+import { AcademicInfoStep } from "./AcademicInfoStep";
+import { EmploymentStep } from "./EmploymentStep";
+import { OnboardingComplete } from "./OnboardingComplete";
+import { DsoProfileStep } from "./DsoProfileStep";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface OnboardingStepContentProps {
   currentStep: number;
@@ -16,22 +17,22 @@ interface OnboardingStepContentProps {
   employmentData: any;
   isSubmitting: boolean;
   currentUser: any;
-  handleAccountCreation: (data: any) => void;
-  handlePersonalInfo: (data: any) => void;
-  handleVisaStatus: (data: any) => void;
-  handleVisaTypeChange: (visaType: string) => void;
-  handleAcademicInfo: (data: any) => void;
-  handleEmploymentInfo: (data: any) => void;
-  handleEmploymentStatusChange: (status: string) => void;
-  isF1OrJ1: () => boolean;
-  isEmployed: () => boolean;
-  isOptOrCpt: () => boolean;
-  isStemOpt: () => boolean;
-  handleFinish: () => void;
-  handleBackToLogin?: () => void; // Add this prop
+  handleAccountCreation: (data: any) => Promise<boolean>;
+  handlePersonalInfo: (data: any) => Promise<boolean>;
+  handleVisaStatus: (data: any) => Promise<boolean>;
+  handleVisaTypeChange: (type: any) => void;
+  handleAcademicInfo: (data: any) => Promise<boolean>;
+  handleEmploymentInfo: (data: any) => Promise<boolean>;
+  handleEmploymentStatusChange: (status: boolean) => void;
+  isF1OrJ1: boolean;
+  isEmployed: boolean;
+  isOptOrCpt: boolean;
+  isStemOpt: boolean;
+  handleFinish: () => Promise<boolean>;
+  handleBackToLogin: () => void;
 }
 
-export function OnboardingStepContent({
+export const OnboardingStepContent = ({
   currentStep,
   accountData,
   personalData,
@@ -52,83 +53,113 @@ export function OnboardingStepContent({
   isOptOrCpt,
   isStemOpt,
   handleFinish,
-  handleBackToLogin, // Add this prop
-}: OnboardingStepContentProps) {
-  switch (currentStep) {
-    case 0:
-      return (
-        <AccountCreationStep
-          defaultValues={accountData}
-          onSubmit={handleAccountCreation}
-          isSubmitting={isSubmitting}
-        />
-      );
-    case 1:
-      return (
-        <PersonalInfoStep
-          defaultValues={personalData}
-          onSubmit={handlePersonalInfo}
-          isSubmitting={isSubmitting}
-          handleBackToLogin={handleBackToLogin} // Add this prop
-        />
-      );
-    case 2:
-      return (
-        <VisaStatusStep
-          defaultValues={visaData}
-          onSubmit={handleVisaStatus}
-          onVisaTypeChange={handleVisaTypeChange}
-          isSubmitting={isSubmitting}
-          handleBackToLogin={handleBackToLogin} // Add this prop
-        />
-      );
-    case 3:
-      return (
-        <AcademicInfoStep
-          defaultValues={academicData}
-          onSubmit={handleAcademicInfo}
-          isF1OrJ1={visaData.visaType === "F1" || visaData.visaType === "J1"}
-          isSubmitting={isSubmitting}
-          handleBackToLogin={handleBackToLogin} // Add this prop
-        />
-      );
-    case 4:
-      return (
-        <EmploymentInfoStep
-          defaultValues={employmentData}
-          onSubmit={handleEmploymentInfo}
-          visaType={visaData.visaType || "F1"}
-          onEmploymentStatusChange={handleEmploymentStatusChange}
-          isF1OrJ1={isF1OrJ1}
-          isEmployed={isEmployed}
-          isOptOrCpt={isOptOrCpt}
-          isStemOpt={isStemOpt}
-          isSubmitting={isSubmitting}
-        />
-      );
-    case 5:
-      return (
-        <OnboardingComplete
-          onFinish={handleFinish}
-          isSubmitting={isSubmitting}
-          userData={{
-            name: currentUser?.name,
-            visaType: visaData.visaType,
-            university: academicData.university,
-            fieldOfStudy: academicData.fieldOfStudy,
-            employer: employmentData.employerName,
-            courseStartDate: academicData.courseStartDate,
-            graduationDate: academicData.graduationDate,
-            employmentStatus: employmentData.employmentStatus,
-            optType: employmentData.optType,
-            previousUniversity: academicData.previousUniversity,
-            hasTransferred: academicData.hasTransferred,
-            employmentStartDate: employmentData.employmentStartDate,
-            usEntryDate: personalData.usEntryDate
-          }}
-        />
-      );
-    default:
-      return null;
-  }
-}
+  handleBackToLogin
+}: OnboardingStepContentProps) => {
+  const { isDSO } = useAuth();
+
+  // Helper function to render the appropriate step
+  const renderStep = () => {
+    // For DSO users, we have a different onboarding flow
+    if (isDSO) {
+      switch (currentStep) {
+        case 0:
+          return (
+            <AccountCreationStep
+              defaultValues={accountData}
+              onSubmit={handleAccountCreation}
+              isSubmitting={isSubmitting}
+            />
+          );
+        case 1:
+          return (
+            <PersonalInfoStep
+              defaultValues={personalData}
+              onSubmit={handlePersonalInfo}
+              isSubmitting={isSubmitting}
+            />
+          );
+        case 2:
+          return (
+            <DsoProfileStep
+              defaultValues={{}}
+              onSubmit={handleAcademicInfo} // Reusing the academicInfo handler for DSO profile
+              isSubmitting={isSubmitting}
+            />
+          );
+        case 5:
+          return (
+            <OnboardingComplete
+              handleFinish={handleFinish}
+              isSubmitting={isSubmitting}
+              role="dso"
+            />
+          );
+        default:
+          return <div>Loading...</div>;
+      }
+    } else {
+      // Student onboarding flow (original)
+      switch (currentStep) {
+        case 0:
+          return (
+            <AccountCreationStep
+              defaultValues={accountData}
+              onSubmit={handleAccountCreation}
+              isSubmitting={isSubmitting}
+            />
+          );
+        case 1:
+          return (
+            <PersonalInfoStep
+              defaultValues={personalData}
+              onSubmit={handlePersonalInfo}
+              isSubmitting={isSubmitting}
+            />
+          );
+        case 2:
+          return (
+            <VisaStatusStep
+              defaultValues={visaData}
+              onSubmit={handleVisaStatus}
+              onVisaTypeChange={handleVisaTypeChange}
+              isSubmitting={isSubmitting}
+            />
+          );
+        case 3:
+          return (
+            <AcademicInfoStep
+              defaultValues={academicData}
+              onSubmit={handleAcademicInfo}
+              isSubmitting={isSubmitting}
+              isF1OrJ1={isF1OrJ1}
+            />
+          );
+        case 4:
+          return (
+            <EmploymentStep
+              defaultValues={employmentData}
+              onSubmit={handleEmploymentInfo}
+              onEmploymentStatusChange={handleEmploymentStatusChange}
+              isSubmitting={isSubmitting}
+              isOptOrCpt={isOptOrCpt}
+              isEmployed={isEmployed}
+              isStemOpt={isStemOpt}
+              isF1OrJ1={isF1OrJ1}
+            />
+          );
+        case 5:
+          return (
+            <OnboardingComplete
+              handleFinish={handleFinish}
+              isSubmitting={isSubmitting}
+              role="student"
+            />
+          );
+        default:
+          return <div>Loading...</div>;
+      }
+    }
+  };
+
+  return <div>{renderStep()}</div>;
+};

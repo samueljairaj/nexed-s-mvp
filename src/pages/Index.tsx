@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileCheck, FolderArchive, MessageCircle, ChevronRight, User } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileCheck, FolderArchive, MessageCircle, ChevronRight, User, Building2, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -19,6 +20,10 @@ const Index = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [userType, setUserType] = useState<"student" | "dso">("student");
+  const [universityName, setUniversityName] = useState("");
+  const [universityCountry, setUniversityCountry] = useState("United States");
+  const [sevisId, setSevisId] = useState("");
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -54,9 +59,19 @@ const Index = () => {
           setIsSubmitting(false);
           return;
         }
+
+        // Additional validation for DSO signup
+        if (userType === "dso" && (!universityName || !universityCountry || !sevisId)) {
+          toast.error("Please fill out all university fields");
+          setIsSubmitting(false);
+          return;
+        }
         
-        await signup(email, password);
-        toast.success("Account created! Proceeding to onboarding...");
+        // Create account with role metadata
+        await signup(email, password, userType, userType === "dso" ? 
+          { universityName, universityCountry, sevisId } : undefined);
+          
+        toast.success(`${userType === "dso" ? "DSO" : "Student"} account created! Proceeding to onboarding...`);
       } else {
         // Login
         if (!email || !password) {
@@ -111,10 +126,14 @@ const Index = () => {
             <div className="grid md:grid-cols-2 gap-10 items-center">
               <div className="space-y-6">
                 <h1 className="text-4xl md:text-5xl font-bold animate-fade-in">
-                  Your International Student Visa Companion
+                  {userType === "student" 
+                    ? "Your International Student Visa Companion" 
+                    : "Streamline Your DSO Responsibilities"}
                 </h1>
                 <p className="text-lg md:text-xl text-blue-50 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                  Stay compliant, organized, and worry-free with neXed's all-in-one visa management platform for international students.
+                  {userType === "student"
+                    ? "Stay compliant, organized, and worry-free with neXed's all-in-one visa management platform for international students."
+                    : "Efficiently manage student visa compliance, document verification, and reporting with neXed's comprehensive DSO platform."}
                 </p>
                 <div className="pt-4 flex flex-wrap gap-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
                   <Button 
@@ -138,26 +157,74 @@ const Index = () => {
                       </h2>
                       
                       {isSignup && (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="firstName">First Name</Label>
-                            <Input
-                              id="firstName"
-                              value={firstName}
-                              onChange={(e) => setFirstName(e.target.value)}
-                              placeholder="John"
-                            />
+                        <>
+                          <Tabs defaultValue="student" value={userType} onValueChange={(value) => setUserType(value as "student" | "dso")} className="mb-6">
+                            <TabsList className="grid w-full grid-cols-2">
+                              <TabsTrigger value="student" className="flex items-center gap-2">
+                                <GraduationCap size={16} />
+                                <span>Student</span>
+                              </TabsTrigger>
+                              <TabsTrigger value="dso" className="flex items-center gap-2">
+                                <Building2 size={16} />
+                                <span>DSO</span>
+                              </TabsTrigger>
+                            </TabsList>
+                          </Tabs>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="firstName">First Name</Label>
+                              <Input
+                                id="firstName"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                placeholder="John"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="lastName">Last Name</Label>
+                              <Input
+                                id="lastName"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                placeholder="Doe"
+                              />
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="lastName">Last Name</Label>
-                            <Input
-                              id="lastName"
-                              value={lastName}
-                              onChange={(e) => setLastName(e.target.value)}
-                              placeholder="Doe"
-                            />
-                          </div>
-                        </div>
+                          
+                          {userType === "dso" && (
+                            <div className="space-y-4 border rounded-md p-4 bg-blue-50">
+                              <h3 className="font-medium text-nexed-700">University Information</h3>
+                              <div className="space-y-2">
+                                <Label htmlFor="universityName">University Name</Label>
+                                <Input
+                                  id="universityName"
+                                  value={universityName}
+                                  onChange={(e) => setUniversityName(e.target.value)}
+                                  placeholder="University of California"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="universityCountry">Country</Label>
+                                <Input
+                                  id="universityCountry"
+                                  value={universityCountry}
+                                  onChange={(e) => setUniversityCountry(e.target.value)}
+                                  placeholder="United States"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="sevisId">SEVIS School Code</Label>
+                                <Input
+                                  id="sevisId"
+                                  value={sevisId}
+                                  onChange={(e) => setSevisId(e.target.value)}
+                                  placeholder="e.g. ABC123456789"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
                       
                       <div className="space-y-2">
@@ -238,28 +305,52 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Feature Section */}
+        {/* Feature Section - Different features based on user type */}
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">
-              Simplify Your International Student Journey
+              {userType === "student" 
+                ? "Simplify Your International Student Journey" 
+                : "Powerful DSO Management Tools"}
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
-              <FeatureCard
-                icon={<FileCheck size={32} className="text-nexed-600" />}
-                title="Visa Compliance"
-                description="Stay on top of deadlines and requirements with personalized checklists and timely reminders."
-              />
-              <FeatureCard
-                icon={<FolderArchive size={32} className="text-nexed-600" />}
-                title="Document Vault"
-                description="Securely store and organize all your essential documents for quick access whenever you need them."
-              />
-              <FeatureCard
-                icon={<MessageCircle size={32} className="text-nexed-600" />}
-                title="AI Assistance"
-                description="Get instant answers to your visa questions with our specialized immigration AI assistant."
-              />
+              {userType === "student" ? (
+                <>
+                  <FeatureCard
+                    icon={<FileCheck size={32} className="text-nexed-600" />}
+                    title="Visa Compliance"
+                    description="Stay on top of deadlines and requirements with personalized checklists and timely reminders."
+                  />
+                  <FeatureCard
+                    icon={<FolderArchive size={32} className="text-nexed-600" />}
+                    title="Document Vault"
+                    description="Securely store and organize all your essential documents for quick access whenever you need them."
+                  />
+                  <FeatureCard
+                    icon={<MessageCircle size={32} className="text-nexed-600" />}
+                    title="AI Assistance"
+                    description="Get instant answers to your visa questions with our specialized immigration AI assistant."
+                  />
+                </>
+              ) : (
+                <>
+                  <FeatureCard
+                    icon={<User size={32} className="text-nexed-600" />}
+                    title="Student Management"
+                    description="Efficiently track and manage all your international students in one centralized dashboard."
+                  />
+                  <FeatureCard
+                    icon={<FileCheck size={32} className="text-nexed-600" />}
+                    title="Compliance Monitoring"
+                    description="Automate compliance tracking and get alerts about upcoming deadlines and potential issues."
+                  />
+                  <FeatureCard
+                    icon={<FolderArchive size={32} className="text-nexed-600" />}
+                    title="Document Verification"
+                    description="Streamline document collection and verification processes for your international students."
+                  />
+                </>
+              )}
             </div>
           </div>
         </section>

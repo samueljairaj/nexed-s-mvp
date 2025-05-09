@@ -40,6 +40,12 @@ interface DSOProfile {
   contactPhone?: string;
 }
 
+interface UniversityInfo {
+  universityName: string;
+  universityCountry: string;
+  sevisId: string;
+}
+
 interface AuthContextType {
   currentUser: UserProfile | null;
   dsoProfile: DSOProfile | null;
@@ -48,7 +54,7 @@ interface AuthContextType {
   isDSO: boolean;
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, role?: UserRole, universityInfo?: UniversityInfo) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
   updateDSOProfile: (data: Partial<DSOProfile>) => Promise<void>;
@@ -205,19 +211,72 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signup = async (email: string, password: string) => {
+  const signup = async (email: string, password: string, role: UserRole = 'student', universityInfo?: UniversityInfo) => {
     setIsLoading(true);
     try {
       if (!email || !password) {
         throw new Error("Email and password are required");
       }
       
-      const { data, error } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (authError) throw authError;
+      
+      // If university info is provided (DSO signup), create or find the university
+      let universityId: string | undefined = undefined;
+      
+      if (role === 'dso' && universityInfo) {
+        // Check if university already exists
+        const { data: existingUniversity } = await supabase
+          .from('universities')
+          .select('id')
+          .ilike('name', universityInfo.universityName)
+          .eq('country', universityInfo.universityCountry)
+          .maybeSingle();
+        
+        if (existingUniversity) {
+          universityId = existingUniversity.id;
+        } else {
+          // Create new university
+          const { data: newUniversity, error: universityError } = await supabase
+            .from('universities')
+            .insert({
+              name: universityInfo.universityName,
+              country: universityInfo.universityCountry,
+              sevis_id: universityInfo.sevisId
+            })
+            .select('id')
+            .single();
+          
+          if (universityError) throw universityError;
+          universityId = newUniversity.id;
+        }
+      }
+      
+      // If we have a user ID after signup, update the profile with role and university
+      if (authData?.user?.id) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            role: role,
+            university_id: universityId
+          })
+          .eq('id', authData.user.id);
+        
+        if (updateError) throw updateError;
+        
+        // If DSO, create an empty DSO profile record
+        if (role === 'dso') {
+          const { error: dsoProfileError } = await supabase
+            .from('dso_profiles')
+            .insert({ id: authData.user.id });
+          
+          if (dsoProfileError) throw dsoProfileError;
+        }
+      }
       
       toast.success("Account created successfully! Please check your email for verification.");
       return;

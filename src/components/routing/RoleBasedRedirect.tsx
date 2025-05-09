@@ -20,6 +20,11 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         navigate('/app/dashboard');
       }
       
+      // Handle onboarding for DSOs
+      if (isDSO && !currentUser.onboardingComplete && !window.location.pathname.includes("/onboarding")) {
+        navigate('/onboarding');
+      }
+      
       // Prevent access to DSO-specific routes for non-DSO users
       if (!isDSO && (
         window.location.pathname === '/app/dso-dashboard' || 

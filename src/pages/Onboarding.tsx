@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, isDSO } = useAuth();
   const onboardingState = useOnboardingState();
   const {
     currentStep,
@@ -42,17 +42,22 @@ const Onboarding = () => {
     setCurrentStep
   } = onboardingState;
 
-  // Step names for the progress indicator
-  const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
+  // Step names for the progress indicator - different for DSO and student
+  const studentStepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
+  const dsoStepNames = ["Account", "Personal", "DSO Profile"];
+
+  // Use the appropriate step names based on user role
+  const stepNames = isDSO ? dsoStepNames : studentStepNames;
 
   useEffect(() => {
     if (isAuthenticated && currentUser?.onboardingComplete) {
-      navigate("/app/dashboard");
+      // Redirect to the appropriate dashboard based on role
+      navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
     } else if (isAuthenticated && currentStep === 0) {
       // If user is already authenticated, skip the account creation step
       setCurrentStep(1);
     }
-  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep]);
+  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isDSO]);
 
   // Handle back to login
   const handleBackToLogin = () => {
