@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Send, Clock, FileText, AlertTriangle, Info, Loader2 } from "lucide-react";
+import { MessageCircle, Send, Clock, FileText, AlertTriangle, Info, Loader2, BellPlus } from "lucide-react";
 import { useAIAssistant, Message } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Assistant = () => {
   const { currentUser } = useAuth();
@@ -16,7 +17,7 @@ const Assistant = () => {
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
-  const { sendMessage, isLoading } = useAIAssistant();
+  const { sendMessage, isLoading, lastCreatedReminder } = useAIAssistant();
   
   // Pre-defined welcome message
   useEffect(() => {
@@ -25,7 +26,7 @@ const Assistant = () => {
         {
           id: `msg-${Date.now()}`,
           role: "assistant",
-          content: `👋 Hello${currentUser?.name ? ` ${currentUser.name}` : ''}! I'm your immigration assistant. How can I help you with your ${currentUser?.visaType || "visa"}-related questions today?`,
+          content: `👋 Hello${currentUser?.name ? ` ${currentUser.name}` : ''}! I'm your immigration assistant. How can I help you with your ${currentUser?.visaType || "visa"}-related questions today?\n\nYou can also ask me to create reminders for important tasks by saying something like "remind me to renew my I-20 in 30 days" or "create a task to submit my OPT progress report by April 15".`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -84,6 +85,14 @@ const Assistant = () => {
   const filteredFAQs = selectedCategory
     ? faqs.filter(faq => faq.category === selectedCategory)
     : faqs;
+
+  // Sample reminder examples
+  const reminderExamples = [
+    "Remind me to renew my I-20 in 30 days",
+    "Create a task to submit my OPT progress report by April 15",
+    "Set a reminder to update my address with USCIS before next week",
+    "Remind me to get my travel documents ready 15 days before my flight"
+  ];
 
   return (
     <div>
@@ -185,6 +194,32 @@ const Assistant = () => {
 
         {/* FAQ Section */}
         <div className="space-y-6">
+          {/* New Reminder Examples Card */}
+          <Card className="nexed-card bg-nexed-50">
+            <CardContent className="pt-6">
+              <h2 className="text-lg font-semibold mb-3 flex items-center">
+                <BellPlus className="h-5 w-5 mr-2 text-nexed-600" />
+                Create Reminders
+              </h2>
+              <p className="text-sm text-gray-600 mb-3">
+                Try asking me to create reminders for your important tasks:
+              </p>
+              <div className="space-y-2">
+                {reminderExamples.map((example, index) => (
+                  <Button 
+                    key={`reminder-${index}`} 
+                    variant="outline" 
+                    className="w-full justify-start text-left h-auto py-2 px-3 border-nexed-200"
+                    onClick={() => suggestQuestion(example)}
+                  >
+                    <Clock className="h-4 w-4 mr-2 flex-shrink-0 text-nexed-600" />
+                    <span className="truncate">{example}</span>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="nexed-card">
             <CardContent className="pt-6">
               <h2 className="text-lg font-semibold mb-3 flex items-center">

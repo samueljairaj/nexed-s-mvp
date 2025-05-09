@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export interface Message {
   id: string;
@@ -10,8 +11,17 @@ export interface Message {
   timestamp: string;
 }
 
+export interface ReminderDetails {
+  title: string;
+  dueDate: string;
+  priority: "low" | "medium" | "high";
+  taskId?: string;
+  success?: boolean;
+}
+
 export function useAIAssistant() {
   const [isLoading, setIsLoading] = useState(false);
+  const [lastCreatedReminder, setLastCreatedReminder] = useState<ReminderDetails | null>(null);
   const { currentUser } = useAuth();
 
   const sendMessage = async (prompt: string, messageHistory: Message[] = []) => {
@@ -26,9 +36,11 @@ export function useAIAssistant() {
 
       // Sanitize user data for the AI
       const userData = currentUser ? {
+        id: currentUser.id,
         visaType: currentUser.visaType,
         university: currentUser.university,
-        country: currentUser.country
+        country: currentUser.country,
+        name: currentUser.name
       } : null;
 
       // Call the Supabase Edge Function
@@ -42,6 +54,19 @@ export function useAIAssistant() {
 
       if (error) {
         throw new Error(error.message || 'Failed to get response from AI assistant');
+      }
+
+      // Check if a reminder was created
+      if (data.reminderCreated && data.reminderDetails) {
+        setLastCreatedReminder(data.reminderDetails);
+        
+        // Show toast notification
+        toast.success(`Reminder created: ${data.reminderDetails.title}`, {
+          description: `Due date: ${data.reminderDetails.dueDate}`,
+          duration: 5000
+        });
+      } else {
+        setLastCreatedReminder(null);
       }
 
       return {
@@ -65,6 +90,7 @@ export function useAIAssistant() {
 
   return {
     sendMessage,
-    isLoading
+    isLoading,
+    lastCreatedReminder
   };
 }
