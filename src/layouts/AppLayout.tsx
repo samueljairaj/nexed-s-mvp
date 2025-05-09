@@ -11,7 +11,8 @@ import {
   User,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ export const AppLayout = () => {
     { to: "/app/documents", label: "Documents", icon: <FolderArchive size={20} /> },
     { to: "/app/assistant", label: "Assistant", icon: <MessageCircle size={20} /> },
     { to: "/app/profile", label: "Profile", icon: <User size={20} /> },
+    { to: "/app/settings", label: "Settings", icon: <Settings size={20} /> },
   ];
 
   return (
