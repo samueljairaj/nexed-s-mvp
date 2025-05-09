@@ -107,11 +107,13 @@ async function enhanceChecklistWithAI(baselineTasks: AITask[], userData: UserDat
           {
             role: 'system',
             content: `You are a specialized immigration compliance assistant. Your task is to:
-            1. ENHANCE each baseline checklist item with a clear, concise explanation of why it is required
-            2. ADD additional documents or requirements based on the user's profile
-            3. DO NOT remove any baseline checklist items
-            4. For each new item you add, include an id, title, description, category, priority, and phase
-            5. Keep all enhancements factually accurate for visa regulations`
+            1. You MUST respond with VALID JSON only. Your entire response should be valid parseable JSON.
+            2. ENHANCE each baseline checklist item with a clear, concise explanation of why it is required
+            3. ADD additional tasks based on the user's profile
+            4. DO NOT remove any baseline checklist items
+            5. For each task, include an id, title, description, category, priority, and phase
+            6. Return your response in this JSON format: {"tasks": [...array of task objects...]}
+            7. Keep all enhancements factually accurate for visa regulations`
           },
           {
             role: 'user',
@@ -123,12 +125,13 @@ async function enhanceChecklistWithAI(baselineTasks: AITask[], userData: UserDat
             
             Given this user profile and baseline checklist, please:
             1. Enhance each item's description to better explain why it's needed
-            2. Add any additional documents needed based on their specific situation (e.g., transfers, status changes, employer transitions)
+            2. Add any additional documents needed based on their specific situation
             3. Do not remove any baseline items
-            4. Return the complete enhanced checklist`
+            4. IMPORTANT: Return your response as VALID JSON that can be parsed - return only the enhanced list of tasks`
           }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
+        response_format: { type: "json_object" }  // Enforce JSON response
       }),
     });
 
@@ -140,18 +143,22 @@ async function enhanceChecklistWithAI(baselineTasks: AITask[], userData: UserDat
 
     // Parse the enhanced tasks
     const responseContent = data.choices[0].message.content;
-    let enhancedTasks;
+    let enhancedTasks: AITask[] = [];
     
     try {
-      // Look for a JSON block in the response
-      const jsonMatch = responseContent.match(/```json\n([\s\S]*?)\n```/) || 
-                        responseContent.match(/```\n([\s\S]*?)\n```/);
+      // Parse the JSON response
+      const parsedResponse = JSON.parse(responseContent);
       
-      if (jsonMatch) {
-        enhancedTasks = JSON.parse(jsonMatch[1]);
+      // Extract the tasks array from the response
+      if (parsedResponse && Array.isArray(parsedResponse.tasks)) {
+        enhancedTasks = parsedResponse.tasks;
+      } else if (Array.isArray(parsedResponse)) {
+        // If the response is directly an array
+        enhancedTasks = parsedResponse;
       } else {
-        // If no JSON block found, try to parse the entire response
-        enhancedTasks = JSON.parse(responseContent);
+        console.error('Unexpected AI response format:', responseContent);
+        // Fall back to baseline tasks
+        enhancedTasks = baselineTasks;
       }
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
@@ -159,33 +166,23 @@ async function enhanceChecklistWithAI(baselineTasks: AITask[], userData: UserDat
       enhancedTasks = baselineTasks;
     }
     
-    // Make sure we have an array
-    if (!Array.isArray(enhancedTasks)) {
-      // If AI returned an object with a tasks property
-      if (enhancedTasks && Array.isArray(enhancedTasks.tasks)) {
-        enhancedTasks = enhancedTasks.tasks;
-      } else {
-        // Fall back to baseline tasks
-        enhancedTasks = baselineTasks;
-      }
-    }
-    
     // Ensure every task has the required properties
-    return enhancedTasks.map((task: any) => {
+    return enhancedTasks.map((task: any, index: number) => {
       // Find matching baseline task if it exists
-      const baselineTask = baselineTasks.find(b => b.id === task.id);
+      const baselineTask = baselineTasks.find(b => b.id === task.id) || 
+                           (index < baselineTasks.length ? baselineTasks[index] : null);
       
       // If this is a baseline task, preserve its phase
       const phase = task.phase || (baselineTask ? baselineTask.phase : "general");
       
       return {
         id: task.id || `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        title: task.title,
-        description: task.description || "",
+        title: task.title || (baselineTask ? baselineTask.title : `Task ${index + 1}`),
+        description: task.description || (baselineTask ? baselineTask.description : ""),
         dueDate: task.dueDate || calculateDueDate(task.priority || "medium"),
-        category: task.category || "immigration",
+        category: task.category || (baselineTask ? baselineTask.category : "immigration"),
         completed: task.completed || false,
-        priority: task.priority || "medium",
+        priority: task.priority || (baselineTask ? baselineTask.priority : "medium"),
         phase: phase
       };
     });

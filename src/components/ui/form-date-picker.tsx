@@ -46,6 +46,13 @@ export function FormDatePicker({
     throw new Error("FormDatePicker must be used within a FormProvider");
   }
 
+  const value = form.getValues(name);
+  const date = value ? new Date(value) : undefined;
+  
+  const handleSelect = (selectedDate: Date | undefined) => {
+    form.setValue(name, selectedDate, { shouldValidate: true });
+  };
+
   return (
     <FormItem className="flex flex-col">
       {label && <FormLabel>{label}{required && <span className="text-destructive ml-1">*</span>}</FormLabel>}
@@ -56,13 +63,13 @@ export function FormDatePicker({
               variant={"outline"}
               className={cn(
                 "w-full pl-3 text-left font-normal border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
-                !form.getValues(name) && "text-muted-foreground",
+                !date && "text-muted-foreground",
                 buttonClassName
               )}
               disabled={disabled}
             >
-              {form.getValues(name) ? (
-                dateUtils.formatDate(form.getValues(name))
+              {date ? (
+                dateUtils.formatDate(date)
               ) : (
                 <span>{placeholder}</span>
               )}
@@ -73,8 +80,8 @@ export function FormDatePicker({
         <PopoverContent className="w-auto p-0 bg-popover shadow-md border border-border rounded-md" align="start">
           <Calendar
             mode="single"
-            selected={form.getValues(name)}
-            onSelect={date => form.setValue(name, date, { shouldValidate: true })}
+            selected={date}
+            onSelect={handleSelect}
             disabled={disabledDates}
             initialFocus
             className={cn("p-3 pointer-events-auto", className)}

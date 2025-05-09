@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAICompliance } from "@/hooks/useAICompliance";
 import { generateMockTasks } from "@/utils/mockTasks";
 import { DocumentCategory } from "@/types/document";
+import { getBaselineChecklist, baselineItemsToAITasks } from "@/utils/baselineChecklists";
 
 // Export the Task type that matches AITask
 export type Task = {
@@ -18,6 +19,9 @@ export type Task = {
   phase?: string;
 };
 
+// Add cache key to localStorage for AI-generated tasks
+const AI_TASKS_CACHE_KEY = "nexed_ai_compliance_tasks";
+
 export const useComplianceTasks = () => {
   const { currentUser } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -27,7 +31,7 @@ export const useComplianceTasks = () => {
   const [selectedPhase, setSelectedPhase] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const { generateCompliance, isGenerating } = useAICompliance();
-  const [showAiLoading, setShowAiLoading] = useState(false);
+  const [isAILoading, setIsAILoading] = useState(false);
   const [phaseGroups, setPhaseGroups] = useState<{[key: string]: Task[]}>({});
 
   // Toggle task completion status
@@ -71,6 +75,15 @@ export const useComplianceTasks = () => {
       newStatus ? "Task marked as complete" : "Task marked as incomplete", 
       { description: taskTitle }
     );
+
+    // Also update tasks in cache
+    const cachedTasks = JSON.parse(localStorage.getItem(AI_TASKS_CACHE_KEY) || "[]");
+    if (cachedTasks.length > 0) {
+      const updatedCache = cachedTasks.map((task: Task) => 
+        task.id === taskId ? { ...task, completed: newStatus } : task
+      );
+      localStorage.setItem(AI_TASKS_CACHE_KEY, JSON.stringify(updatedCache));
+    }
   };
 
   // Filter tasks based on search, category, and phase
@@ -107,20 +120,22 @@ export const useComplianceTasks = () => {
     );
   };
 
-  // Generate tasks using AI
-  const generateTasksWithAI = async () => {
-    setShowAiLoading(true);
-    setIsLoading(true);
+  // Load baseline tasks immediately
+  const loadBaselineTasks = () => {
+    const visaType = currentUser?.visaType || "F1";
+    const mockTasks = generateMockTasks(visaType);
     
-    try {
-      const aiTasks = await generateCompliance();
-      
-      if (aiTasks && aiTasks.length > 0) {
-        setTasks(aiTasks as Task[]);
-        setFilteredTasks(aiTasks as Task[]);
+    // Try to get cached AI tasks
+    const cachedTasks = localStorage.getItem(AI_TASKS_CACHE_KEY);
+    
+    if (cachedTasks) {
+      try {
+        const parsedCache = JSON.parse(cachedTasks);
+        setTasks(parsedCache);
+        setFilteredTasks(parsedCache);
         
-        // Group tasks by phase
-        const groupedByPhase = (aiTasks as Task[]).reduce((groups: {[key: string]: Task[]}, task) => {
+        // Group cached tasks by phase
+        const groupedByPhase = parsedCache.reduce((groups: {[key: string]: Task[]}, task: Task) => {
           const phase = task.phase || "general";
           if (!groups[phase]) {
             groups[phase] = [];
@@ -130,31 +145,69 @@ export const useComplianceTasks = () => {
         }, {});
         
         setPhaseGroups(groupedByPhase);
+        toast.success("Loaded your compliance tasks");
+      } catch (error) {
+        console.error("Error parsing cached tasks:", error);
+        setTasksAndGroups(mockTasks);
+      }
+    } else {
+      // Load baseline tasks if no cache
+      const baselineItems = getBaselineChecklist(visaType);
+      const baselineTasks = baselineItemsToAITasks(baselineItems);
+      
+      if (baselineTasks.length > 0) {
+        setTasksAndGroups(baselineTasks);
+      } else {
+        // Fallback to mock tasks if baseline is empty
+        setTasksAndGroups(mockTasks);
+      }
+    }
+    
+    setIsLoading(false);
+  };
+
+  // Helper to set tasks and create phase groups
+  const setTasksAndGroups = (taskList: Task[]) => {
+    setTasks(taskList);
+    setFilteredTasks(taskList);
+    
+    // Group tasks by phase
+    const groupedByPhase = taskList.reduce((groups: {[key: string]: Task[]}, task) => {
+      const phase = task.phase || "general";
+      if (!groups[phase]) {
+        groups[phase] = [];
+      }
+      groups[phase].push(task);
+      return groups;
+    }, {});
+    
+    setPhaseGroups(groupedByPhase);
+  };
+
+  // Generate tasks using AI - now explicitly triggered by user
+  const generateTasksWithAI = async () => {
+    setIsAILoading(true);
+    
+    try {
+      const aiTasks = await generateCompliance();
+      
+      if (aiTasks && aiTasks.length > 0) {
+        setTasksAndGroups(aiTasks as Task[]);
+        
+        // Cache the AI-generated tasks
+        localStorage.setItem(AI_TASKS_CACHE_KEY, JSON.stringify(aiTasks));
         
         toast.success("AI-generated compliance tasks created successfully");
       } else {
-        // Fallback to mock tasks if AI fails or returns empty
-        const mockTasks = generateMockTasks(currentUser?.visaType || "F1");
-        setTasks(mockTasks);
-        setFilteredTasks(mockTasks);
-        
-        // Group mock tasks by visa type
-        const mockGroups = {
-          [currentUser?.visaType || "F1"]: mockTasks
-        };
-        setPhaseGroups(mockGroups);
+        toast.error("AI task generation failed, using baseline tasks instead");
+        loadBaselineTasks();
       }
     } catch (error) {
       console.error("Error generating AI tasks:", error);
-      toast.error("Failed to generate AI tasks, using mock data instead");
-      
-      // Fallback to mock tasks
-      const mockTasks = generateMockTasks(currentUser?.visaType || "F1");
-      setTasks(mockTasks);
-      setFilteredTasks(mockTasks);
+      toast.error("Failed to generate AI tasks");
+      loadBaselineTasks();
     } finally {
-      setShowAiLoading(false);
-      setIsLoading(false);
+      setIsAILoading(false);
     }
   };
 
@@ -163,9 +216,9 @@ export const useComplianceTasks = () => {
     filterTasks(searchQuery, selectedFilters, selectedPhase);
   }, [searchQuery, selectedFilters, selectedPhase, tasks]);
 
-  // Generate tasks on component mount
+  // Load baseline tasks on component mount
   useEffect(() => {
-    generateTasksWithAI();
+    loadBaselineTasks();
   }, [currentUser]);
 
   return {
@@ -178,7 +231,7 @@ export const useComplianceTasks = () => {
     selectedPhase,
     setSelectedPhase,
     isLoading,
-    isGenerating: isGenerating || showAiLoading,
+    isGenerating: isGenerating || isAILoading,
     phaseGroups,
     toggleTaskStatus,
     generateTasksWithAI
