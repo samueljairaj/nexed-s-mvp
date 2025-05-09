@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getProfileProperty, debugAuthState } from '@/utils/propertyMapping';
+import { toast } from 'sonner';
 
 interface RoleBasedRedirectProps {
   children: React.ReactNode;
@@ -13,12 +14,10 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [redirectProcessed, setRedirectProcessed] = useState(false);
+  const [lastAttemptedPath, setLastAttemptedPath] = useState<string | null>(null);
 
   useEffect(() => {
-    // Skip redirection logic if we've already processed a redirect
-    if (redirectProcessed) {
-      return;
-    }
+    const currentPath = location.pathname;
     
     // Skip redirection logic if we're still loading auth state
     if (isLoading) {
@@ -26,7 +25,12 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       return;
     }
 
-    const currentPath = location.pathname;
+    // Prevent redundant redirections to the same path
+    if (redirectProcessed && lastAttemptedPath === currentPath) {
+      console.log(`RoleBasedRedirect: Already processed redirection for ${currentPath}, skipping`);
+      return;
+    }
+
     console.log("RoleBasedRedirect: Processing path:", currentPath);
     console.log("RoleBasedRedirect: Authentication state:", { isAuthenticated: !!currentUser, isDSO, isLoading });
     
@@ -53,12 +57,14 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
             console.log("RoleBasedRedirect: DSO needs to complete DSO onboarding, redirecting");
             navigate('/dso-onboarding', { replace: true });
             setRedirectProcessed(true);
+            setLastAttemptedPath('/dso-onboarding');
             return;
           }
         } else if (currentPath !== '/onboarding') {
           console.log("RoleBasedRedirect: Student needs to complete student onboarding, redirecting");
           navigate('/onboarding', { replace: true });
           setRedirectProcessed(true);
+          setLastAttemptedPath('/onboarding');
           return;
         }
       }
@@ -68,11 +74,13 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         console.log("RoleBasedRedirect: DSO on student dashboard, redirecting to DSO dashboard");
         navigate('/app/dso-dashboard', { replace: true });
         setRedirectProcessed(true);
+        setLastAttemptedPath('/app/dso-dashboard');
         return;
       } else if (!isDSO && currentPath === '/app/dso-dashboard') {
         console.log("RoleBasedRedirect: Student on DSO dashboard, redirecting to student dashboard");
         navigate('/app/dashboard', { replace: true });
         setRedirectProcessed(true);
+        setLastAttemptedPath('/app/dashboard');
         return;
       }
       
@@ -85,6 +93,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         console.log("RoleBasedRedirect: Non-DSO user trying to access DSO routes");
         navigate('/app/dashboard', { replace: true });
         setRedirectProcessed(true);
+        setLastAttemptedPath('/app/dashboard');
         return;
       }
 
@@ -93,6 +102,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
         console.log("RoleBasedRedirect: DSO user trying to access student onboarding");
         navigate('/dso-onboarding', { replace: true });
         setRedirectProcessed(true);
+        setLastAttemptedPath('/dso-onboarding');
         return;
       }
     } else {
@@ -105,25 +115,34 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
           currentPath === '/dso-onboarding') {
         
         console.log("RoleBasedRedirect: Unauthenticated user trying to access protected route");
+        
+        // Show a toast message to inform the user
+        toast.error("Please log in to access this page");
+        
         // Redirect based on the path to the appropriate landing page
         if (currentPath.includes('dso') || currentPath === '/dso-onboarding') {
           navigate('/university', { replace: true });
+          setRedirectProcessed(true);
+          setLastAttemptedPath('/university');
         } else {
           navigate('/student', { replace: true });
+          setRedirectProcessed(true);
+          setLastAttemptedPath('/student');
         }
-        setRedirectProcessed(true);
         return;
       }
     }
     
     // Reset processed flag if we don't redirect
     setRedirectProcessed(false);
-  }, [currentUser, isLoading, isDSO, navigate, location.pathname, redirectProcessed]);
+    setLastAttemptedPath(currentPath);
+  }, [currentUser, isLoading, isDSO, navigate, location.pathname]);
 
   // Safety timeout to prevent getting stuck in a redirect loop
   useEffect(() => {
     const timeout = setTimeout(() => {
       setRedirectProcessed(false); // Reset after timeout to allow new redirections
+      setLastAttemptedPath(null);
     }, 5000);
     
     return () => clearTimeout(timeout);

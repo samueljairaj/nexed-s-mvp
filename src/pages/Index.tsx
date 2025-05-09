@@ -47,9 +47,22 @@ const Index = () => {
     return () => clearTimeout(safetyTimeout);
   }, [localLoading, navigate]);
 
+  // Add another safety mechanism for a hard reload if we're stuck
+  useEffect(() => {
+    const hardTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.log("Index: Hard timeout triggered - forcing reload");
+        window.location.href = '/student';
+      }
+    }, 8000); // 8 second timeout before hard reload
+    
+    return () => clearTimeout(hardTimeout);
+  }, [isLoading]);
+
   return (
-    <div className="min-h-screen flex justify-center items-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+    <div className="min-h-screen flex flex-col justify-center items-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
+      <div className="text-gray-500">Loading, please wait...</div>
     </div>
   );
 };

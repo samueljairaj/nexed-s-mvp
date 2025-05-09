@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,6 +43,23 @@ const UniversityLanding = () => {
       }
     }
   }, [isAuthenticated, currentUser, navigate, isDSO]);
+  
+  // Add a safety timeout to prevent infinite loading
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    if (isSubmitting) {
+      timeoutId = setTimeout(() => {
+        console.log("Form submission timed out after 15 seconds");
+        setIsSubmitting(false);
+        toast.error("Request timed out. Please try again or refresh the page.");
+      }, 15000); // 15 second timeout
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isSubmitting]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,8 +86,18 @@ const UniversityLanding = () => {
           return;
         }
         
+        console.log("Creating DSO account with data:", {
+          email,
+          firstName,
+          lastName,
+          role: "dso",
+          universityName,
+          universityCountry,
+          sevisId
+        });
+        
         // Create account with full name and role
-        await signUp({
+        const success = await signUp({
           email,
           password,
           firstName,
@@ -80,9 +108,19 @@ const UniversityLanding = () => {
           sevisId
         });
         
-        toast.success("DSO account created! Proceeding to onboarding...");
-        
-        // After successful signup and creating the profile, we'll let the auth state change handle redirection
+        if (success) {
+          toast.success("DSO account created! Proceeding to onboarding...");
+          
+          // Manual navigation if the auth state change doesn't trigger navigation
+          setTimeout(() => {
+            console.log("Manual navigation to DSO onboarding");
+            navigate('/dso-onboarding', { replace: true });
+            setIsSubmitting(false);
+          }, 2000);
+        } else {
+          // This will execute if signUp returns false
+          setIsSubmitting(false);
+        }
       } else {
         // Login with email and password
         if (!email || !password) {
@@ -93,11 +131,14 @@ const UniversityLanding = () => {
         
         await login(email, password);
         // After successful login, we'll let the auth state change handle redirection
+        // But also have a backup timeout
+        setTimeout(() => {
+          setIsSubmitting(false);
+        }, 3000);
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
       toast.error(`Authentication failed: ${error.message}`);
-    } finally {
       setIsSubmitting(false);
     }
   };
