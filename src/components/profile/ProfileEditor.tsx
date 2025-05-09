@@ -42,10 +42,10 @@ const profileSchema = z.object({
   university: z.string().optional(),
   country: z.string().optional(),
   address: z.string().optional(),
-  visaType: z.string().optional(),
-  degreeLevel: z.string().optional(),
-  fieldOfStudy: z.string().optional(),
-  isSTEM: z.boolean().optional(),
+  visa_type: z.string().optional(),
+  degree_level: z.string().optional(),
+  field_of_study: z.string().optional(),
+  is_stem: z.boolean().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -57,19 +57,19 @@ export const ProfileEditor = () => {
   
   // Dates
   const [courseStartDate, setCourseStartDate] = useState<Date | undefined>(
-    currentUser?.courseStartDate ? new Date(currentUser.courseStartDate) : undefined
+    currentUser?.course_start_date ? new Date(currentUser.course_start_date) : undefined
   );
   const [usEntryDate, setUsEntryDate] = useState<Date | undefined>(
-    currentUser?.usEntryDate ? new Date(currentUser.usEntryDate) : undefined
+    currentUser?.us_entry_date ? new Date(currentUser.us_entry_date) : undefined
   );
   const [employmentStartDate, setEmploymentStartDate] = useState<Date | undefined>(
-    currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate) : undefined
+    currentUser?.employment_start_date ? new Date(currentUser.employment_start_date) : undefined
   );
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(
-    currentUser?.dateOfBirth ? new Date(currentUser.dateOfBirth) : undefined
+    currentUser?.date_of_birth ? new Date(currentUser.date_of_birth) : undefined
   );
   const [passportExpiryDate, setPassportExpiryDate] = useState<Date | undefined>(
-    currentUser?.passportExpiryDate ? new Date(currentUser.passportExpiryDate) : undefined
+    currentUser?.passport_expiry_date ? new Date(currentUser.passport_expiry_date) : undefined
   );
 
   const defaultValues: Partial<ProfileFormValues> = {
@@ -79,10 +79,10 @@ export const ProfileEditor = () => {
     university: currentUser?.university || "",
     country: currentUser?.country || "",
     address: currentUser?.address || "",
-    visaType: currentUser?.visaType || "F1",
-    degreeLevel: currentUser?.degreeLevel || "",
-    fieldOfStudy: currentUser?.fieldOfStudy || "",
-    isSTEM: currentUser?.isSTEM || false,
+    visa_type: currentUser?.visa_type || "F1",
+    degree_level: currentUser?.degree_level || "",
+    field_of_study: currentUser?.field_of_study || "",
+    is_stem: currentUser?.is_stem || false,
   };
 
   const form = useForm<ProfileFormValues>({
@@ -100,15 +100,15 @@ export const ProfileEditor = () => {
         email: data.email,
         phone: data.phone,
         university: data.university,
-        visaType: data.visaType as any,
-        degreeLevel: data.degreeLevel,
-        fieldOfStudy: data.fieldOfStudy,
-        isSTEM: data.isSTEM,
-        courseStartDate: courseStartDate ? courseStartDate.toISOString() : undefined,
-        usEntryDate: usEntryDate ? usEntryDate.toISOString() : undefined,
-        employmentStartDate: employmentStartDate ? employmentStartDate.toISOString() : undefined,
-        dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : undefined,
-        passportExpiryDate: passportExpiryDate ? passportExpiryDate.toISOString() : undefined,
+        visa_type: data.visa_type as any,
+        degree_level: data.degree_level,
+        field_of_study: data.field_of_study,
+        is_stem: data.is_stem,
+        course_start_date: courseStartDate ? courseStartDate.toISOString() : undefined,
+        us_entry_date: usEntryDate ? usEntryDate.toISOString() : undefined,
+        employment_start_date: employmentStartDate ? employmentStartDate.toISOString() : undefined,
+        date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : undefined,
+        passport_expiry_date: passportExpiryDate ? passportExpiryDate.toISOString() : undefined,
       });
       toast.success("Profile updated successfully");
     } catch (error) {
@@ -231,7 +231,7 @@ export const ProfileEditor = () => {
               <TabsContent value="visa" className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="visaType"
+                  name="visa_type"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Visa Type</FormLabel>
@@ -285,7 +285,7 @@ export const ProfileEditor = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
-                    name="degreeLevel"
+                    name="degree_level"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Degree Level</FormLabel>
@@ -313,7 +313,7 @@ export const ProfileEditor = () => {
                   
                   <FormField
                     control={form.control}
-                    name="fieldOfStudy"
+                    name="field_of_study"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Field of Study</FormLabel>
@@ -346,7 +346,7 @@ export const ProfileEditor = () => {
                 
                 <FormField
                   control={form.control}
-                  name="isSTEM"
+                  name="is_stem"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
