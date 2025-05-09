@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { getProfileProperty } from "@/utils/propertyMapping";
 
 const Index = () => {
-  const { isAuthenticated, login, currentUser, isLoading, isDSO } = useAuth();
+  const { isAuthenticated, login, currentUser, isLoading, isDSO, signUp } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("demo@example.com");
   const [password, setPassword] = useState("Password123!");
@@ -64,21 +64,25 @@ const Index = () => {
           return;
         }
         
-        const fullName = `${firstName} ${lastName}`;
-        
-        // Create account with role metadata
-        await login(); // Call login without arguments - will be handled in AuthContext
+        // Create account with full name and role
+        await signUp({
+          email,
+          password,
+          firstName,
+          lastName,
+          role: userType
+        });
         
         toast.success(`${userType === "dso" ? "DSO" : "Student"} account created! Proceeding to onboarding...`);
       } else {
-        // Login
+        // Login with email and password
         if (!email || !password) {
           toast.error("Please enter both email and password");
           setIsSubmitting(false);
           return;
         }
         
-        await login(); // Call login without arguments - will be handled in AuthContext
+        await login(email, password);
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
@@ -101,14 +105,19 @@ const Index = () => {
     login();
   };
 
-  const handleDemoSignup = () => {
-    // Instead of passing arguments to login, just call it directly as it shows in the interface
-    login();
+  const handleDemoLogin = () => {
+    setEmail("demo@example.com");
+    setPassword("Password123!");
+    login("demo@example.com", "Password123!");
   };
 
-  const handleDemoLogin = () => {
-    // Instead of passing arguments to login, just call it directly as it shows in the interface
-    login();
+  const handleDemoSignup = () => {
+    setIsSignup(true);
+    setEmail("demo@example.com");
+    setPassword("Password123!");
+    setConfirmPassword("Password123!");
+    setFirstName("Demo");
+    setLastName("User");
   };
 
   if (isLoading) {

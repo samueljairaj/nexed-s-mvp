@@ -1,71 +1,32 @@
 
 /**
- * Utility functions to help with property name mappings between camelCase and snake_case
- * This helps us avoid TypeScript errors when accessing properties with different naming conventions.
+ * Get a property from a profile object, handling possible missing values.
+ * This function safely accesses profile properties, including those in the "meta" object.
+ * 
+ * @param profile The profile object or null/undefined
+ * @param property The property name to retrieve
+ * @returns The property value or undefined if not found or profile is null
  */
-
-/**
- * Helper function to safely access properties that might have different naming conventions
- * @param obj The object to access properties from
- * @param camelCaseProp The camelCase property name
- * @param snakeCaseProp The snake_case property name
- * @returns The value of the property, or undefined if neither exists
- */
-export function getProperty<T extends object, K extends keyof T>(
-  obj: T, 
-  camelCaseProp: string, 
-  snakeCaseProp: K
-): T[K] | undefined {
-  // If the object has the camelCase property, return it
-  if (camelCaseProp in obj) {
-    return obj[camelCaseProp as unknown as K];
-  }
+export function getProfileProperty<T extends object>(profile: T | null | undefined, property: string): any {
+  if (!profile) return undefined;
   
-  // Otherwise return the snake_case property
-  return obj[snakeCaseProp];
-}
-
-/**
- * Helper function to uniformly access common profile properties
- * regardless of whether they're in camelCase or snake_case
- */
-export function getProfileProperty(profile: any | null | undefined, property: string): any {
-  // Return undefined early if profile is null or undefined
-  if (!profile) {
-    return undefined;
-  }
-
-  const snakeMapping: Record<string, string> = {
-    visaType: 'visa_type',
-    onboardingComplete: 'onboarding_complete',
-    dateOfBirth: 'date_of_birth',
-    usEntryDate: 'us_entry_date',
-    courseStartDate: 'course_start_date',
-    employmentStartDate: 'employment_start_date',
-    passportExpiryDate: 'passport_expiry_date',
-    degreeLevel: 'degree_level',
-    fieldOfStudy: 'field_of_study'
-  };
-
-  // DSO specific mappings
-  const dsoMapping: Record<string, string> = {
-    officeLocation: 'office_location',
-    officeHours: 'office_hours',
-    contactEmail: 'contact_email',
-    contactPhone: 'contact_phone'
-  };
-
-  const allMappings = { ...snakeMapping, ...dsoMapping };
-  
-  // Check for both camelCase and snake_case versions
-  const snakeVersion = allMappings[property];
-  if (snakeVersion && snakeVersion in profile) {
-    return profile[snakeVersion];
-  }
-  
-  // Return the original property if it exists
+  // Direct property access
   if (property in profile) {
-    return profile[property];
+    return (profile as any)[property];
+  }
+  
+  // Check in a meta property if it exists
+  if ('meta' in profile && profile.meta && typeof profile.meta === 'object') {
+    if (property in profile.meta) {
+      return (profile.meta as any)[property];
+    }
+  }
+  
+  // Check in a raw_user_meta_data property if it exists
+  if ('raw_user_meta_data' in profile && profile.raw_user_meta_data && typeof profile.raw_user_meta_data === 'object') {
+    if (property in profile.raw_user_meta_data) {
+      return (profile.raw_user_meta_data as any)[property];
+    }
   }
   
   return undefined;

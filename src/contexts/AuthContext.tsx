@@ -32,7 +32,7 @@ interface AuthContextType {
   isDSO: boolean;
   isAdmin?: boolean;
   dsoProfile: DsoProfile | null;
-  login: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signUp: (data: any) => Promise<any>;
   signup: (data: any) => Promise<any>; // Alias for signUp
@@ -151,18 +151,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const login = async () => {
+  const login = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/onboarding`,
-        }
+      // Use email/password authentication instead of OAuth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
-
+      
       if (error) {
         throw error;
       }
+      
+      // If successful, the session change will be caught by the onAuthStateChange listener
+      toast.success("Login successful!");
+      return;
     } catch (error: any) {
       console.error("Login failed:", error.message);
       toast.error(`Login failed: ${error.message}`);
