@@ -4,7 +4,7 @@ import { VisaStatusStep } from "./VisaStatusStep";
 import { AcademicInfoStep } from "./AcademicInfoStep";
 import { EmploymentStep } from "./EmploymentStep";
 import { OnboardingComplete } from "./OnboardingComplete";
-import { DsoProfileStep } from "./DsoProfileStep";
+import { UniversityInfoStep } from "./UniversityInfoStep";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface OnboardingStepContentProps {
@@ -29,6 +29,8 @@ interface OnboardingStepContentProps {
   isStemOpt: boolean;
   handleFinish: () => Promise<boolean>;
   handleBackToLogin: () => void;
+  handleUniversityInfoSetup?: (data: any) => Promise<boolean>;
+  universityData?: any;
 }
 
 export const OnboardingStepContent = ({
@@ -52,7 +54,9 @@ export const OnboardingStepContent = ({
   isOptOrCpt,
   isStemOpt,
   handleFinish,
-  handleBackToLogin
+  handleBackToLogin,
+  handleUniversityInfoSetup,
+  universityData
 }: OnboardingStepContentProps) => {
   const { isDSO } = useAuth();
 
@@ -79,13 +83,13 @@ export const OnboardingStepContent = ({
           );
         case 2:
           return (
-            <DsoProfileStep
-              defaultValues={{}}
-              onSubmit={handleAcademicInfo} // Reusing the academicInfo handler for DSO profile
+            <UniversityInfoStep
+              defaultValues={universityData || {}}
+              onSubmit={handleUniversityInfoSetup || (() => Promise.resolve(false))}
               isSubmitting={isSubmitting}
             />
           );
-        case 5:
+        case 3:
           return (
             <OnboardingComplete
               handleFinish={handleFinish}

@@ -1,36 +1,52 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function useOnboardingNavigation() {
-  const { isAuthenticated } = useAuth();
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const { isDSO } = useAuth();
 
   const goToNextStep = () => {
-    setCurrentStep(currentStep + 1);
+    setCurrentStep(prev => prev + 1);
   };
 
   const goToPreviousStep = () => {
-    setCurrentStep(currentStep - 1);
+    setCurrentStep(prev => Math.max(0, prev - 1));
   };
 
-  // Determine if step is the first step
   const isFirstStep = () => {
-    // If authenticated, first visible step is step 1 (Personal Info)
-    return isAuthenticated ? currentStep === 1 : currentStep === 0;
+    return currentStep === 0;
   };
 
-  // Determine if step is the last step
   const isLastStep = () => {
+    if (isDSO) {
+      // For DSO users, the last interactive step is 2 (University Info)
+      return currentStep === 2;
+    }
+    // For students, the last interactive step is 4 (Employment) 
     return currentStep === 4;
   };
 
-  // Calculate the progress percentage
   const calculateProgress = () => {
-    // If authenticated, we skip step 0, so we have 4 steps (1-4)
-    // Otherwise, we have 5 steps (0-4)
-    const totalSteps = isAuthenticated ? 4 : 5;
-    const effectiveStep = isAuthenticated ? currentStep : currentStep + 1;
-    return (effectiveStep / totalSteps) * 100;
+    if (isDSO) {
+      // For DSO users:
+      // 0 - Account Creation (25%)
+      // 1 - Personal Info (50%)
+      // 2 - University Info (75%)
+      // 3 - Completion (100%)
+      const total = 3;
+      return Math.min(100, Math.round((currentStep / total) * 100));
+    } else {
+      // For student users:
+      // 0 - Account Creation (20%)
+      // 1 - Personal Info (40%)
+      // 2 - Visa Status (60%)
+      // 3 - Academic Info (80%)
+      // 4 - Employment (100%)
+      // 5 - Completion (100%)
+      const total = 5;
+      return Math.min(100, Math.round((currentStep / total) * 100));
+    }
   };
 
   return {

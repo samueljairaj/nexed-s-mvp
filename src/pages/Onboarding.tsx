@@ -7,12 +7,12 @@ import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepCon
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDsoOnboarding } from "@/hooks/onboarding/useDsoOnboarding";
+import { useUniversityInfo } from "@/hooks/onboarding/useUniversityInfo";
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { logout, isDSO } = useAuth();
-  const { handleDsoProfileSetup } = useDsoOnboarding();
+  const { handleUniversityInfoSetup, universityData } = useUniversityInfo();
   const onboardingState = useOnboardingState();
   
   const {
@@ -47,7 +47,7 @@ const Onboarding = () => {
 
   // Step names for the progress indicator - different for DSO and student
   const studentStepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
-  const dsoStepNames = ["Account", "Personal", "DSO Profile"];
+  const dsoStepNames = ["Account", "Personal", "University"];
 
   // Use the appropriate step names based on user role
   const stepNames = isDSO ? dsoStepNames : studentStepNames;
@@ -68,6 +68,14 @@ const Onboarding = () => {
     logout();
     // Navigate back to login page
     navigate("/", { replace: true });
+  };
+
+  // Adjust last step calculation based on role
+  const isLastStepForCurrentRole = () => {
+    if (isDSO) {
+      return currentStep === 2; // University info is the last interactive step for DSOs
+    }
+    return isLastStep();
   };
 
   // If loading, show a loading indicator
@@ -103,27 +111,26 @@ const Onboarding = () => {
           handlePersonalInfo={handlePersonalInfo}
           handleVisaStatus={handleVisaStatus}
           handleVisaTypeChange={handleVisaTypeChange}
-          // For DSOs, use handleDsoProfileSetup instead of handleAcademicInfo
-          handleAcademicInfo={isDSO ? handleDsoProfileSetup : handleAcademicInfo}
+          handleAcademicInfo={handleAcademicInfo}
           handleEmploymentInfo={handleEmploymentInfo}
-          // Make sure we're passing the right parameter type
           handleEmploymentStatusChange={handleEmploymentStatusChange}
-          // Convert function references to actual boolean values
           isF1OrJ1={typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1}
           isEmployed={typeof isEmployed === 'function' ? isEmployed() : isEmployed}
           isOptOrCpt={typeof isOptOrCpt === 'function' ? isOptOrCpt() : isOptOrCpt}
           isStemOpt={typeof isStemOpt === 'function' ? isStemOpt() : isStemOpt}
           handleFinish={handleFinish}
-          handleBackToLogin={handleBackToLogin} // Pass the function
+          handleBackToLogin={handleBackToLogin}
+          handleUniversityInfoSetup={handleUniversityInfoSetup}
+          universityData={universityData}
         />
       </div>
       
       {/* Navigation buttons - only show if not on the final completion screen */}
-      {currentStep !== 5 && currentStep !== 0 && (
+      {currentStep !== (isDSO ? 3 : 5) && currentStep !== 0 && (
         <StepNavigation
           currentStep={currentStep}
           isFirstStep={isFirstStep()}
-          isLastStep={isLastStep()}
+          isLastStep={isLastStepForCurrentRole()}
           onNext={() => {
             // This is handled by the individual form submissions
           }}

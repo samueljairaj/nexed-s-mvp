@@ -18,12 +18,13 @@ export function OnboardingProgress({
       <div className="flex justify-between items-center">
         {stepNames.map((label, index) => {
           const stepNum = index + 1;
+          const isLastStep = index === stepNames.length - 1;
+          const stepWidth = isLastStep ? "" : `w-1/${stepNames.length - 1}`;
+          
           return (
             <div
               key={stepNum}
-              className={`flex flex-col items-center ${
-                stepNum !== stepNames.length ? "w-1/5" : ""
-              }`}
+              className={`flex flex-col items-center ${stepWidth}`}
             >
               <div
                 className={`h-10 w-10 rounded-full flex items-center justify-center ${
