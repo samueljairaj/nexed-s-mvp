@@ -12,6 +12,7 @@ import Compliance from "./pages/Compliance";
 import Documents from "./pages/Documents";
 import Assistant from "./pages/Assistant";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="documents" element={<Documents />} />
               <Route path="assistant" element={<Assistant />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
