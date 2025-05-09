@@ -43,6 +43,8 @@ export function useAIAssistant() {
         name: currentUser.name
       } : null;
 
+      console.log('Sending request to AI assistant with user data:', userData ? 'User data available' : 'No user data');
+
       // Call the Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('ai-assistant', {
         body: { 
@@ -53,8 +55,11 @@ export function useAIAssistant() {
       });
 
       if (error) {
+        console.error('Error from AI assistant edge function:', error);
         throw new Error(error.message || 'Failed to get response from AI assistant');
       }
+
+      console.log('Received response from AI assistant:', data);
 
       // Check if a reminder was created
       if (data.reminderCreated && data.reminderDetails) {

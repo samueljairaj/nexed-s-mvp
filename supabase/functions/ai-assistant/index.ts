@@ -1,7 +1,6 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { format, addDays, parse } from "https://deno.land/std@0.168.0/datetime/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -155,7 +154,6 @@ async function createReminder(userId: string, reminderDetails: any, supabaseUrl:
       description: `AI assistant created reminder: ${title}`,
       due_date: dueDate,
       is_completed: false,
-      visa_type: null, // We don't have this information from the context
       priority: priority,
       category: "personal",
       phase: "general"
@@ -176,6 +174,7 @@ async function createReminder(userId: string, reminderDetails: any, supabaseUrl:
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Error response from Supabase:', errorText);
       throw new Error(`Failed to create task: ${errorText}`);
     }
 
