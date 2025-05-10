@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 export function useOnboardingCompletion() {
-  const { completeOnboarding, isDSO } = useAuth();
+  const { completeOnboarding, isDSO, currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -18,10 +18,10 @@ export function useOnboardingCompletion() {
       // Assume success if no error was thrown
       toast.success("Onboarding completed successfully!");
       
-      // Navigate to appropriate dashboard based on user role
+      // Add a delay before navigation to ensure the compliance dialog appears
       setTimeout(() => {
         navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
-      }, 1500);
+      }, 2500); // Increased delay to give enough time for the checklist to appear
       
       return true;
     } catch (error) {
@@ -33,8 +33,20 @@ export function useOnboardingCompletion() {
     }
   };
 
+  // Return user data for the compliance checklist
+  const getUserDataForCompliance = () => {
+    return {
+      name: currentUser?.name || '',
+      visaType: currentUser?.visaType || 'F1',
+      university: currentUser?.university || '',
+      fieldOfStudy: currentUser?.fieldOfStudy || '',
+      employer: currentUser?.employer || ''
+    };
+  };
+
   return {
     handleFinish,
-    isSubmitting
+    isSubmitting,
+    getUserDataForCompliance
   };
 }

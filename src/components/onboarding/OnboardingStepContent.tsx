@@ -56,6 +56,15 @@ export const OnboardingStepContent = ({
   console.log("OnboardingStepContent - currentStep:", currentStep);
   console.log("OnboardingStepContent - isF1OrJ1:", isF1OrJ1);
 
+  // Prepare user data for compliance checklist
+  const userData = {
+    name: currentUser?.name,
+    visaType: visaData.visaType,
+    university: academicData.university,
+    fieldOfStudy: academicData.fieldOfStudy,
+    employer: employmentData.employer,
+  };
+
   // Student onboarding flow
   const renderStep = () => {
     switch (currentStep) {
@@ -121,5 +130,17 @@ export const OnboardingStepContent = ({
     }
   };
 
-  return <div>{renderStep()}</div>;
+  return (
+    <>
+      {renderStep()}
+      {/* Pass user data directly to CompletionStep when on the final step */}
+      {currentStep === 5 && (
+        <ComplianceChecklist
+          open={true}
+          onOpenChange={() => {}}
+          userData={userData}
+        />
+      )}
+    </>
+  );
 }

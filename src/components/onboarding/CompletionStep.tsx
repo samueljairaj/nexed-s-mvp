@@ -18,21 +18,13 @@ interface CompletionStepProps {
 }
 
 export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }: CompletionStepProps) {
-  const [showChecklist, setShowChecklist] = useState(false);
+  // Always start with checklist visible
+  const [showChecklist, setShowChecklist] = useState(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Show compliance checklist automatically after a short delay
-    const timer = setTimeout(() => {
-      setShowChecklist(true);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleGoToDashboard = () => {
     onFinish();
-    // Let the parent component handle navigation through auth context
+    // The parent component handles navigation through auth context
   };
 
   return (
@@ -68,7 +60,7 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
         </Button>
       </div>
 
-      {/* Compliance Checklist Dialog */}
+      {/* Compliance Checklist Dialog - Always visible */}
       <ComplianceChecklist 
         open={showChecklist} 
         onOpenChange={setShowChecklist} 

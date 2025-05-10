@@ -44,6 +44,17 @@ export function useOnboardingState() {
     }
   }, [isAuthenticated, currentUser]);
 
+  // Collect user data for completion step
+  const getUserData = () => {
+    return {
+      name: currentUser?.name,
+      visaType: visaStatus.visaData.visaType,
+      university: academicInfo.academicData.university,
+      fieldOfStudy: academicInfo.academicData.fieldOfStudy,
+      employer: employmentInfo.employmentData.employer,
+    };
+  };
+
   // Handle account creation and navigate to next step if successful
   const handleAccountCreation = async (data: any): Promise<boolean> => {
     const success = await accountCreation.handleAccountCreation(data);
@@ -111,6 +122,7 @@ export function useOnboardingState() {
     isAuthenticated,
     currentUser,
     isLoading,
+    getUserData,
     handleAccountCreation,
     handlePersonalInfo,
     handleVisaStatus,
