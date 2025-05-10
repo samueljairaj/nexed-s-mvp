@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -22,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
+import {
   Accordion, 
   AccordionContent, 
   AccordionItem, 
@@ -53,8 +52,6 @@ export function VisaStatusStep({
   const initialVisaType = defaultValues.visaType as "F1" | "J1" | "H1B" | "Other";
 
   console.log("VisaStatusStep rendering with defaultValues:", defaultValues);
-  console.log("VisaStatusStep isSubmitting:", isSubmitting);
-  console.log("VisaStatusStep handleBackToLogin:", !!handleBackToLogin);
 
   const form = useForm<VisaStatusFormValues>({
     resolver: zodResolver(visaStatusSchema),
@@ -131,6 +128,7 @@ export function VisaStatusStep({
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+          {/* Main visa information section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -225,6 +223,7 @@ export function VisaStatusStep({
               )}
             />
 
+            {/* We keep these fields for UI purposes but don't send them to the database */}
             <FormField
               control={form.control}
               name="sevisId"
@@ -276,6 +275,7 @@ export function VisaStatusStep({
             />
           </div>
 
+          {/* OPT Information section - only shown for OPT/STEM OPT */}
           {isOptOrStemOpt && (
             <div className="bg-gray-50 p-4 rounded-md">
               <h3 className="font-medium mb-3">OPT Information</h3>
@@ -341,24 +341,25 @@ export function VisaStatusStep({
             </div>
           )}
           
-          {visaType === "F1" && (
-            <FormField
-              control={form.control}
-              name="i20ExpiryDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>I-20 Expiration Date</FormLabel>
-                  <FormDatePicker
-                    name="i20ExpiryDate"
-                    placeholder="Select I-20 expiration date"
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
+          {/* Visa type specific fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {visaType === "F1" && (
+              <FormField
+                control={form.control}
+                name="i20ExpiryDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>I-20 Expiration Date</FormLabel>
+                    <FormDatePicker
+                      name="i20ExpiryDate"
+                      placeholder="Select I-20 expiration date"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             {visaType === "J1" && (
               <FormField
                 control={form.control}
