@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { visaStatusSchema } from "@/types/onboarding";
+import { visaStatusSchema, VisaStatusFormValues } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -30,29 +30,12 @@ import {
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 
-// Export the form data type
-export interface VisaStatusFormData {
-  visaType: "F1" | "J1" | "H1B" | "Other";
-  visaExpiryDate?: Date | null;
-  hasDS2019?: boolean;
-  hasDependents?: boolean;
-  sevisId?: string;
-  i20ExpiryDate?: Date | null;
-  entryDate?: Date | null;
-  currentStatus?: string;
-  programStartDate?: Date | null;
-}
+// Export the form data type - use the schema-derived type
+export type VisaStatusFormData = VisaStatusFormValues;
 
 interface VisaStatusStepProps {
-  defaultValues: {
-    visaType: string;
-    visaExpiryDate: Date | null;
-    hasDS2019?: boolean;
-    hasDependents?: boolean;
-    sevisId?: string;
-    i20ExpiryDate?: Date | null;
-  };
-  onSubmit: (data: VisaStatusFormData) => void;
+  defaultValues: Partial<VisaStatusFormValues>;
+  onSubmit: (data: VisaStatusFormValues) => void;
   onVisaTypeChange: (visaType: string) => void;
   isSubmitting?: boolean;
   handleBackToLogin?: () => void;
@@ -72,7 +55,7 @@ export function VisaStatusStep({
   console.log("VisaStatusStep isSubmitting:", isSubmitting);
   console.log("VisaStatusStep handleBackToLogin:", !!handleBackToLogin);
 
-  const form = useForm({
+  const form = useForm<VisaStatusFormValues>({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
       ...defaultValues,
@@ -84,15 +67,9 @@ export function VisaStatusStep({
   const visaType = form.watch("visaType");
   
   // Handle submit to ensure data is properly typed
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = (data: VisaStatusFormValues) => {
     console.log("VisaStatusStep submitting data:", data);
-    // Ensure visaType is one of the allowed types
-    const formattedData: VisaStatusFormData = {
-      ...data,
-      visaType: data.visaType as "F1" | "J1" | "H1B" | "Other"
-    };
-    
-    onSubmit(formattedData);
+    onSubmit(data);
   };
 
   return (
@@ -303,7 +280,7 @@ export function VisaStatusStep({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Current H-1B Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -338,7 +315,7 @@ export function VisaStatusStep({
                   <FormItem>
                     <FormLabel>Specify Visa Type</FormLabel>
                     <FormControl>
-                      <Input placeholder="E.g., O-1, TN, etc." {...field} />
+                      <Input placeholder="E.g., O-1, TN, etc." {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

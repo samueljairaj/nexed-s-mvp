@@ -56,7 +56,7 @@ export const visaStatusSchema = z.object({
   sevisId: optionalStringSchema,
   i20ExpiryDate: optionalDateSchema,
   entryDate: optionalDateSchema,
-  visaStatus: optionalStringSchema, // Added this field to replace currentStatus
+  visaStatus: optionalStringSchema, // Added this field for visa status
   programStartDate: optionalDateSchema,
 });
 

@@ -22,6 +22,7 @@ export function useVisaStatus() {
       const formattedData: Record<string, any> = {
         visaType: data.visaType as VisaType,
         // Use visaStatus instead of currentStatus
+        visaStatus: data.visaStatus
       };
       
       // Format dates as YYYY-MM-DD strings
