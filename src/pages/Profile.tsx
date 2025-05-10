@@ -1,69 +1,89 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { getProfileProperty } from "@/utils/propertyMapping";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProfileEditor } from "@/components/profile/ProfileEditor";
 
-const ProfilePage = () => {
-  const { currentUser, logout, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const [mounted, setMounted] = useState(false);
+const Profile = () => {
+  const { currentUser } = useAuth();
+  
+  const getRequiredDocuments = () => {
+    const docs = ["Valid Passport", "Visa Document"];
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (currentUser?.visaType === "F1") {
+      docs.push("I-20 Form", "SEVIS Fee Receipt", "I-94 Arrival Record");
+    } else if (currentUser?.visaType === "J1") {
+      docs.push("DS-2019 Form", "SEVIS Fee Receipt", "I-94 Arrival Record", "Health Insurance Documentation");
+    } else if (currentUser?.visaType === "H1B") {
+      docs.push("I-797 Approval Notice", "Labor Condition Application", "Employment Verification Letter");
+    }
 
-  // Do not render on the server
-  if (!mounted) {
-    return null;
-  }
-
-  // Redirect if not authenticated
-  if (!currentUser) {
-    navigate("/");
-    return null;
-  }
-
-  const visaType = currentUser ? getProfileProperty(currentUser, 'visa_type') : null;
+    return docs;
+  };
 
   return (
-    <div className="container mx-auto py-8">
-      <Card className="max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl">Your Profile</CardTitle>
-          <CardDescription>
-            View and manage your profile information here.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="text-gray-700 font-bold">Name:</div>
-            <div>{currentUser?.name}</div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="text-gray-700 font-bold">Email:</div>
-            <div>{currentUser?.email}</div>
-          </div>
-          {visaType && (
-            <div className="grid grid-cols-2 gap-2">
-              <div className="text-gray-700 font-bold">Visa Type:</div>
-              <div>{visaType}</div>
-            </div>
-          )}
-          <Button variant="destructive" onClick={logout} className="mt-4">
-            Logout
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="container max-w-4xl mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-6">Profile</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          <ProfileEditor />
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Document Checklist</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm mb-4">
+                Based on your visa type, ensure you have the following documents:
+              </p>
+              <ul className="space-y-2">
+                {getRequiredDocuments().map((doc, index) => (
+                  <li key={index} className="flex items-center">
+                    <div className="w-2 h-2 rounded-full bg-nexed-600 mr-2"></div>
+                    {doc}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Visa Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-sm text-gray-500">Current Status:</span>
+                  <p className="font-medium">{currentUser?.visaType || "Not specified"}</p>
+                </div>
+                
+                {currentUser?.visaType === "F1" && (
+                  <div className="p-3 bg-amber-50 rounded-md">
+                    <p className="text-amber-800 text-sm">Remember to maintain full-time enrollment</p>
+                  </div>
+                )}
+                
+                {currentUser?.visaType === "J1" && (
+                  <div className="p-3 bg-amber-50 rounded-md">
+                    <p className="text-amber-800 text-sm">Health insurance is mandatory</p>
+                  </div>
+                )}
+                
+                {currentUser?.visaType === "H1B" && (
+                  <div className="p-3 bg-amber-50 rounded-md">
+                    <p className="text-amber-800 text-sm">Employment limited to sponsoring employer</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default ProfilePage;
+export default Profile;

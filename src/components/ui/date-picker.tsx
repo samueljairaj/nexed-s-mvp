@@ -16,7 +16,6 @@ import { dateUtils } from "@/lib/date-utils";
 export interface DatePickerProps {
   date: Date | undefined;
   onDateChange: (date: Date | undefined) => void;
-  setDate?: React.Dispatch<React.SetStateAction<Date | undefined>>;
   placeholder?: string;
   disabled?: boolean;
   disabledDates?: (date: Date) => boolean;
@@ -28,7 +27,6 @@ export interface DatePickerProps {
 export function DatePicker({
   date,
   onDateChange,
-  setDate,
   placeholder = "Pick a date",
   disabled = false,
   disabledDates,
@@ -36,14 +34,6 @@ export function DatePicker({
   align = "start",
   buttonClassName,
 }: DatePickerProps) {
-  // For backward compatibility, support both onDateChange and setDate
-  const handleDateChange = (newDate: Date | undefined) => {
-    onDateChange(newDate);
-    if (setDate) {
-      setDate(newDate);
-    }
-  };
-
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -67,7 +57,7 @@ export function DatePicker({
         <Calendar
           mode="single"
           selected={date}
-          onSelect={handleDateChange}
+          onSelect={onDateChange}
           disabled={disabledDates}
           initialFocus
           className={cn("p-3 pointer-events-auto", className)}

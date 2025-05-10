@@ -7,16 +7,18 @@ import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepCon
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { getProfileProperty } from "@/utils/propertyMapping";
+import { useDsoOnboarding } from "@/hooks/onboarding/useDsoOnboarding";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { logout, isAuthenticated } = useAuth();
+  const { logout, isDSO } = useAuth();
+  const { handleDsoProfileSetup } = useDsoOnboarding();
   const onboardingState = useOnboardingState();
   
   const {
     currentStep,
     isSubmitting,
+    isAuthenticated,
     currentUser,
     isLoading,
     accountData,
@@ -43,35 +45,28 @@ const Onboarding = () => {
     setCurrentStep
   } = onboardingState;
 
-  // Step names for the progress indicator - only student flow now
-  const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
+  // Step names for the progress indicator - different for DSO and student
+  const studentStepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
+  const dsoStepNames = ["Account", "Personal", "DSO Profile"];
+
+  // Use the appropriate step names based on user role
+  const stepNames = isDSO ? dsoStepNames : studentStepNames;
 
   useEffect(() => {
-    // If not authenticated, redirect to home
-    if (!isLoading && !isAuthenticated) {
-      navigate('/');
-      return;
+    if (isAuthenticated && currentUser?.onboardingComplete) {
+      // Redirect to the appropriate dashboard based on role
+      navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
+    } else if (isAuthenticated && currentStep === 0) {
+      // If user is already authenticated, skip the account creation step
+      setCurrentStep(1);
     }
+  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isDSO]);
 
-    // If user is authenticated and has completed onboarding, redirect to dashboard
-    if (!isLoading && isAuthenticated && currentUser) {
-      const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
-      if (onboardingComplete) {
-        // Redirect to student dashboard
-        navigate("/app/dashboard");
-        return;
-      } else if (currentStep === 0) {
-        // If user is already authenticated, skip the account creation step
-        setCurrentStep(1);
-      }
-    }
-  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isLoading]);
-
-  // Handle back to login/landing page
-  const handleBackToHome = () => {
+  // Handle back to login
+  const handleBackToLogin = () => {
     // Logout the user if they are authenticated
     logout();
-    // Navigate back to landing page
+    // Navigate back to login page
     navigate("/", { replace: true });
   };
 
@@ -108,15 +103,18 @@ const Onboarding = () => {
           handlePersonalInfo={handlePersonalInfo}
           handleVisaStatus={handleVisaStatus}
           handleVisaTypeChange={handleVisaTypeChange}
-          handleAcademicInfo={handleAcademicInfo}
+          // For DSOs, use handleDsoProfileSetup instead of handleAcademicInfo
+          handleAcademicInfo={isDSO ? handleDsoProfileSetup : handleAcademicInfo}
           handleEmploymentInfo={handleEmploymentInfo}
+          // Make sure we're passing the right parameter type
           handleEmploymentStatusChange={handleEmploymentStatusChange}
+          // Convert function references to actual boolean values
           isF1OrJ1={typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1}
           isEmployed={typeof isEmployed === 'function' ? isEmployed() : isEmployed}
           isOptOrCpt={typeof isOptOrCpt === 'function' ? isOptOrCpt() : isOptOrCpt}
           isStemOpt={typeof isStemOpt === 'function' ? isStemOpt() : isStemOpt}
           handleFinish={handleFinish}
-          handleBackToLogin={handleBackToHome}
+          handleBackToLogin={handleBackToLogin} // Pass the function
         />
       </div>
       
@@ -131,7 +129,6 @@ const Onboarding = () => {
           }}
           onPrevious={goToPreviousStep}
           isSubmitting={isSubmitting}
-          onBackToHome={handleBackToHome}
         />
       )}
     </OnboardingLayout>

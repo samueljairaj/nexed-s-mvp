@@ -8,7 +8,6 @@ import { useAcademicInfo } from "./onboarding/useAcademicInfo";
 import { useEmploymentInfo } from "./onboarding/useEmploymentInfo";
 import { useOnboardingCompletion } from "./onboarding/useOnboardingCompletion";
 import { useOnboardingNavigation } from "./onboarding/useOnboardingNavigation";
-import { getProfileProperty } from "@/utils/propertyMapping";
 
 export function useOnboardingState() {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
@@ -35,9 +34,8 @@ export function useOnboardingState() {
         personalInfo.setPersonalData(prev => ({ ...prev, country: currentUser.country || "" }));
       }
       
-      const visaType = getProfileProperty(currentUser, 'visa_type');
-      if (visaType) {
-        visaStatus.setVisaData(prev => ({ ...prev, visaType }));
+      if (currentUser.visaType) {
+        visaStatus.setVisaData(prev => ({ ...prev, visaType: currentUser.visaType }));
       }
       
       if (currentUser.university) {

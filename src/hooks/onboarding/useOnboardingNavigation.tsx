@@ -1,30 +1,36 @@
-
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function useOnboardingNavigation() {
-  const [currentStep, setCurrentStep] = useState<number>(0);
+  const { isAuthenticated } = useAuth();
+  const [currentStep, setCurrentStep] = useState(0);
 
   const goToNextStep = () => {
-    setCurrentStep(prev => prev + 1);
+    setCurrentStep(currentStep + 1);
   };
 
   const goToPreviousStep = () => {
-    setCurrentStep(prev => Math.max(0, prev - 1));
+    setCurrentStep(currentStep - 1);
   };
 
+  // Determine if step is the first step
   const isFirstStep = () => {
-    return currentStep === 0;
+    // If authenticated, first visible step is step 1 (Personal Info)
+    return isAuthenticated ? currentStep === 1 : currentStep === 0;
   };
 
+  // Determine if step is the last step
   const isLastStep = () => {
-    // For students, the last interactive step is 4 (Employment) 
     return currentStep === 4;
   };
 
+  // Calculate the progress percentage
   const calculateProgress = () => {
-    // Total steps: Account, Personal, Visa, Academic, Employment, Completion (6 total)
-    const total = 5; // We calculate progress based on 5 interactive steps
-    return Math.min(100, Math.round((currentStep / total) * 100));
+    // If authenticated, we skip step 0, so we have 4 steps (1-4)
+    // Otherwise, we have 5 steps (0-4)
+    const totalSteps = isAuthenticated ? 4 : 5;
+    const effectiveStep = isAuthenticated ? currentStep : currentStep + 1;
+    return (effectiveStep / totalSteps) * 100;
   };
 
   return {

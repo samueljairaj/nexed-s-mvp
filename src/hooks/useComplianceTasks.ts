@@ -84,7 +84,7 @@ export const useComplianceTasks = () => {
       } else {
         // No cached tasks, load baseline checklist based on user's visa type
         const baselineTasks = baselineItemsToAITasks(
-          getBaselineChecklist(currentUser?.visa_type || 'F1')
+          getBaselineChecklist(currentUser?.visaType || 'F1')
         );
         setTasks(baselineTasks);
         
@@ -97,7 +97,7 @@ export const useComplianceTasks = () => {
       
       // Fallback to baseline tasks
       const baselineTasks = baselineItemsToAITasks(
-        getBaselineChecklist(currentUser?.visa_type || 'F1')
+        getBaselineChecklist(currentUser?.visaType || 'F1')
       );
       setTasks(baselineTasks);
     } finally {
@@ -127,23 +127,25 @@ export const useComplianceTasks = () => {
     try {
       // First show baseline checklist immediately
       const baselineTasks = baselineItemsToAITasks(
-        getBaselineChecklist(currentUser.visa_type || 'F1')
+        getBaselineChecklist(currentUser.visaType || 'F1')
       );
       setTasks(baselineTasks);
       
       // For quick development and testing, use mock tasks instead of real API call
       // In production, this would be replaced with the actual API call
-      const mockTasks = generateMockTasks(currentUser.visa_type || 'F1');
+      const mockTasks = generateMockTasks(currentUser.visaType || 'F1');
       
       // Then enhance with AI tasks - using mock tasks for now
       try {
         const { data, error } = await supabase.functions.invoke('generate-compliance', {
           body: { 
             userId: currentUser.id,
-            visaType: currentUser.visa_type,
+            visaType: currentUser.visaType,
             profile: {
               country: currentUser.country,
               university: currentUser.university,
+              // Remove employmentStatus as it doesn't exist in UserProfile
+              // employmentStatus: currentUser.employmentStatus
             }
           }
         });
@@ -303,6 +305,6 @@ export const useComplianceTasks = () => {
     toggleTaskStatus,
     generateTasksWithAI,
     loadTasks,
-    addCustomTask,
+    addCustomTask,  // Add the new function
   };
 };

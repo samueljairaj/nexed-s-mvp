@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Mail, Phone, Clock, MapPin, AlertCircle, RefreshCw } from "lucide-react";
+import { Building2, Mail, Phone, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const dsoProfileSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
@@ -32,49 +32,26 @@ interface DsoProfileStepProps {
   defaultValues?: Partial<DsoProfileFormData>;
   onSubmit: (data: DsoProfileFormData) => void;
   isSubmitting?: boolean;
-  submitError?: string | null;
-  onSkip?: () => void;
 }
 
 export function DsoProfileStep({ 
   defaultValues = {},
   onSubmit,
-  isSubmitting = false,
-  submitError = null,
-  onSkip
+  isSubmitting = false 
 }: DsoProfileStepProps) {
-  const { currentUser } = useAuth();
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [showSkipOption, setShowSkipOption] = useState(false);
+  const { dsoProfile } = useAuth();
   
   const form = useForm<DsoProfileFormData>({
     resolver: zodResolver(dsoProfileSchema),
     defaultValues: {
-      title: defaultValues.title || "",
-      department: defaultValues.department || "",
-      officeLocation: defaultValues.officeLocation || "",
-      officeHours: defaultValues.officeHours || "",
-      contactEmail: defaultValues.contactEmail || currentUser?.email || "",
-      contactPhone: defaultValues.contactPhone || currentUser?.phone || "",
+      title: dsoProfile?.title || defaultValues.title || "",
+      department: dsoProfile?.department || defaultValues.department || "",
+      officeLocation: dsoProfile?.officeLocation || defaultValues.officeLocation || "",
+      officeHours: dsoProfile?.officeHours || defaultValues.officeHours || "",
+      contactEmail: dsoProfile?.contactEmail || defaultValues.contactEmail || "",
+      contactPhone: dsoProfile?.contactPhone || defaultValues.contactPhone || "",
     }
   });
-
-  // Show skip option after submission errors
-  useEffect(() => {
-    if (submitError) {
-      const timer = setTimeout(() => {
-        setShowSkipOption(true);
-      }, 5000); // Show skip option after 5 seconds of error
-      return () => clearTimeout(timer);
-    }
-  }, [submitError]);
-
-  // Handle manual retry
-  const handleRetry = () => {
-    setIsRetrying(true);
-    form.handleSubmit(onSubmit)();
-    setTimeout(() => setIsRetrying(false), 300);
-  };
 
   return (
     <div className="space-y-6">
@@ -84,24 +61,6 @@ export function DsoProfileStep({
           This information will be visible to students to help them reach out to you when needed.
         </p>
       </div>
-      
-      {submitError && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="flex justify-between items-center">
-            <div>{submitError}</div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRetry} 
-              disabled={isRetrying || isSubmitting}
-              className="flex items-center gap-1"
-            >
-              <RefreshCw className="h-3 w-3" /> Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -237,33 +196,20 @@ export function DsoProfileStep({
             )}
           />
           
-          <div className="flex flex-col md:flex-row gap-4 justify-between mt-6">
-            <Button 
-              type="submit" 
-              className="w-full md:w-auto"
-              disabled={isSubmitting || isRetrying}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
-                  Saving...
-                </>
-              ) : (
-                "Save & Continue"
-              )}
-            </Button>
-            
-            {showSkipOption && onSkip && (
-              <Button 
-                type="button"
-                variant="outline" 
-                className="w-full md:w-auto"
-                onClick={onSkip}
-              >
-                Skip for now
-              </Button>
+          <Button 
+            type="submit" 
+            className="w-full mt-6"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
+                Saving...
+              </>
+            ) : (
+              "Save & Continue"
             )}
-          </div>
+          </Button>
         </form>
       </Form>
     </div>

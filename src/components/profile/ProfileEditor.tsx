@@ -1,157 +1,131 @@
 
-import { useForm } from "react-hook-form";
-import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Separator } from "@/components/ui/separator";
-
-const VISA_OPTIONS = [
-  { value: "F1", label: "F-1 Student Visa" },
-  { value: "J1", label: "J-1 Exchange Visitor" },
-  { value: "H1B", label: "H-1B Work Visa" },
-  { value: "CPT", label: "Curricular Practical Training (CPT)" },
-  { value: "OPT", label: "Optional Practical Training (OPT)" },
-  { value: "STEM_OPT", label: "STEM OPT Extension" },
-  { value: "Other", label: "Other" }
-];
-
-const DEGREE_OPTIONS = [
-  { value: "associates", label: "Associate's Degree" },
-  { value: "bachelors", label: "Bachelor's Degree" },
-  { value: "masters", label: "Master's Degree" },
-  { value: "phd", label: "PhD / Doctorate" },
-  { value: "certificate", label: "Certificate Program" },
-  { value: "other", label: "Other" }
-];
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { FormDatePicker } from "@/components/ui/form-date-picker";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { countries } from "@/types/onboarding";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const profileSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email("Invalid email address").optional(),
-  phone: z.string().optional(),
-  university: z.string().optional(),
-  country: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  country: z.string().min(1, "Country is required"),
   address: z.string().optional(),
-  visa_type: z.string().optional(),
-  degree_level: z.string().optional(),
-  field_of_study: z.string().optional(),
-  is_stem: z.boolean().optional(),
+  phone: z.string().optional(),
+  visaType: z.enum(["F1", "J1", "H1B", "Other"]).nullable().optional(),
+  university: z.string().optional(),
+  degreeLevel: z.string().optional(),
+  fieldOfStudy: z.string().optional(),
+  isSTEM: z.boolean().optional(),
+  courseStartDate: z.date().nullable().optional(),
+  usEntryDate: z.date().nullable().optional(),
+  employmentStartDate: z.date().nullable().optional(),
+  dateOfBirth: z.date().nullable().optional(),
+  passportNumber: z.string().optional(),
+  passportExpiryDate: z.date().nullable().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export const ProfileEditor = () => {
   const { currentUser, updateProfile } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState("personal");
-  
-  // Dates
-  const [courseStartDate, setCourseStartDate] = useState<Date | undefined>(
-    currentUser?.course_start_date ? new Date(currentUser.course_start_date) : undefined
-  );
-  const [usEntryDate, setUsEntryDate] = useState<Date | undefined>(
-    currentUser?.us_entry_date ? new Date(currentUser.us_entry_date) : undefined
-  );
-  const [employmentStartDate, setEmploymentStartDate] = useState<Date | undefined>(
-    currentUser?.employment_start_date ? new Date(currentUser.employment_start_date) : undefined
-  );
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(
-    currentUser?.date_of_birth ? new Date(currentUser.date_of_birth) : undefined
-  );
-  const [passportExpiryDate, setPassportExpiryDate] = useState<Date | undefined>(
-    currentUser?.passport_expiry_date ? new Date(currentUser.passport_expiry_date) : undefined
-  );
+  const [openSections, setOpenSections] = useState({
+    personal: true,
+    visa: false,
+    academic: false,
+    employment: false,
+  });
 
-  const defaultValues: Partial<ProfileFormValues> = {
-    name: currentUser?.name || "",
-    email: currentUser?.email || "",
-    phone: currentUser?.phone || "",
-    university: currentUser?.university || "",
-    country: currentUser?.country || "",
-    address: currentUser?.address || "",
-    visa_type: currentUser?.visa_type || "F1",
-    degree_level: currentUser?.degree_level || "",
-    field_of_study: currentUser?.field_of_study || "",
-    is_stem: currentUser?.is_stem || false,
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
-    defaultValues,
+    defaultValues: {
+      name: currentUser?.name || "",
+      email: currentUser?.email || "",
+      country: currentUser?.country || "",
+      address: currentUser?.address || "",
+      phone: currentUser?.phone || "",
+      visaType: currentUser?.visaType || null,
+      university: currentUser?.university || "",
+      degreeLevel: currentUser?.degreeLevel || "",
+      fieldOfStudy: currentUser?.fieldOfStudy || "",
+      isSTEM: currentUser?.isSTEM || false,
+      courseStartDate: currentUser?.courseStartDate || null,
+      usEntryDate: currentUser?.usEntryDate || null,
+      employmentStartDate: currentUser?.employmentStartDate || null,
+      dateOfBirth: currentUser?.dateOfBirth ? new Date(currentUser.dateOfBirth) : null,
+      passportNumber: currentUser?.passportNumber || "",
+      passportExpiryDate: currentUser?.passportExpiryDate ? new Date(currentUser.passportExpiryDate) : null,
+    },
   });
 
   const onSubmit = async (data: ProfileFormValues) => {
-    setIsSubmitting(true);
     try {
-      await updateProfile({
-        name: data.name,
-        address: data.address,
-        country: data.country,
-        email: data.email,
-        phone: data.phone,
-        university: data.university,
-        visa_type: data.visa_type as any,
-        degree_level: data.degree_level,
-        field_of_study: data.field_of_study,
-        is_stem: data.is_stem,
-        course_start_date: courseStartDate ? courseStartDate.toISOString() : undefined,
-        us_entry_date: usEntryDate ? usEntryDate.toISOString() : undefined,
-        employment_start_date: employmentStartDate ? employmentStartDate.toISOString() : undefined,
-        date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : undefined,
-        passport_expiry_date: passportExpiryDate ? passportExpiryDate.toISOString() : undefined,
-      });
-      toast.success("Profile updated successfully");
-    } catch (error) {
-      console.error("Error updating profile:", error);
+      await updateProfile(data);
+      toast.success("Profile updated successfully!");
+    } catch (error: any) {
       toast.error("Failed to update profile");
-    } finally {
-      setIsSubmitting(false);
+      console.error(error);
     }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
-        <CardDescription>
-          Update your personal information and visa status
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="personal">Personal Information</TabsTrigger>
-            <TabsTrigger value="visa">Visa & Academic</TabsTrigger>
-          </TabsList>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <TabsContent value="personal" className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your full name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Personal Information */}
+        <Card>
+          <Collapsible open={openSections.personal}>
+            <CollapsibleTrigger asChild>
+              <div 
+                className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/50"
+                onClick={() => toggleSection("personal")}
+              >
+                <h2 className="text-lg font-semibold">Personal Information</h2>
+                {openSections.personal ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
                   <FormField
                     control={form.control}
                     name="email"
@@ -159,9 +133,8 @@ export const ProfileEditor = () => {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="your.email@example.com" {...field} />
+                          <Input {...field} disabled />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -173,208 +146,305 @@ export const ProfileEditor = () => {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="+1 (555) 555-5555" {...field} />
+                          <Input {...field} />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country of Origin</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your country" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your current address" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="space-y-4">
-                  <FormLabel>Date of Birth</FormLabel>
-                  <DatePicker
-                    date={dateOfBirth}
-                    onDateChange={setDateOfBirth}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-4">
-                  <FormLabel>Passport Expiry Date</FormLabel>
-                  <DatePicker
-                    date={passportExpiryDate}
-                    onDateChange={setPassportExpiryDate}
-                    className="w-full"
-                  />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="visa" className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="visa_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Visa Type</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select visa type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {VISA_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="space-y-4">
-                  <FormLabel>US Entry Date</FormLabel>
-                  <DatePicker
-                    date={usEntryDate}
-                    onDateChange={setUsEntryDate}
-                    className="w-full"
-                  />
-                </div>
-                
-                <Separator className="my-6" />
-                
-                <FormField
-                  control={form.control}
-                  name="university"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>University / School</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your university name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="degree_level"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Degree Level</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select degree level" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {DEGREE_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
                   
                   <FormField
                     control={form.control}
-                    name="field_of_study"
+                    name="dateOfBirth"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date of Birth</FormLabel>
+                        <FormDatePicker
+                          name="dateOfBirth"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="country"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Field of Study</FormLabel>
+                        <FormLabel>Country of Origin</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries.map((country) => (
+                              <SelectItem key={country} value={country}>
+                                {country}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your major or field" {...field} />
+                          <Input {...field} />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                
-                <div className="space-y-4">
-                  <FormLabel>Course Start Date</FormLabel>
-                  <DatePicker
-                    date={courseStartDate}
-                    onDateChange={setCourseStartDate}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-4">
-                  <FormLabel>Employment Start Date (if applicable)</FormLabel>
-                  <DatePicker
-                    date={employmentStartDate}
-                    onDateChange={setEmploymentStartDate}
-                    className="w-full"
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="is_stem"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">STEM Field</FormLabel>
-                        <FormDescription>
-                          Is your field of study a STEM field?
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </TabsContent>
-              
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : "Save Changes"}
-                </Button>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+
+        {/* Visa Information */}
+        <Card>
+          <Collapsible open={openSections.visa}>
+            <CollapsibleTrigger asChild>
+              <div 
+                className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/50"
+                onClick={() => toggleSection("visa")}
+              >
+                <h2 className="text-lg font-semibold">Visa Information</h2>
+                {openSections.visa ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
               </div>
-            </form>
-          </Form>
-        </Tabs>
-      </CardContent>
-    </Card>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="visaType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Visa Type</FormLabel>
+                        <Select
+                          value={field.value || ""}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select visa type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="F1">F-1 (Student)</SelectItem>
+                            <SelectItem value="J1">J-1 (Exchange Visitor)</SelectItem>
+                            <SelectItem value="H1B">H-1B (Work)</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="usEntryDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>US Entry Date</FormLabel>
+                        <FormDatePicker 
+                          name="usEntryDate"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="passportNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Passport Number</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="passportExpiryDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Passport Expiry Date</FormLabel>
+                        <FormDatePicker
+                          name="passportExpiryDate"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+
+        {/* Academic Information */}
+        <Card>
+          <Collapsible open={openSections.academic}>
+            <CollapsibleTrigger asChild>
+              <div 
+                className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/50"
+                onClick={() => toggleSection("academic")}
+              >
+                <h2 className="text-lg font-semibold">Academic Information</h2>
+                {openSections.academic ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="university"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>University/Institution</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="courseStartDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Course Start Date</FormLabel>
+                        <FormDatePicker
+                          name="courseStartDate"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="degreeLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Degree Level</FormLabel>
+                        <Select
+                          value={field.value || ""}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select degree level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Associates">Associate's</SelectItem>
+                            <SelectItem value="Bachelors">Bachelor's</SelectItem>
+                            <SelectItem value="Masters">Master's</SelectItem>
+                            <SelectItem value="Doctoral">Doctoral</SelectItem>
+                            <SelectItem value="Certificate">Certificate</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="fieldOfStudy"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Field of Study</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="isSTEM"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="h-4 w-4 rounded border-gray-300 text-nexed-600 focus:ring-nexed-500"
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">STEM Designated Program</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+
+        {/* Employment Information */}
+        <Card>
+          <Collapsible open={openSections.employment}>
+            <CollapsibleTrigger asChild>
+              <div 
+                className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/50"
+                onClick={() => toggleSection("employment")}
+              >
+                <h2 className="text-lg font-semibold">Employment Information</h2>
+                {openSections.employment ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="employmentStartDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Employment Start Date</FormLabel>
+                        <FormDatePicker
+                          name="employmentStartDate"
+                        />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+        
+        <div className="flex justify-end">
+          <Button type="submit" className="nexed-gradient-button">
+            Save Changes
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };

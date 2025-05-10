@@ -1,19 +1,8 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, VisaType } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-
-export interface VisaStatusFormValues {
-  visaType: "F1" | "J1" | "H1B" | "Other";
-  currentStatus?: string;
-  entryDate?: Date;
-  programStartDate?: Date;
-  visaExpiryDate?: Date;
-  hasDS2019?: boolean;
-  hasDependents?: boolean;
-  sevisId?: string;
-  i20ExpiryDate?: Date;
-}
+import { VisaStatusFormValues } from "@/types/onboarding";
 
 export function useVisaStatus() {
   const { updateProfile } = useAuth();
@@ -31,17 +20,17 @@ export function useVisaStatus() {
     try {
       // Ensure we're only sending fields that match the database schema
       const formattedData: Record<string, any> = {
-        visa_type: data.visaType,
+        visaType: data.visaType as VisaType,
         // Remove currentStatus as it doesn't exist in the profiles table
       };
       
       // Format dates as YYYY-MM-DD strings
       if (data.entryDate) {
-        formattedData.us_entry_date = formatDateToString(data.entryDate);
+        formattedData.usEntryDate = formatDateToString(data.entryDate);
       }
       
       if (data.programStartDate) {
-        formattedData.course_start_date = formatDateToString(data.programStartDate);
+        formattedData.courseStartDate = formatDateToString(data.programStartDate);
       }
       
       console.log("Attempting to update profile with visa data:", formattedData);

@@ -5,22 +5,22 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 export function useOnboardingCompletion() {
-  const { updateProfile } = useAuth();
+  const { completeOnboarding, isDSO } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleFinish = async (): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      // Update profile with onboarding_complete = true
-      await updateProfile({ onboarding_complete: true });
+      // Call completeOnboarding() without checking its return value
+      await completeOnboarding();
       
       // Assume success if no error was thrown
       toast.success("Onboarding completed successfully!");
       
-      // Navigate to student dashboard
+      // Navigate to appropriate dashboard based on user role
       setTimeout(() => {
-        navigate("/app/dashboard");
+        navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
       }, 1500);
       
       return true;

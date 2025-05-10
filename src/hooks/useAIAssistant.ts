@@ -1,8 +1,8 @@
+
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { getProfileProperty } from "@/utils/propertyMapping";
 
 export interface Message {
   id: string;
@@ -37,7 +37,7 @@ export function useAIAssistant() {
       // Sanitize user data for the AI
       const userData = currentUser ? {
         id: currentUser.id,
-        visaType: getProfileProperty(currentUser, 'visa_type'),
+        visaType: currentUser.visaType,
         university: currentUser.university,
         country: currentUser.country,
         name: currentUser.name

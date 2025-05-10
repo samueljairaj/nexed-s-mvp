@@ -2,18 +2,10 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-
-export interface AccountCreationFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  acceptTerms: boolean;
-}
+import { AccountCreationFormData } from "@/components/onboarding/AccountCreationStep";
 
 export function useAccountCreation() {
-  const { isAuthenticated, updateProfile, signUp } = useAuth();
+  const { isAuthenticated, updateProfile, signup } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [accountData, setAccountData] = useState<Partial<AccountCreationFormData>>({
     firstName: "",
@@ -30,11 +22,10 @@ export function useAccountCreation() {
     if (!isAuthenticated) {
       setIsSubmitting(true);
       try {
-        await signUp({
-          email: data.email,
-          password: data.password,
-          firstName: data.firstName,
-          lastName: data.lastName
+        await signup(data.email, data.password);
+        // Update the profile with name
+        await updateProfile({ 
+          name: `${data.firstName} ${data.lastName}` 
         });
         toast.success("Account created successfully!");
         return true;
