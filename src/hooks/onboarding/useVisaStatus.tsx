@@ -19,10 +19,11 @@ export function useVisaStatus() {
     
     try {
       // Ensure we're only sending fields that match the database schema
+      // Important: Only include fields that exist in the profiles table
       const formattedData: Record<string, any> = {
         visaType: data.visaType as VisaType,
         visaStatus: data.visaStatus,
-        sevisId: data.sevisId
+        // Do not include sevisId as it's not in the profiles table
       };
       
       // Format dates as YYYY-MM-DD strings

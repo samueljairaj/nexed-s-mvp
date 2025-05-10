@@ -192,31 +192,6 @@ export function VisaStatusStep({
 
             <FormField
               control={form.control}
-              name="sevisId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SEVIS ID</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input 
-                        placeholder="Enter your SEVIS ID" 
-                        {...field} 
-                        value={field.value || ""} 
-                        className="pl-10"
-                      />
-                      <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Your SEVIS ID starts with N00 and is found on your I-20 or DS-2019
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="entryDate"
               render={({ field }) => (
                 <FormItem>
@@ -245,6 +220,31 @@ export function VisaStatusStep({
                     name="visaExpiryDate"
                     placeholder="Select your visa expiration date"
                   />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="sevisId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SEVIS ID</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input 
+                        placeholder="Enter your SEVIS ID" 
+                        {...field} 
+                        value={field.value || ""} 
+                        className="pl-10"
+                      />
+                      <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Your SEVIS ID starts with N00 and is found on your I-20 or DS-2019
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -404,10 +404,19 @@ export function VisaStatusStep({
             />
           </div>
 
-          <FormDatePicker
+          <FormField
+            control={form.control}
             name="programStartDate"
-            label="Program Start Date"
-            placeholder="Select program start date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Program Start Date</FormLabel>
+                <FormDatePicker
+                  name="programStartDate"
+                  placeholder="Select program start date"
+                />
+                <FormMessage />
+              </FormItem>
+            )}
           />
           
           <div className="bg-blue-50 p-4 rounded-md mt-6">
