@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,9 @@ export function AcademicInfoStep({
   isSubmitting = false,
   handleBackToLogin // Added prop
 }: AcademicInfoStepProps) {
+  console.log("AcademicInfoStep - isF1OrJ1:", isF1OrJ1);
+  console.log("AcademicInfoStep - handleBackToLogin:", !!handleBackToLogin);
+  
   const form = useForm({
     resolver: zodResolver(academicInfoSchema),
     defaultValues: {

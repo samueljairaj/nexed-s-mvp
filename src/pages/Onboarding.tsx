@@ -70,9 +70,9 @@ const Onboarding = () => {
     navigate("/", { replace: true });
   };
 
-  console.log("Current step:", currentStep);
-  console.log("isF1OrJ1:", typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1);
-  console.log("isLoading:", isLoading);
+  console.log("Onboarding Page - Current step:", currentStep);
+  console.log("Onboarding Page - isDSO:", isDSO);
+  console.log("Onboarding Page - isF1OrJ1:", typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1);
 
   // If loading, show a loading indicator
   if (isLoading) {

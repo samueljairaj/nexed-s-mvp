@@ -56,6 +56,9 @@ export const OnboardingStepContent = ({
   handleBackToLogin
 }: OnboardingStepContentProps) => {
   const { isDSO } = useAuth();
+  
+  console.log("OnboardingStepContent - currentStep:", currentStep);
+  console.log("OnboardingStepContent - isDSO:", isDSO);
 
   // Helper function to render the appropriate step
   const renderStep = () => {
@@ -133,6 +136,7 @@ export const OnboardingStepContent = ({
               onSubmit={handleAcademicInfo}
               isSubmitting={isSubmitting}
               isF1OrJ1={isF1OrJ1}
+              handleBackToLogin={handleBackToLogin}
             />
           );
         case 4:
@@ -163,4 +167,4 @@ export const OnboardingStepContent = ({
   };
 
   return <div>{renderStep()}</div>;
-};
+}
