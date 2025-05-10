@@ -7,12 +7,10 @@ import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepCon
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDsoOnboarding } from "@/hooks/onboarding/useDsoOnboarding";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { logout, isDSO } = useAuth();
-  const { handleDsoProfileSetup } = useDsoOnboarding();
+  const { logout } = useAuth();
   const onboardingState = useOnboardingState();
   
   const {
@@ -45,22 +43,18 @@ const Onboarding = () => {
     setCurrentStep
   } = onboardingState;
 
-  // Step names for the progress indicator - different for DSO and student
-  const studentStepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
-  const dsoStepNames = ["Account", "Personal", "DSO Profile"];
-
-  // Use the appropriate step names based on user role
-  const stepNames = isDSO ? dsoStepNames : studentStepNames;
+  // Step names for the progress indicator
+  const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
 
   useEffect(() => {
     if (isAuthenticated && currentUser?.onboardingComplete) {
-      // Redirect to the appropriate dashboard based on role
-      navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard");
+      // Redirect to the dashboard if onboarding is complete
+      navigate("/app/dashboard");
     } else if (isAuthenticated && currentStep === 0) {
       // If user is already authenticated, skip the account creation step
       setCurrentStep(1);
     }
-  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isDSO]);
+  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep]);
 
   // Handle back to login
   const handleBackToLogin = () => {
@@ -71,7 +65,6 @@ const Onboarding = () => {
   };
 
   console.log("Onboarding Page - Current step:", currentStep);
-  console.log("Onboarding Page - isDSO:", isDSO);
   console.log("Onboarding Page - isF1OrJ1:", typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1);
 
   // If loading, show a loading indicator
@@ -107,7 +100,7 @@ const Onboarding = () => {
           handlePersonalInfo={handlePersonalInfo}
           handleVisaStatus={handleVisaStatus}
           handleVisaTypeChange={handleVisaTypeChange}
-          handleAcademicInfo={isDSO ? handleDsoProfileSetup : handleAcademicInfo}
+          handleAcademicInfo={handleAcademicInfo}
           handleEmploymentInfo={handleEmploymentInfo}
           handleEmploymentStatusChange={handleEmploymentStatusChange}
           isF1OrJ1={typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1}
