@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -142,15 +143,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login with email:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (error) {
+        console.error("Login error:", error);
         throw error;
       }
       
+      console.log("Login successful:", !!data.user);
       // If successful, the session change will be caught by the onAuthStateChange listener
       toast.success("Login successful!");
       return;
@@ -186,7 +190,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // Simplified signUp function with better error handling
+  // Simplified signUp function with better error handling and debugging
   const signUp = async (data: any) => {
     try {
       console.log("Starting signUp process with data:", { 
@@ -210,6 +214,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (authError) {
+        console.error("Signup auth error:", authError);
         // Provide more specific error messages
         if (authError.message.includes("already registered")) {
           toast.error("This email is already registered. Please use a different email or try logging in.");

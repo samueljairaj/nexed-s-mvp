@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,9 +25,13 @@ const StudentLanding = () => {
   useEffect(() => {
     if (isAuthenticated && currentUser) {
       const onboardingComplete = getProfileProperty(currentUser, 'onboarding_complete');
+      console.log("Auth status:", { isAuthenticated, currentUser, onboardingComplete });
+      
       if (onboardingComplete) {
+        console.log("User has completed onboarding, navigating to dashboard");
         navigate('/app/dashboard');
       } else {
+        console.log("User needs to complete onboarding");
         navigate('/onboarding');
       }
     }
@@ -59,8 +62,10 @@ const StudentLanding = () => {
           return;
         }
         
+        console.log("Creating student account with:", { email, firstName, lastName });
+        
         // Create account with full name and role
-        await signUp({
+        const result = await signUp({
           email,
           password,
           firstName,
@@ -68,7 +73,11 @@ const StudentLanding = () => {
           role: "student"
         });
         
-        toast.success("Student account created! Proceeding to onboarding...");
+        if (result) {
+          toast.success("Student account created! Proceeding to onboarding...");
+        } else {
+          toast.error("Failed to create account. Please try again.");
+        }
       } else {
         // Login with email and password
         if (!email || !password) {
@@ -77,6 +86,7 @@ const StudentLanding = () => {
           return;
         }
         
+        console.log("Logging in with:", { email });
         await login(email, password);
       }
     } catch (error: any) {

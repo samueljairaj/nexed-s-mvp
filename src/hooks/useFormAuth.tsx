@@ -106,11 +106,11 @@ export const useFormAuth = ({ initialMode = "login" }: FormAuthProps = {}) => {
     setIsSubmitting(true);
     setSubmissionProgress(10);
     setErrorMessage("");
-
+    
     // Clear any existing timeout
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     
-    // Set a shorter timeout (5 seconds)
+    // Set a timeout to prevent hanging
     timeoutRef.current = setTimeout(() => {
       console.log("Auth operation timed out, resetting submission state");
       setIsSubmitting(false);
@@ -118,12 +118,14 @@ export const useFormAuth = ({ initialMode = "login" }: FormAuthProps = {}) => {
       setSubmissionStep("");
       setErrorMessage("Operation timed out. Please try again.");
       toast.error("Operation timed out. Please try again.");
-    }, 5000);
+    }, 10000); // Increased timeout to 10 seconds
     
     try {
       if (authMode === "signup") {
         setSubmissionStep("Creating your account...");
         setSubmissionProgress(30);
+        
+        console.log("Attempting signup with:", { email, password, firstName, lastName });
         
         const signupResult = await signup({
           email,
@@ -131,6 +133,8 @@ export const useFormAuth = ({ initialMode = "login" }: FormAuthProps = {}) => {
           firstName,
           lastName
         });
+        
+        console.log("Signup result:", signupResult);
         
         if (signupResult) {
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -142,6 +146,8 @@ export const useFormAuth = ({ initialMode = "login" }: FormAuthProps = {}) => {
       } else {
         setSubmissionStep("Signing in...");
         setSubmissionProgress(30);
+        
+        console.log("Attempting login with:", { email });
         
         await login(email, password);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
