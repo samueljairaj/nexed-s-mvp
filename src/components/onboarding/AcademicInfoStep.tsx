@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { academicInfoSchema } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { ArrowLeft } from "lucide-react"; // Added import
+import { ArrowLeft } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -29,12 +29,11 @@ export interface AcademicInfoFormData {
   university: string;
   fieldOfStudy: string;
   degreeLevel: string;
-  courseStartDate: Date | null;
-  graduationDate: Date | null;
-  hasTransferred: boolean;
+  programStartDate?: Date | null;
+  expectedGraduationDate?: Date | null;
+  isTransferStudent?: boolean;
   previousUniversity?: string;
   isSTEM?: boolean;
-  programStartDate?: Date | null;
 }
 
 interface AcademicInfoStepProps {
@@ -42,15 +41,15 @@ interface AcademicInfoStepProps {
     university: string;
     fieldOfStudy: string;
     degreeLevel: string;
-    courseStartDate: Date | null;
-    graduationDate: Date | null;
-    hasTransferred: boolean;
+    programStartDate?: Date | null;
+    expectedGraduationDate?: Date | null;
+    isTransferStudent?: boolean;
     previousUniversity?: string;
   };
   onSubmit: (data: AcademicInfoFormData) => void;
   isF1OrJ1: boolean;
   isSubmitting?: boolean;
-  handleBackToLogin?: () => void; // Added prop
+  handleBackToLogin?: () => void;
 }
 
 export function AcademicInfoStep({ 
@@ -58,7 +57,7 @@ export function AcademicInfoStep({
   onSubmit, 
   isF1OrJ1,
   isSubmitting = false,
-  handleBackToLogin // Added prop
+  handleBackToLogin
 }: AcademicInfoStepProps) {
   console.log("AcademicInfoStep - isF1OrJ1:", isF1OrJ1);
   console.log("AcademicInfoStep - handleBackToLogin:", !!handleBackToLogin);
@@ -69,15 +68,34 @@ export function AcademicInfoStep({
       university: defaultValues.university || "",
       fieldOfStudy: defaultValues.fieldOfStudy || "",
       degreeLevel: defaultValues.degreeLevel || "",
-      courseStartDate: defaultValues.courseStartDate || null,
-      graduationDate: defaultValues.graduationDate || null,
-      hasTransferred: defaultValues.hasTransferred || false,
+      programStartDate: defaultValues.programStartDate || null,
+      expectedGraduationDate: defaultValues.expectedGraduationDate || null,
+      isTransferStudent: defaultValues.isTransferStudent || false,
       previousUniversity: defaultValues.previousUniversity || "",
+      isSTEM: false,
     },
   });
 
-  // Watch for hasTransferred to conditionally show previous university field
-  const hasTransferred = form.watch("hasTransferred");
+  // Watch for relevant fields to conditionally show other fields
+  const hasTransferred = form.watch("isTransferStudent");
+  const degreeLevel = form.watch("degreeLevel");
+  const fieldOfStudy = form.watch("fieldOfStudy");
+
+  // List of common STEM fields
+  const stemFields = [
+    "Computer Science",
+    "Engineering",
+    "Mathematics",
+    "Physics",
+    "Chemistry",
+    "Biology",
+    "Data Science"
+  ];
+
+  // Check if current field of study might be STEM
+  const mightBeSTEM = stemFields.some(field => 
+    fieldOfStudy?.toLowerCase().includes(field.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -154,21 +172,44 @@ export function AcademicInfoStep({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormDatePicker
-              name="courseStartDate"
-              label="Course Start Date"
+              name="programStartDate"
+              label="Program Start Date"
               placeholder="Select start date"
             />
 
             <FormDatePicker
-              name="graduationDate"
+              name="expectedGraduationDate"
               label="Expected Graduation Date"
               placeholder="Select graduation date"
             />
           </div>
 
+          {isF1OrJ1 && mightBeSTEM && (
+            <FormField
+              control={form.control}
+              name="isSTEM"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>This is a STEM-designated program</FormLabel>
+                    <FormDescription>
+                      STEM-designated programs may qualify for extended OPT periods
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+          )}
+
           <FormField
             control={form.control}
-            name="hasTransferred"
+            name="isTransferStudent"
             render={({ field }) => (
               <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                 <FormControl>
@@ -201,6 +242,15 @@ export function AcademicInfoStep({
                 </FormItem>
               )}
             />
+          )}
+          
+          {isF1OrJ1 && (
+            <div className="bg-blue-50 p-4 rounded-md mt-4">
+              <h4 className="font-medium text-blue-800">Academic Information and Visa Status</h4>
+              <p className="text-sm text-blue-700 mt-1">
+                It's important to ensure your academic information is accurate and up-to-date as any changes may impact your visa status. Remember to notify your DSO of any academic changes.
+              </p>
+            </div>
           )}
           
           <Button 
