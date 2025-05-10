@@ -56,7 +56,7 @@ export const visaStatusSchema = z.object({
   sevisId: optionalStringSchema,
   i20ExpiryDate: optionalDateSchema,
   entryDate: optionalDateSchema,
-  currentStatus: optionalStringSchema,
+  visaStatus: optionalStringSchema, // Added this field to replace currentStatus
   programStartDate: optionalDateSchema,
 });
 
@@ -94,6 +94,7 @@ export const academicInfoSchema = z.object({
   expectedGraduationDate: optionalDateSchema,
   isTransferStudent: optionalBooleanSchema,
   previousUniversity: optionalStringSchema,
+  isSTEM: optionalBooleanSchema,
 });
 
 // Educational Info Schema (alias for academic info)

@@ -299,7 +299,7 @@ export function VisaStatusStep({
               
               <FormField
                 control={form.control}
-                name="currentStatus"
+                name="visaStatus"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Current H-1B Status</FormLabel>
@@ -333,7 +333,7 @@ export function VisaStatusStep({
               
               <FormField
                 control={form.control}
-                name="currentStatus"
+                name="visaStatus"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Specify Visa Type</FormLabel>

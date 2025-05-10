@@ -9,7 +9,7 @@ export function useVisaStatus() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visaData, setVisaData] = useState<Partial<VisaStatusFormValues>>({
     visaType: "F1",
-    currentStatus: ""
+    visaStatus: ""
   });
 
   const handleVisaStatus = async (data: VisaStatusFormValues) => {
@@ -21,7 +21,7 @@ export function useVisaStatus() {
       // Ensure we're only sending fields that match the database schema
       const formattedData: Record<string, any> = {
         visaType: data.visaType as VisaType,
-        // Remove currentStatus as it doesn't exist in the profiles table
+        // Use visaStatus instead of currentStatus
       };
       
       // Format dates as YYYY-MM-DD strings
