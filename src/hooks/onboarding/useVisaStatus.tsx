@@ -19,11 +19,12 @@ export function useVisaStatus() {
     
     try {
       // Only include fields that exist in the profiles table
+      // Based on the database schema error, we're checking each field carefully
       const formattedData: Record<string, any> = {
         visaType: data.visaType as VisaType,
         visaStatus: data.visaStatus,
-        // Remove fields not in the profiles table:
-        // sevisId, i94Number, totalUnemployedDays, etc.
+        // Remove all fields not in the profiles table schema:
+        // sevisId, i94Number, visaExpiryDate, totalUnemployedDays, etc.
       };
       
       // Format dates as YYYY-MM-DD strings
@@ -33,10 +34,6 @@ export function useVisaStatus() {
       
       if (data.programStartDate) {
         formattedData.courseStartDate = formatDateToString(data.programStartDate);
-      }
-
-      if (data.visaExpiryDate) {
-        formattedData.visaExpiryDate = formatDateToString(data.visaExpiryDate);
       }
       
       console.log("Attempting to update profile with visa data:", formattedData);
