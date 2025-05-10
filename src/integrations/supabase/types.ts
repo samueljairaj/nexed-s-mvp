@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       compliance_rules: {
         Row: {
           active: boolean | null
@@ -324,7 +354,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_university_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_dso: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_my_student: {
+        Args: { student_id: string }
+        Returns: boolean
+      }
+      is_same_university: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          entity_type: string
+          entity_id: string
+          action: string
+          details?: Json
+        }
+        Returns: undefined
+      }
+      log_dso_data_access: {
+        Args: { entity_type: string; entity_id: string }
+        Returns: undefined
+      }
+      policy_exists: {
+        Args: { policy_name: string; table_name: string }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "student" | "dso" | "admin"

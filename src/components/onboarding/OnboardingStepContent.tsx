@@ -1,3 +1,4 @@
+
 import { AccountCreationStep } from "./AccountCreationStep";
 import { PersonalInfoStep } from "./PersonalInfoStep";
 import { VisaStatusStep } from "./VisaStatusStep"; 
@@ -5,6 +6,7 @@ import { AcademicInfoStep } from "./AcademicInfoStep";
 import { EmploymentStep } from "./EmploymentStep";
 import { OnboardingComplete } from "./OnboardingComplete";
 import { ComplianceChecklist } from "./ComplianceChecklist";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface OnboardingStepContentProps {
   currentStep: number;
@@ -62,7 +64,7 @@ export const OnboardingStepContent = ({
     visaType: visaData.visaType,
     university: academicData.university,
     fieldOfStudy: academicData.fieldOfStudy,
-    employer: employmentData.employerName, // Changed from employer to employerName
+    employer: employmentData.employerName, // Use employerName from employment data
   };
 
   // Student onboarding flow

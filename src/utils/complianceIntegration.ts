@@ -2,6 +2,8 @@
 import { AITask } from "@/hooks/useAICompliance";
 import { Document, DocumentStatus } from "@/types/document";
 import { toast } from "sonner";
+import { logDsoAccess } from "./accessControl";
+import { supabase } from "@/integrations/supabase/client";
 
 // Interface to track document compliance requirements
 interface DocumentRequirement {
@@ -12,10 +14,10 @@ interface DocumentRequirement {
 }
 
 // Check if uploaded documents satisfy compliance requirements
-export const checkDocumentCompliance = (
+export const checkDocumentCompliance = async (
   tasks: AITask[],
   documents: Document[]
-): DocumentRequirement[] => {
+): Promise<DocumentRequirement[]> => {
   const documentRequirements: DocumentRequirement[] = [];
   
   // Keywords to identify document types in task descriptions
@@ -42,6 +44,23 @@ export const checkDocumentCompliance = (
         );
         
         if (matchingDoc) {
+          // Log access if the current user is a DSO
+          if (matchingDoc.user_id) {
+            try {
+              // Just check if current user is a DSO
+              supabase.rpc('is_dso')
+                .then(({ data: isDso }) => {
+                  if (isDso) {
+                    // Log the access
+                    logDsoAccess('document', matchingDoc.id);
+                  }
+                });
+            } catch (error) {
+              // Silently continue if access check fails
+              console.error("Error checking DSO status:", error);
+            }
+          }
+          
           const status = matchingDoc.status === "expired" ? "expired" : "present";
           documentRequirements.push({
             documentType: docType.type,

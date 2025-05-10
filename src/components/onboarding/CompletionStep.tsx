@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { ComplianceChecklist } from "./ComplianceChecklist";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CompletionStepProps {
   onFinish: () => void;
@@ -21,6 +22,7 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
   // Always start with checklist visible
   const [showChecklist, setShowChecklist] = useState(true);
   const navigate = useNavigate();
+  const { isDSO } = useAuth();
 
   const handleGoToDashboard = () => {
     onFinish();
@@ -35,15 +37,27 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
         </div>
         <h3 className="text-2xl font-bold mb-2">Profile Setup Complete!</h3>
         <p className="text-gray-600 mb-6">
-          We've personalized your experience based on your visa type and details. Your personalized compliance checklist has been created and you're now ready to start managing your documents.
+          We've personalized your experience based on your {isDSO ? 'role' : 'visa type'} and details. 
+          {!isDSO && 'Your personalized compliance checklist has been created and you\'re now ready to start managing your documents.'}
         </p>
         <div className="bg-nexed-50 p-4 rounded-lg mb-6">
           <h4 className="font-medium text-nexed-700 mb-2">Your Next Steps:</h4>
           <ol className="text-left text-nexed-600 list-decimal list-inside space-y-2">
-            <li>Upload your required visa documents</li>
-            <li>Complete any urgent compliance tasks</li>
-            <li>Set up notifications for important deadlines</li>
-            <li>Explore the dashboard to understand your visa status</li>
+            {isDSO ? (
+              <>
+                <li>Manage student visa information</li>
+                <li>Review compliance tasks for students</li>
+                <li>Set up notifications for important deadlines</li>
+                <li>Explore the dashboard to support your students</li>
+              </>
+            ) : (
+              <>
+                <li>Upload your required visa documents</li>
+                <li>Complete any urgent compliance tasks</li>
+                <li>Set up notifications for important deadlines</li>
+                <li>Explore the dashboard to understand your visa status</li>
+              </>
+            )}
           </ol>
         </div>
         <Button 
@@ -60,12 +74,14 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
         </Button>
       </div>
 
-      {/* Compliance Checklist Dialog - Always visible */}
-      <ComplianceChecklist 
-        open={showChecklist} 
-        onOpenChange={setShowChecklist} 
-        userData={userData}
-      />
+      {/* Compliance Checklist Dialog - Only show for students */}
+      {!isDSO && (
+        <ComplianceChecklist 
+          open={showChecklist} 
+          onOpenChange={setShowChecklist} 
+          userData={userData}
+        />
+      )}
     </>
   );
 }

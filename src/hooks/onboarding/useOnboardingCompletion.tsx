@@ -40,8 +40,8 @@ export function useOnboardingCompletion() {
       visaType: currentUser?.visaType || 'F1',
       university: currentUser?.university || '',
       fieldOfStudy: currentUser?.fieldOfStudy || '',
-      // Since employerName doesn't exist on UserProfile, use a safe fallback
-      employer: ''  // This is just an empty string since the property doesn't exist
+      // Get employer data in a safe way, with a fallback
+      employer: ''  // This is just an empty string since the property doesn't exist on UserProfile
     };
   };
 
