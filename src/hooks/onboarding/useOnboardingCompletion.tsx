@@ -40,7 +40,9 @@ export function useOnboardingCompletion() {
       visaType: currentUser?.visaType || 'F1',
       university: currentUser?.university || '',
       fieldOfStudy: currentUser?.fieldOfStudy || '',
-      employer: currentUser?.employer || ''
+      // Remove the employer property since it doesn't exist on the UserProfile type
+      // And replace it with an employer string derived from other profile data if available
+      employer: currentUser?.employerName || ''
     };
   };
 
