@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -130,224 +131,214 @@ export function VisaStatusStep({
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="visaType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Visa Type</FormLabel>
-                <Select 
-                  value={field.value} 
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    onVisaTypeChange(value);
-                  }}
-                >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="visaType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Visa Type</FormLabel>
+                  <Select 
+                    value={field.value} 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      onVisaTypeChange(value);
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your visa type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="F1">F-1 Student Visa</SelectItem>
+                      <SelectItem value="J1">J-1 Exchange Visitor Visa</SelectItem>
+                      <SelectItem value="H1B">H-1B Specialty Occupation Visa</SelectItem>
+                      <SelectItem value="Other">Other Visa Type</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="visaStatus"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Visa Status</FormLabel>
+                  <Select 
+                    value={field.value || ""} 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your current status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {getVisaStatusOptions().map(option => (
+                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="sevisId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SEVIS ID</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your visa type" />
-                    </SelectTrigger>
+                    <div className="relative">
+                      <Input 
+                        placeholder="Enter your SEVIS ID" 
+                        {...field} 
+                        value={field.value || ""} 
+                        className="pl-10"
+                      />
+                      <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="F1">F-1 Student Visa</SelectItem>
-                    <SelectItem value="J1">J-1 Exchange Visitor Visa</SelectItem>
-                    <SelectItem value="H1B">H-1B Specialty Occupation Visa</SelectItem>
-                    <SelectItem value="Other">Other Visa Type</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormDescription>
+                    Your SEVIS ID starts with N00 and is found on your I-20 or DS-2019
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="visaStatus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Current Visa Status</FormLabel>
-                <Select 
-                  value={field.value || ""} 
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                  }}
-                >
+            <FormField
+              control={form.control}
+              name="entryDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Most Recent Entry to the U.S.</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your current status" />
-                    </SelectTrigger>
+                    <div className="relative">
+                      <FormDatePicker
+                        name="entryDate"
+                        placeholder="Select your most recent entry date"
+                      />
+                      <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
                   </FormControl>
-                  <SelectContent>
-                    {getVisaStatusOptions().map(option => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="sevisId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>SEVIS ID</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input 
-                      placeholder="Enter your SEVIS ID" 
-                      {...field} 
-                      value={field.value || ""} 
-                      className="pl-10"
-                    />
-                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  </div>
-                </FormControl>
-                <FormDescription>
-                  Your SEVIS ID starts with N00 and is found on your I-20 or DS-2019
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="visaExpiryDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Visa Stamp Expiration Date</FormLabel>
+                  <FormDatePicker
+                    name="visaExpiryDate"
+                    placeholder="Select your visa expiration date"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="entryDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Most Recent Entry to the U.S.</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <FormDatePicker
-                      name="entryDate"
-                      placeholder="Select your most recent entry date"
-                    />
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="visaExpiryDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Visa Stamp Expiration Date</FormLabel>
-                <FormDatePicker
-                  name="visaExpiryDate"
-                  placeholder="Select your visa expiration date"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="i94Number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>I-94 Number</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input 
-                      placeholder="Enter your I-94 number" 
-                      {...field} 
-                      value={field.value || ""}
-                      className="pl-10"
-                    />
-                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  </div>
-                </FormControl>
-                <FormDescription>
-                  Your I-94 number can be retrieved from the CBP website
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="i94AdmissionDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>I-94 Admission Date</FormLabel>
-                <FormDatePicker
-                  name="i94AdmissionDate"
-                  placeholder="Select your I-94 admission date"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="i94Number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>I-94 Number</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input 
+                        placeholder="Enter your I-94 number" 
+                        {...field} 
+                        value={field.value || ""}
+                        className="pl-10"
+                      />
+                      <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Your I-94 number can be retrieved from the CBP website
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {isOptOrStemOpt && (
-            <>
-              <FormField
-                control={form.control}
-                name="hadUnemploymentPeriods"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Have you had periods of unemployment?</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={(value) => field.onChange(value === "true")}
-                        defaultValue={field.value ? "true" : "false"}
-                        className="flex flex-row space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="true" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="false" />
-                          </FormControl>
-                          <FormLabel className="font-normal cursor-pointer">No</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormDescription>
-                      F-1 OPT allows a maximum of 90 days of unemployment
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {hadUnemploymentPeriods && (
+            <div className="bg-gray-50 p-4 rounded-md">
+              <h3 className="font-medium mb-3">OPT Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="totalUnemployedDays"
+                  name="hadUnemploymentPeriods"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Total Days Unemployed</FormLabel>
+                    <FormItem className="space-y-3">
+                      <FormLabel>Have you had periods of unemployment?</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Enter total days unemployed" 
-                          {...field} 
-                          type="number"
-                          value={field.value || ""}
-                        />
+                        <RadioGroup
+                          onValueChange={(value) => field.onChange(value === "true")}
+                          defaultValue={field.value ? "true" : "false"}
+                          className="flex flex-row space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="true" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="false" />
+                            </FormControl>
+                            <FormLabel className="font-normal cursor-pointer">No</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
                       </FormControl>
-                      <FormDescription className="text-amber-500">
-                        Note: Exceeding 90 days of unemployment during OPT may violate your visa status
+                      <FormDescription>
+                        F-1 OPT allows a maximum of 90 days of unemployment
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
-            </>
+
+                {hadUnemploymentPeriods && (
+                  <FormField
+                    control={form.control}
+                    name="totalUnemployedDays"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Days Unemployed</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter total days unemployed" 
+                            {...field} 
+                            type="number"
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-amber-500">
+                          Note: Exceeding 90 days of unemployment during OPT may violate your visa status
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            </div>
           )}
           
           {visaType === "F1" && (
@@ -367,10 +358,33 @@ export function VisaStatusStep({
             />
           )}
 
-          {visaType === "J1" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {visaType === "J1" && (
+              <FormField
+                control={form.control}
+                name="hasDS2019"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Do you have a DS-2019 form?</FormLabel>
+                      <FormDescription>
+                        If you are a J-1 Exchange Visitor, you should have a DS-2019 form
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            )}
+            
             <FormField
               control={form.control}
-              name="hasDS2019"
+              name="hasDependents"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
                   <FormControl>
@@ -380,36 +394,15 @@ export function VisaStatusStep({
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Do you have a DS-2019 form?</FormLabel>
+                    <FormLabel>Do you have dependents?</FormLabel>
                     <FormDescription>
-                      If you are a J-1 Exchange Visitor, you should have a DS-2019 form
+                      Check this if your spouse or children are in the US as your dependents
                     </FormDescription>
                   </div>
                 </FormItem>
               )}
             />
-          )}
-          
-          <FormField
-            control={form.control}
-            name="hasDependents"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value || false}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Do you have dependents?</FormLabel>
-                  <FormDescription>
-                    Check this if your spouse or children are in the US as your dependents
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
+          </div>
 
           <FormDatePicker
             name="programStartDate"

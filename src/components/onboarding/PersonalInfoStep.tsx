@@ -62,139 +62,139 @@ export function PersonalInfoStep({ defaultValues, onSubmit, isSubmitting = false
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="nationality"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Country of Origin</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="nationality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country of Origin</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <div className="relative">
+                        <SelectTrigger className="pl-10">
+                          <SelectValue placeholder="Select your nationality" />
+                        </SelectTrigger>
+                        <Flag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </FormControl>
+                    <SelectContent className="max-h-[200px]">
+                      {countries.map((country) => (
+                        <SelectItem key={country} value={country}>{country}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Country of Residence</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your country" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[200px]">
+                      {countries.map((country) => (
+                        <SelectItem key={country} value={country}>{country}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <SelectTrigger className="pl-10">
-                        <SelectValue placeholder="Select your nationality" />
-                      </SelectTrigger>
-                      <Flag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="+1 (555) 123-4567" 
+                        {...field} 
+                        className="pl-10"
+                      />
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     </div>
                   </FormControl>
-                  <SelectContent className="max-h-[200px]">
-                    {countries.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        {country}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Current Country of Residence</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormField
+              control={form.control}
+              name="passportNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Passport Number</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your country" />
-                    </SelectTrigger>
+                    <div className="relative">
+                      <Input 
+                        placeholder="Enter your passport number" 
+                        {...field} 
+                        className="pl-10"
+                      />
+                      <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
                   </FormControl>
-                  <SelectContent className="max-h-[200px]">
-                    {countries.map((country) => (
-                      <SelectItem key={country} value={country}>{country}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormDescription>
+                    Used to track expiration and verify identification
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="phoneNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input 
-                      placeholder="+1 (555) 123-4567" 
-                      {...field} 
-                      className="pl-10"
-                    />
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+              control={form.control}
+              name="passportExpiryDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Passport Expiry Date</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <FormDatePicker
+                        name="passportExpiryDate"
+                        placeholder="Select passport expiry date"
+                      />
+                      <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="passportNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Passport Number</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input 
-                      placeholder="Enter your passport number" 
-                      {...field} 
-                      className="pl-10"
-                    />
-                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  </div>
-                </FormControl>
-                <FormDescription>
-                  Used to track expiration and verify identification
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="passportExpiryDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Passport Expiry Date</FormLabel>
-                <FormControl>
-                  <div className="relative">
+            <FormField
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of Birth (Optional)</FormLabel>
+                  <FormControl>
                     <FormDatePicker
-                      name="passportExpiryDate"
-                      placeholder="Select passport expiry date"
+                      name="dateOfBirth"
+                      placeholder="Select date of birth"
+                      required={false}
                     />
-                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="dateOfBirth"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Birth (Optional)</FormLabel>
-                <FormControl>
-                  <FormDatePicker
-                    name="dateOfBirth"
-                    placeholder="Select date of birth"
-                    required={false}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control}

@@ -34,10 +34,6 @@ export function useVisaStatus() {
         formattedData.courseStartDate = formatDateToString(data.programStartDate);
       }
 
-      if (data.i94AdmissionDate) {
-        formattedData.i94AdmissionDate = formatDateToString(data.i94AdmissionDate);
-      }
-
       if (data.visaExpiryDate) {
         formattedData.visaExpiryDate = formatDateToString(data.visaExpiryDate);
       }

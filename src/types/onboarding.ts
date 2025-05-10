@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // Shared schema patterns
@@ -63,9 +62,6 @@ export const visaStatusSchema = z.object({
   visaStatus: z.string().min(1, "Current visa status is required"),
   programStartDate: optionalDateSchema,
   i94Number: z.string().min(1, "I-94 number is required"),
-  i94AdmissionDate: z.date({
-    required_error: "I-94 admission date is required",
-  }),
   hadUnemploymentPeriods: optionalBooleanSchema,
   totalUnemployedDays: optionalStringSchema,
 });
