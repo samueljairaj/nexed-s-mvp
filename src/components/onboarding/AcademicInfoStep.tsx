@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { academicInfoSchema } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, Book, Calendar, Folder, GraduationCap, School } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -23,29 +23,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 // Export the form data type
 export interface AcademicInfoFormData {
   university: string;
   fieldOfStudy: string;
   degreeLevel: string;
-  programStartDate?: Date | null;
-  expectedGraduationDate?: Date | null;
+  programStartDate: Date;
+  programCompletionDate: Date;
+  isSTEM?: boolean;
   isTransferStudent?: boolean;
   previousUniversity?: string;
-  isSTEM?: boolean;
+  transferStartDate?: Date | null;
+  transferEndDate?: Date | null;
+  transferReason?: string;
+  dsoName?: string;
+  dsoEmail?: string;
+  dsoPhone?: string;
 }
 
 interface AcademicInfoStepProps {
-  defaultValues: {
-    university: string;
-    fieldOfStudy: string;
-    degreeLevel: string;
-    programStartDate?: Date | null;
-    expectedGraduationDate?: Date | null;
-    isTransferStudent?: boolean;
-    previousUniversity?: string;
-  };
+  defaultValues: Partial<AcademicInfoFormData>;
   onSubmit: (data: AcademicInfoFormData) => void;
   isF1OrJ1: boolean;
   isSubmitting?: boolean;
@@ -60,7 +64,6 @@ export function AcademicInfoStep({
   handleBackToLogin
 }: AcademicInfoStepProps) {
   console.log("AcademicInfoStep - isF1OrJ1:", isF1OrJ1);
-  console.log("AcademicInfoStep - handleBackToLogin:", !!handleBackToLogin);
   
   const form = useForm({
     resolver: zodResolver(academicInfoSchema),
@@ -69,16 +72,21 @@ export function AcademicInfoStep({
       fieldOfStudy: defaultValues.fieldOfStudy || "",
       degreeLevel: defaultValues.degreeLevel || "",
       programStartDate: defaultValues.programStartDate || null,
-      expectedGraduationDate: defaultValues.expectedGraduationDate || null,
+      programCompletionDate: defaultValues.programCompletionDate || null,
       isTransferStudent: defaultValues.isTransferStudent || false,
       previousUniversity: defaultValues.previousUniversity || "",
-      isSTEM: false,
+      transferStartDate: defaultValues.transferStartDate || null,
+      transferEndDate: defaultValues.transferEndDate || null,
+      transferReason: defaultValues.transferReason || "",
+      isSTEM: defaultValues.isSTEM || false,
+      dsoName: defaultValues.dsoName || "",
+      dsoEmail: defaultValues.dsoEmail || "",
+      dsoPhone: defaultValues.dsoPhone || "",
     },
   });
 
   // Watch for relevant fields to conditionally show other fields
   const hasTransferred = form.watch("isTransferStudent");
-  const degreeLevel = form.watch("degreeLevel");
   const fieldOfStudy = form.watch("fieldOfStudy");
 
   // List of common STEM fields
@@ -122,23 +130,16 @@ export function AcademicInfoStep({
             name="university"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>University/Institution Name</FormLabel>
+                <FormLabel>Current University / Institution Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your university name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="fieldOfStudy"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Major/Field of Study</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your field of study" {...field} />
+                  <div className="relative">
+                    <Input 
+                      placeholder="Enter your university name" 
+                      {...field} 
+                      className="pl-10"
+                    />
+                    <School className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -153,15 +154,17 @@ export function AcademicInfoStep({
                 <FormLabel>Degree Level</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a degree" />
-                    </SelectTrigger>
+                    <div className="relative">
+                      <SelectTrigger className="pl-10">
+                        <SelectValue placeholder="Select a degree level" />
+                      </SelectTrigger>
+                      <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Associate">Associate</SelectItem>
-                    <SelectItem value="Bachelor">Bachelor</SelectItem>
-                    <SelectItem value="Master">Master</SelectItem>
-                    <SelectItem value="Doctorate">Doctorate</SelectItem>
+                    <SelectItem value="Undergraduate">Undergraduate</SelectItem>
+                    <SelectItem value="Masters">Masters</SelectItem>
+                    <SelectItem value="PhD">PhD</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -170,17 +173,66 @@ export function AcademicInfoStep({
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="fieldOfStudy"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Field of Study / Major</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      placeholder="Enter your field of study" 
+                      {...field} 
+                      className="pl-10"
+                    />
+                    <Book className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormDatePicker
+            <FormField
+              control={form.control}
               name="programStartDate"
-              label="Program Start Date"
-              placeholder="Select start date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Program Start Date</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <FormDatePicker
+                        name="programStartDate"
+                        placeholder="Select start date"
+                      />
+                      <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
-            <FormDatePicker
-              name="expectedGraduationDate"
-              label="Expected Graduation Date"
-              placeholder="Select graduation date"
+            <FormField
+              control={form.control}
+              name="programCompletionDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Program Completion Date</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <FormDatePicker
+                        name="programCompletionDate"
+                        placeholder="Select completion date"
+                      />
+                      <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
 
@@ -219,9 +271,12 @@ export function AcademicInfoStep({
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Have you transferred from another university?</FormLabel>
+                  <FormLabel className="flex items-center gap-1">
+                    <span>Previous University Transfers?</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </FormLabel>
                   <FormDescription>
-                    If yes, please provide the name of the previous university.
+                    Have you transferred from another university or institution?
                   </FormDescription>
                 </div>
               </FormItem>
@@ -229,20 +284,122 @@ export function AcademicInfoStep({
           />
 
           {hasTransferred && (
-            <FormField
-              control={form.control}
-              name="previousUniversity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Previous University Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter previous university name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-4 bg-muted/50 p-4 rounded-md">
+              <FormField
+                control={form.control}
+                name="previousUniversity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Previous University Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter previous university name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="transferStartDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormDatePicker
+                        name="transferStartDate"
+                        placeholder="Select start date"
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="transferEndDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date</FormLabel>
+                      <FormDatePicker
+                        name="transferEndDate"
+                        placeholder="Select end date"
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="transferReason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reason for Transfer (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Why did you transfer?" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           )}
+          
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="dso-info">
+              <AccordionTrigger className="text-sm font-medium">
+                <div className="flex items-center gap-2">
+                  <Folder className="h-4 w-4" />
+                  DSO Contact Information (optional)
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="dsoName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>DSO Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter DSO name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="dsoEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>DSO Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter DSO email" type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="dsoPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>DSO Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter DSO phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
           
           {isF1OrJ1 && (
             <div className="bg-blue-50 p-4 rounded-md mt-4">

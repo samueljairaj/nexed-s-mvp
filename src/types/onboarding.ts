@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // Shared schema patterns
@@ -32,14 +31,16 @@ export const countries = [
 
 // Personal Info Schema
 export const personalInfoSchema = z.object({
-  dateOfBirth: z.date({
-    required_error: "Date of birth is required",
-  }),
+  dateOfBirth: optionalDateSchema,
   usEntryDate: optionalDateSchema,
-  nationality: z.string().min(1, "Nationality is required"),
+  nationality: z.string().min(1, "Country of origin is required"),
   country: z.string().min(1, "Country is required"),
-  address: z.string().min(1, "Address is required"),
+  address: z.string().min(1, "U.S. Residential address is required"),
   phoneNumber: z.string().min(1, "Phone number is required"),
+  passportNumber: z.string().min(1, "Passport number is required"),
+  passportExpiryDate: z.date({
+    required_error: "Passport expiry date is required",
+  }),
 });
 
 // Schema for the onboarding personal info step specifically
@@ -53,24 +54,19 @@ export const visaStatusSchema = z.object({
   visaExpiryDate: optionalDateSchema,
   hasDS2019: optionalBooleanSchema,
   hasDependents: optionalBooleanSchema,
-  sevisId: optionalStringSchema,
+  sevisId: z.string().min(1, "SEVIS ID is required"),
   i20ExpiryDate: optionalDateSchema,
-  entryDate: optionalDateSchema,
-  visaStatus: optionalStringSchema, // Added this field for visa status
+  entryDate: z.date({
+    required_error: "Most recent entry date to the U.S. is required",
+  }),
+  visaStatus: z.string().min(1, "Current visa status is required"),
   programStartDate: optionalDateSchema,
-});
-
-// Visa Info Schema
-export const visaInfoSchema = z.object({
-  visaType: z.string({
-    required_error: "Visa type is required",
+  i94Number: z.string().min(1, "I-94 number is required"),
+  i94AdmissionDate: z.date({
+    required_error: "I-94 admission date is required",
   }),
-  otherVisaType: z.string().optional(),
-  countryOfOrigin: z.string().min(1, "Country of origin is required"),
-  visaStatus: z.string({
-    required_error: "Visa status is required",
-  }),
-  visaExpirationDate: optionalDateSchema,
+  hadUnemploymentPeriods: optionalBooleanSchema,
+  totalUnemployedDays: optionalStringSchema,
 });
 
 // SEVIS Info Schema
@@ -90,11 +86,21 @@ export const academicInfoSchema = z.object({
   university: z.string().min(1, "University name is required"),
   degreeLevel: z.string().min(1, "Degree level is required"),
   fieldOfStudy: z.string().min(1, "Field of study is required"),
-  programStartDate: optionalDateSchema,
-  expectedGraduationDate: optionalDateSchema,
+  programStartDate: z.date({
+    required_error: "Program start date is required",
+  }),
+  programCompletionDate: z.date({
+    required_error: "Program completion date is required",
+  }),
+  isSTEM: optionalBooleanSchema,
   isTransferStudent: optionalBooleanSchema,
   previousUniversity: optionalStringSchema,
-  isSTEM: optionalBooleanSchema,
+  transferStartDate: optionalDateSchema,
+  transferEndDate: optionalDateSchema,
+  transferReason: optionalStringSchema,
+  dsoName: optionalStringSchema,
+  dsoEmail: optionalStringSchema,
+  dsoPhone: optionalStringSchema,
 });
 
 // Educational Info Schema (alias for academic info)
@@ -103,16 +109,30 @@ export const educationalInfoSchema = academicInfoSchema;
 // Employment Info Schema
 export const employmentInfoSchema = z.object({
   employmentStatus: z.string().min(1, "Employment status is required"),
+  workAuthorizationType: optionalStringSchema,
+  eadStartDate: optionalDateSchema,
+  eadEndDate: optionalDateSchema,
   employer: optionalStringSchema,
   jobTitle: optionalStringSchema,
   startDate: optionalDateSchema,
-  employerAddress: optionalStringSchema,
+  jobLocation: optionalStringSchema,
   supervisorName: optionalStringSchema,
   supervisorEmail: optionalStringSchema,
+  isRelatedToField: optionalBooleanSchema,
+  isFullTime: optionalBooleanSchema,
   isOPT: optionalBooleanSchema,
   isStemOPT: optionalBooleanSchema,
   optStartDate: optionalDateSchema,
   optEndDate: optionalDateSchema,
+  previousEmployers: z.array(
+    z.object({
+      employer: z.string(),
+      jobTitle: z.string(),
+      startDate: optionalDateSchema,
+      endDate: optionalDateSchema,
+      jobLocation: optionalStringSchema,
+    })
+  ).optional(),
 });
 
 // Terms and conditions schema
@@ -137,6 +157,24 @@ export const preferencesSchema = z.object({
   receiveUpdates: z.boolean().default(true),
 });
 
+// Account Creation Schema
+export const accountCreationSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
+  confirmPassword: z.string(),
+  acceptTerms: z.boolean().refine(val => val === true, {
+    message: "You must accept the Terms of Service",
+  }),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
 // Define export types from schemas
 export type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
 export type VisaStatusFormValues = z.infer<typeof visaStatusSchema>;
@@ -147,3 +185,4 @@ export type SevisInfoFormValues = z.infer<typeof sevisInfoSchema>;
 export type PreferencesFormValues = z.infer<typeof preferencesSchema>;
 export type TermsFormValues = z.infer<typeof termsSchema>;
 export type EducationalInfoFormValues = z.infer<typeof educationalInfoSchema>;
+export type AccountCreationFormValues = z.infer<typeof accountCreationSchema>;

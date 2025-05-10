@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { visaStatusSchema, VisaStatusFormValues } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Passport } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -29,6 +29,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Export the form data type - use the schema-derived type
 export type VisaStatusFormData = VisaStatusFormValues;
@@ -60,11 +61,16 @@ export function VisaStatusStep({
     defaultValues: {
       ...defaultValues,
       visaType: initialVisaType || "F1",
+      visaStatus: defaultValues.visaStatus || "",
+      sevisId: defaultValues.sevisId || "",
+      i94Number: defaultValues.i94Number || "",
     },
   });
 
   // Watch visa type to update form fields and validation
   const visaType = form.watch("visaType");
+  const visaStatus = form.watch("visaStatus");
+  const hadUnemploymentPeriods = form.watch("hadUnemploymentPeriods");
   
   // Handle submit to ensure data is properly typed
   const handleFormSubmit = (data: VisaStatusFormValues) => {
@@ -72,10 +78,43 @@ export function VisaStatusStep({
     onSubmit(data);
   };
 
+  const getVisaStatusOptions = () => {
+    switch(visaType) {
+      case "F1":
+        return [
+          { value: "active", label: "Active Student" },
+          { value: "cpt", label: "CPT" },
+          { value: "opt", label: "OPT" },
+          { value: "stem_opt", label: "STEM OPT" },
+          { value: "grace_period", label: "Grace Period" }
+        ];
+      case "J1":
+        return [
+          { value: "active_program", label: "Active Program" },
+          { value: "academic_training", label: "Academic Training" },
+          { value: "grace_period", label: "Grace Period" }
+        ];
+      case "H1B":
+        return [
+          { value: "active_employment", label: "Active Employment" },
+          { value: "portability", label: "Portability" }
+        ];
+      default:
+        return [
+          { value: "active", label: "Active" },
+          { value: "pending", label: "Pending" },
+          { value: "other", label: "Other" }
+        ];
+    }
+  };
+
+  // Check if the selected visa status is OPT or STEM OPT
+  const isOptOrStemOpt = visaStatus === "opt" || visaStatus === "stem_opt";
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Visa Information</h2>
+        <h2 className="text-2xl font-semibold">Visa & Status Details</h2>
         {handleBackToLogin && (
           <Button
             type="button"
@@ -122,207 +161,269 @@ export function VisaStatusStep({
             )}
           />
 
-          {/* Entry date field for all visa types */}
-          <FormDatePicker
-            name="entryDate"
-            label="US Entry Date"
-            placeholder="Select your entry date to the US"
+          <FormField
+            control={form.control}
+            name="visaStatus"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Current Visa Status</FormLabel>
+                <Select 
+                  value={field.value || ""} 
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                  }}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your current status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {getVisaStatusOptions().map(option => (
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
-          {visaType === "F1" && (
+          <FormField
+            control={form.control}
+            name="sevisId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>SEVIS ID</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      placeholder="Enter your SEVIS ID" 
+                      {...field} 
+                      value={field.value || ""} 
+                      className="pl-10"
+                    />
+                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </FormControl>
+                <FormDescription>
+                  Your SEVIS ID starts with N00 and is found on your I-20 or DS-2019
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="entryDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Most Recent Entry to the U.S.</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <FormDatePicker
+                      name="entryDate"
+                      placeholder="Select your most recent entry date"
+                    />
+                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="visaExpiryDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Visa Stamp Expiration Date</FormLabel>
+                <FormDatePicker
+                  name="visaExpiryDate"
+                  placeholder="Select your visa expiration date"
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="i94Number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>I-94 Number</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      placeholder="Enter your I-94 number" 
+                      {...field} 
+                      value={field.value || ""}
+                      className="pl-10"
+                    />
+                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </FormControl>
+                <FormDescription>
+                  Your I-94 number can be retrieved from the CBP website
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="i94AdmissionDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>I-94 Admission Date</FormLabel>
+                <FormDatePicker
+                  name="i94AdmissionDate"
+                  placeholder="Select your I-94 admission date"
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {isOptOrStemOpt && (
             <>
               <FormField
                 control={form.control}
-                name="sevisId"
+                name="hadUnemploymentPeriods"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>SEVIS ID</FormLabel>
+                  <FormItem className="space-y-3">
+                    <FormLabel>Have you had periods of unemployment?</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your SEVIS ID" {...field} />
+                      <RadioGroup
+                        onValueChange={(value) => field.onChange(value === "true")}
+                        defaultValue={field.value ? "true" : "false"}
+                        className="flex flex-row space-x-4"
+                      >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="true" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="false" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">No</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
                     <FormDescription>
-                      Your SEVIS ID starts with N00 and is found on your I-20
+                      F-1 OPT allows a maximum of 90 days of unemployment
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <FormDatePicker
-                name="i20ExpiryDate"
-                label="I-20 Expiration Date"
-                placeholder="Select I-20 expiration date"
-              />
-              
-              <FormField
-                control={form.control}
-                name="hasDependents"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Do you have dependents on F-2 visas?</FormLabel>
-                      <FormDescription>
-                        Check this if your spouse or children are in the US on F-2 visas
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
 
-              <FormDatePicker
-                name="programStartDate"
-                label="Program Start Date"
-                placeholder="Select program start date"
-              />
+              {hadUnemploymentPeriods && (
+                <FormField
+                  control={form.control}
+                  name="totalUnemployedDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Total Days Unemployed</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter total days unemployed" 
+                          {...field} 
+                          type="number"
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-amber-500">
+                        Note: Exceeding 90 days of unemployment during OPT may violate your visa status
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </>
+          )}
+          
+          {visaType === "F1" && (
+            <FormField
+              control={form.control}
+              name="i20ExpiryDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>I-20 Expiration Date</FormLabel>
+                  <FormDatePicker
+                    name="i20ExpiryDate"
+                    placeholder="Select I-20 expiration date"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           )}
 
           {visaType === "J1" && (
-            <>
-              <FormField
-                control={form.control}
-                name="sevisId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>SEVIS ID</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your SEVIS ID" {...field} />
-                    </FormControl>
+            <FormField
+              control={form.control}
+              name="hasDS2019"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value || false}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Do you have a DS-2019 form?</FormLabel>
                     <FormDescription>
-                      Your SEVIS ID starts with N00 and is found on your DS-2019
+                      If you are a J-1 Exchange Visitor, you should have a DS-2019 form
                     </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="ds2019">
-                  <AccordionTrigger>DS-2019 Information</AccordionTrigger>
-                  <AccordionContent>
-                    <FormField
-                      control={form.control}
-                      name="hasDS2019"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Do you have a DS-2019 form?</FormLabel>
-                            <FormDescription>
-                              If you are a J-1 Exchange Visitor, you should have a DS-2019 form.
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormDatePicker
-                      name="visaExpiryDate"
-                      label="DS-2019 Expiry Date"
-                      placeholder="Select DS-2019 expiry date"
-                      className="mt-4"
-                    />
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-              
-              <FormField
-                control={form.control}
-                name="hasDependents"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Do you have dependents on J-2 visas?</FormLabel>
-                      <FormDescription>
-                        Check this if your spouse or children are in the US on J-2 visas
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormDatePicker
-                name="programStartDate"
-                label="Program Start Date"
-                placeholder="Select program start date"
-              />
-            </>
+                  </div>
+                </FormItem>
+              )}
+            />
           )}
+          
+          <FormField
+            control={form.control}
+            name="hasDependents"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value || false}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Do you have dependents?</FormLabel>
+                  <FormDescription>
+                    Check this if your spouse or children are in the US as your dependents
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
 
-          {visaType === "H1B" && (
-            <>
-              <FormDatePicker
-                name="visaExpiryDate"
-                label="H-1B Expiration Date"
-                placeholder="Select visa expiry date"
-              />
-              
-              <FormField
-                control={form.control}
-                name="visaStatus"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current H-1B Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="extension">Extension Filed</SelectItem>
-                        <SelectItem value="transfer">Transfer Filed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </>
-          )}
-
-          {visaType === "Other" && (
-            <>
-              <FormDatePicker
-                name="visaExpiryDate"
-                label="Visa Expiration Date"
-                placeholder="Select visa expiry date"
-              />
-              
-              <FormField
-                control={form.control}
-                name="visaStatus"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Specify Visa Type</FormLabel>
-                    <FormControl>
-                      <Input placeholder="E.g., O-1, TN, etc." {...field} value={field.value || ""} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </>
-          )}
+          <FormDatePicker
+            name="programStartDate"
+            label="Program Start Date"
+            placeholder="Select program start date"
+          />
+          
+          <div className="bg-blue-50 p-4 rounded-md mt-6">
+            <h4 className="font-medium text-blue-800">Important Note About Visa Status</h4>
+            <p className="text-sm text-blue-700 mt-1">
+              Maintaining proper visa status is critical. Always ensure all your immigration documents are up to date and report any changes to your DSO or immigration advisor promptly.
+            </p>
+          </div>
           
           <Button 
             type="submit" 

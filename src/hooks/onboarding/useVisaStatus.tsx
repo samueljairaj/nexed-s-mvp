@@ -21,8 +21,8 @@ export function useVisaStatus() {
       // Ensure we're only sending fields that match the database schema
       const formattedData: Record<string, any> = {
         visaType: data.visaType as VisaType,
-        // Use visaStatus instead of currentStatus
-        visaStatus: data.visaStatus
+        visaStatus: data.visaStatus,
+        sevisId: data.sevisId
       };
       
       // Format dates as YYYY-MM-DD strings
@@ -32,6 +32,14 @@ export function useVisaStatus() {
       
       if (data.programStartDate) {
         formattedData.courseStartDate = formatDateToString(data.programStartDate);
+      }
+
+      if (data.i94AdmissionDate) {
+        formattedData.i94AdmissionDate = formatDateToString(data.i94AdmissionDate);
+      }
+
+      if (data.visaExpiryDate) {
+        formattedData.visaExpiryDate = formatDateToString(data.visaExpiryDate);
       }
       
       console.log("Attempting to update profile with visa data:", formattedData);

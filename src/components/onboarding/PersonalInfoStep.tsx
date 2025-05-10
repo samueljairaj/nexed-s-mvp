@@ -3,9 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { onboardingPersonalInfoSchema } from "@/types/onboarding";
+import { personalInfoSchema, countries } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { ArrowLeft } from "lucide-react";
+import { Flag, Phone, MapPin, Calendar, Passport } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -13,6 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -21,169 +22,99 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { countries } from "@/types/onboarding";
 
-// Export the form data type
 export interface PersonalInfoFormData {
-  dateOfBirth: Date | string | null;
   nationality: string;
   country: string;
-  usEntryDate: Date | string | null;
-  address: string;
   phoneNumber: string;
+  passportNumber: string;
+  passportExpiryDate: Date;
+  address: string;
+  dateOfBirth?: Date | null;
+  usEntryDate?: Date | null;
 }
 
 interface PersonalInfoStepProps {
-  defaultValues: {
-    dateOfBirth: Date | string | null;
-    nationality: string;
-    country: string;
-    usEntryDate: Date | string | null;
-    address: string;
-    phoneNumber: string;
-  };
+  defaultValues: Partial<PersonalInfoFormData>;
   onSubmit: (data: PersonalInfoFormData) => void;
   isSubmitting?: boolean;
-  handleBackToLogin?: () => void;
 }
 
-export function PersonalInfoStep({ 
-  defaultValues, 
-  onSubmit, 
-  isSubmitting = false,
-  handleBackToLogin
-}: PersonalInfoStepProps) {
-  // Parse date strings to Date objects if they are strings
-  const initialValues = {
-    ...defaultValues,
-    dateOfBirth: defaultValues.dateOfBirth ? new Date(defaultValues.dateOfBirth) : null,
-    usEntryDate: defaultValues.usEntryDate ? new Date(defaultValues.usEntryDate) : null
-  };
-  
+export function PersonalInfoStep({ defaultValues, onSubmit, isSubmitting = false }: PersonalInfoStepProps) {
   const form = useForm({
-    resolver: zodResolver(onboardingPersonalInfoSchema),
-    defaultValues: initialValues
+    resolver: zodResolver(personalInfoSchema),
+    defaultValues: {
+      nationality: defaultValues.nationality || "",
+      country: defaultValues.country || "",
+      phoneNumber: defaultValues.phoneNumber || "",
+      passportNumber: defaultValues.passportNumber || "",
+      passportExpiryDate: defaultValues.passportExpiryDate || null,
+      dateOfBirth: defaultValues.dateOfBirth || null,
+      address: defaultValues.address || "",
+      usEntryDate: defaultValues.usEntryDate || null,
+    },
   });
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Personal Information</h2>
-        {handleBackToLogin && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleBackToLogin}
-            className="flex items-center gap-1 text-primary"
-          >
-            <ArrowLeft size={16} />
-            Back to Login
-          </Button>
-        )}
-      </div>
-      <p className="text-muted-foreground">Please enter your personal details.</p>
+      <h2 className="text-2xl font-semibold">Personal Information</h2>
+      <p className="text-muted-foreground">Please provide your personal information for SEVIS compliance.</p>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="dateOfBirth"
-              render={({ field }) => (
-                <FormDatePicker
-                  name="dateOfBirth"
-                  label="Date of Birth"
-                  placeholder="Select date"
-                  required
-                />
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="nationality"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nationality</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your nationality" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {countries.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="country"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Country of Residence</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your country" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {countries.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="usEntryDate"
-              render={({ field }) => (
-                <FormDatePicker
-                  name="usEntryDate"
-                  label="Date of First Entry to the U.S."
-                  placeholder="Select date"
-                />
-              )}
-            />
-          </div>
-          
           <FormField
             control={form.control}
-            name="address"
+            name="nationality"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Current U.S. Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your U.S. address" {...field} />
-                </FormControl>
+                <FormLabel>Country of Origin</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <div className="relative">
+                      <SelectTrigger className="pl-10">
+                        <SelectValue placeholder="Select your nationality" />
+                      </SelectTrigger>
+                      <Flag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </FormControl>
+                  <SelectContent className="max-h-[200px]">
+                    {countries.map((country) => (
+                      <SelectItem key={country} value={country}>
+                        {country}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Current Country of Residence</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your country" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="max-h-[200px]">
+                    {countries.map((country) => (
+                      <SelectItem key={country} value={country}>
+                        {country}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="phoneNumber"
@@ -191,13 +122,106 @@ export function PersonalInfoStep({
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your phone number" type="tel" {...field} />
+                  <div className="relative">
+                    <Input 
+                      placeholder="+1 (555) 123-4567" 
+                      {...field} 
+                      className="pl-10"
+                    />
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
+          <FormField
+            control={form.control}
+            name="passportNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Passport Number</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      placeholder="Enter your passport number" 
+                      {...field} 
+                      className="pl-10"
+                    />
+                    <Passport className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </FormControl>
+                <FormDescription>
+                  Used to track expiration and verify identification
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="passportExpiryDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Passport Expiry Date</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <FormDatePicker
+                      name="passportExpiryDate"
+                      placeholder="Select passport expiry date"
+                    />
+                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="dateOfBirth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of Birth (Optional)</FormLabel>
+                <FormControl>
+                  <FormDatePicker
+                    name="dateOfBirth"
+                    placeholder="Select date of birth"
+                    required={false}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>U.S. Residential Address</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input 
+                      placeholder="Enter your U.S. residential address" 
+                      {...field} 
+                      className="pl-10"
+                    />
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </FormControl>
+                <FormDescription>
+                  Required for SEVIS compliance reporting
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <Button 
             type="submit" 
             className="w-full mt-6"
