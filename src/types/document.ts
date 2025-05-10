@@ -24,6 +24,7 @@ export interface Document {
   status?: DocumentStatus;
   versions?: DocumentVersion[];
   folderId?: string;
+  user_id?: string; // Added user_id field
 }
 
 export interface DocumentFolder {

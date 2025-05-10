@@ -44,7 +44,7 @@ export const checkDocumentCompliance = async (
         );
         
         if (matchingDoc) {
-          // Log access if the current user is a DSO
+          // Log access if the current user is a DSO and there's a user_id on the document
           if (matchingDoc.user_id) {
             try {
               // Just check if current user is a DSO
