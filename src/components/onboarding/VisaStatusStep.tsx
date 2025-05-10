@@ -1,11 +1,10 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { visaStatusSchema, VisaStatusFormValues } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { ArrowLeft, Calendar, FileText, Passport } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, FileIcon } from "lucide-react";
 import {
   Form,
   FormControl,

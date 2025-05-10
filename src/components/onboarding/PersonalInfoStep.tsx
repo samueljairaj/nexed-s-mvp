@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { personalInfoSchema, countries } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { Flag, Phone, MapPin, Calendar, Passport } from "lucide-react";
+import { Flag, Phone, MapPin, Calendar, FileText } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -104,9 +104,7 @@ export function PersonalInfoStep({ defaultValues, onSubmit, isSubmitting = false
                   </FormControl>
                   <SelectContent className="max-h-[200px]">
                     {countries.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        {country}
-                      </SelectItem>
+                      <SelectItem key={country} value={country}>{country}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -149,7 +147,7 @@ export function PersonalInfoStep({ defaultValues, onSubmit, isSubmitting = false
                       {...field} 
                       className="pl-10"
                     />
-                    <Passport className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   </div>
                 </FormControl>
                 <FormDescription>

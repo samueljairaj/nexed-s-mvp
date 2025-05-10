@@ -30,8 +30,8 @@ export function useAcademicInfo() {
         updateData.courseStartDate = formatDateToString(data.programStartDate);
       }
 
-      if (data.expectedGraduationDate) {
-        updateData.graduationDate = formatDateToString(data.expectedGraduationDate);
+      if (data.programCompletionDate) {
+        updateData.graduationDate = formatDateToString(data.programCompletionDate);
       }
 
       if (data.isTransferStudent) {

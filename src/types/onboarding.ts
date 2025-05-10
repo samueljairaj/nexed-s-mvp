@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 // Shared schema patterns
@@ -180,7 +181,6 @@ export type PersonalInfoFormValues = z.infer<typeof personalInfoSchema>;
 export type VisaStatusFormValues = z.infer<typeof visaStatusSchema>;
 export type AcademicInfoFormValues = z.infer<typeof academicInfoSchema>;
 export type EmploymentInfoFormValues = z.infer<typeof employmentInfoSchema>;
-export type VisaInfoFormValues = z.infer<typeof visaInfoSchema>;
 export type SevisInfoFormValues = z.infer<typeof sevisInfoSchema>;
 export type PreferencesFormValues = z.infer<typeof preferencesSchema>;
 export type TermsFormValues = z.infer<typeof termsSchema>;
