@@ -67,6 +67,10 @@ export function VisaStatusStep({
   // Convert the string visa type to the enum type expected by the schema
   const initialVisaType = defaultValues.visaType as "F1" | "J1" | "H1B" | "Other";
 
+  console.log("VisaStatusStep rendering with defaultValues:", defaultValues);
+  console.log("VisaStatusStep isSubmitting:", isSubmitting);
+  console.log("VisaStatusStep handleBackToLogin:", !!handleBackToLogin);
+
   const form = useForm({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
@@ -80,6 +84,7 @@ export function VisaStatusStep({
   
   // Handle submit to ensure data is properly typed
   const handleFormSubmit = (data: any) => {
+    console.log("VisaStatusStep submitting data:", data);
     // Ensure visaType is one of the allowed types
     const formattedData: VisaStatusFormData = {
       ...data,

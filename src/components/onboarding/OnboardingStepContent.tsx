@@ -123,6 +123,7 @@ export const OnboardingStepContent = ({
               onSubmit={handleVisaStatus}
               onVisaTypeChange={handleVisaTypeChange}
               isSubmitting={isSubmitting}
+              handleBackToLogin={handleBackToLogin}
             />
           );
         case 3:

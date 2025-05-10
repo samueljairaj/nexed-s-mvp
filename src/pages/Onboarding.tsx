@@ -70,6 +70,10 @@ const Onboarding = () => {
     navigate("/", { replace: true });
   };
 
+  console.log("Current step:", currentStep);
+  console.log("isF1OrJ1:", typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1);
+  console.log("isLoading:", isLoading);
+
   // If loading, show a loading indicator
   if (isLoading) {
     return (
@@ -103,18 +107,15 @@ const Onboarding = () => {
           handlePersonalInfo={handlePersonalInfo}
           handleVisaStatus={handleVisaStatus}
           handleVisaTypeChange={handleVisaTypeChange}
-          // For DSOs, use handleDsoProfileSetup instead of handleAcademicInfo
           handleAcademicInfo={isDSO ? handleDsoProfileSetup : handleAcademicInfo}
           handleEmploymentInfo={handleEmploymentInfo}
-          // Make sure we're passing the right parameter type
           handleEmploymentStatusChange={handleEmploymentStatusChange}
-          // Convert function references to actual boolean values
           isF1OrJ1={typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1}
           isEmployed={typeof isEmployed === 'function' ? isEmployed() : isEmployed}
           isOptOrCpt={typeof isOptOrCpt === 'function' ? isOptOrCpt() : isOptOrCpt}
           isStemOpt={typeof isStemOpt === 'function' ? isStemOpt() : isStemOpt}
           handleFinish={handleFinish}
-          handleBackToLogin={handleBackToLogin} // Pass the function
+          handleBackToLogin={handleBackToLogin}
         />
       </div>
       
