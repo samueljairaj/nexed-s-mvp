@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { countries } from "@/types/onboarding";
 
 // Export the form data type
 export interface PersonalInfoFormData {
@@ -104,9 +105,23 @@ export function PersonalInfoStep({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nationality</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your nationality" {...field} />
-                  </FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your nationality" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {countries.map((country) => (
+                        <SelectItem key={country} value={country}>
+                          {country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -120,9 +135,23 @@ export function PersonalInfoStep({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Country of Residence</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your country of residence" {...field} />
-                  </FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your country" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {countries.map((country) => (
+                        <SelectItem key={country} value={country}>
+                          {country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

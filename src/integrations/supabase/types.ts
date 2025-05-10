@@ -217,6 +217,7 @@ export type Database = {
           id: string
           is_stem: boolean | null
           name: string | null
+          nationality: string | null
           onboarding_complete: boolean | null
           passport_expiry_date: string | null
           passport_number: string | null
@@ -241,6 +242,7 @@ export type Database = {
           id: string
           is_stem?: boolean | null
           name?: string | null
+          nationality?: string | null
           onboarding_complete?: boolean | null
           passport_expiry_date?: string | null
           passport_number?: string | null
@@ -265,6 +267,7 @@ export type Database = {
           id?: string
           is_stem?: boolean | null
           name?: string | null
+          nationality?: string | null
           onboarding_complete?: boolean | null
           passport_expiry_date?: string | null
           passport_number?: string | null
