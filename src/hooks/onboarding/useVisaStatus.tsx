@@ -19,21 +19,21 @@ export function useVisaStatus() {
     
     try {
       // Only include fields that exist in the profiles table
-      // Based on the database schema error, we're checking each field carefully
+      // Based on the database schema, we need to use visa_status, not visaStatus
+      // The error indicates that 'visaStatus' column doesn't exist
       const formattedData: Record<string, any> = {
-        visaType: data.visaType as VisaType,
-        visaStatus: data.visaStatus,
+        visa_type: data.visaType as VisaType,
         // Remove all fields not in the profiles table schema:
-        // sevisId, i94Number, visaExpiryDate, totalUnemployedDays, etc.
+        // visaStatus, sevisId, i94Number, visaExpiryDate, totalUnemployedDays, etc.
       };
       
       // Format dates as YYYY-MM-DD strings
       if (data.entryDate) {
-        formattedData.usEntryDate = formatDateToString(data.entryDate);
+        formattedData.us_entry_date = formatDateToString(data.entryDate);
       }
       
       if (data.programStartDate) {
-        formattedData.courseStartDate = formatDateToString(data.programStartDate);
+        formattedData.course_start_date = formatDateToString(data.programStartDate);
       }
       
       console.log("Attempting to update profile with visa data:", formattedData);
