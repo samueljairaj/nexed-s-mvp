@@ -25,15 +25,16 @@ export function useAcademicInfo() {
         field_of_study: data.fieldOfStudy,  // Use snake_case for database columns
       };
       
-      // Format program start date as YYYY-MM-DD string
+      // Format program start date as YYYY-MM-DD string if it exists
       if (data.programStartDate) {
-        updateData.courseStartDate = formatDateToString(data.programStartDate);
+        updateData.course_start_date = formatDateToString(data.programStartDate);
       }
 
-      if (data.programCompletionDate) {
-        updateData.graduationDate = formatDateToString(data.programCompletionDate);
-      }
-
+      // The column "graduationDate" doesn't exist in the database schema
+      // We need to either remove this or map to a column that does exist
+      // Based on the schema, we don't have a direct column for this value
+      // So we'll remove it from the update data
+      
       if (data.isTransferStudent) {
         updateData.previous_university = data.previousUniversity;
         updateData.has_transferred = true;
