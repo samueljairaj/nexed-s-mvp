@@ -36,8 +36,7 @@ export function StepNavigation({
         type={isLastStep ? "button" : "submit"}
         onClick={isLastStep ? onNext : undefined}
         disabled={isSubmitting}
-        variant={isLastStep ? "gradient" : "default"}
-        className="flex items-center gap-2 transition-all"
+        className="flex items-center gap-2 transition-all bg-nexed-500 hover:bg-nexed-600 text-white"
       >
         {isSubmitting ? (
           <>

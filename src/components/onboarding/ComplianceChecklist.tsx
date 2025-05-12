@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +8,8 @@ import { AlertTriangle, FileCheck, Upload, User, Briefcase, GraduationCap, Info,
 import { useNavigate } from "react-router-dom";
 import { useAICompliance, AITask } from "@/hooks/useAICompliance";
 import { DocumentCategory } from "@/types/document";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ComplianceChecklistProps {
   open: boolean;
@@ -29,6 +32,7 @@ interface GroupedDocuments {
 
 export function ComplianceChecklist({ open, onOpenChange, userData }: ComplianceChecklistProps) {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [tab, setTab] = useState("all-documents");
   const { generateCompliance, isGenerating } = useAICompliance();
   const [documents, setDocuments] = useState<GroupedDocuments>({
@@ -51,6 +55,45 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     employer: userData.employer || "Tech Company Inc.",
   });
   
+  // Save generated tasks to the database
+  const saveGeneratedTasksToDatabase = async (tasks: AITask[]) => {
+    if (!currentUser?.id) return;
+    
+    try {
+      // Transform tasks to database format
+      const dbTasks = tasks.map(task => ({
+        user_id: currentUser.id,
+        title: task.title,
+        description: task.description,
+        due_date: task.dueDate,
+        is_completed: !!task.completed,
+        category: task.category as DocumentCategory,
+        phase: task.phase || 'general',
+        priority: task.priority || 'medium',
+        visa_type: currentUser.visaType || 'F1'
+      }));
+      
+      // Insert the tasks into the database
+      const { error } = await supabase
+        .from('compliance_tasks')
+        .upsert(dbTasks, {
+          onConflict: 'user_id, title, phase',
+          ignoreDuplicates: false
+        });
+        
+      if (error) {
+        console.error('Error saving compliance tasks to database:', error);
+        return false;
+      }
+      
+      console.log('Successfully saved compliance tasks to database');
+      return true;
+    } catch (error) {
+      console.error('Failed to save compliance tasks:', error);
+      return false;
+    }
+  };
+  
   // Generate checklist when the component mounts
   useEffect(() => {
     if (open) {
@@ -65,6 +108,11 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     
     try {
       const tasks = await generateCompliance(userData);
+      
+      // Save the generated tasks to the database
+      if (currentUser?.id) {
+        saveGeneratedTasksToDatabase(tasks);
+      }
       
       // Categorize tasks by traditional categories
       const categorizedTasks = {
