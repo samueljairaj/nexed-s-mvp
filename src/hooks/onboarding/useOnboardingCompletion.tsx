@@ -17,6 +17,12 @@ export function useOnboardingCompletion() {
       // Generate appropriate tasks based on visa type
       const tasks = generateMockTasks(visaType);
       
+      // Convert visaType to one of the allowed values in the database
+      let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
+      if (visaType === "F1" || visaType === "OPT" || visaType === "H1B") {
+        normalizedVisaType = visaType as "F1" | "OPT" | "H1B";
+      }
+      
       // Transform tasks to database format
       const dbTasks = tasks.map(task => ({
         user_id: userId,
@@ -27,7 +33,7 @@ export function useOnboardingCompletion() {
         category: task.category,
         phase: task.phase || 'general',
         priority: task.priority,
-        visa_type: visaType
+        visa_type: normalizedVisaType
       }));
       
       // Insert the tasks into the database

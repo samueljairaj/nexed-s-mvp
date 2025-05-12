@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DocumentCategory } from '@/types/document';
@@ -54,6 +53,12 @@ export const useComplianceTasks = () => {
     if (!currentUser?.id) return;
     
     try {
+      // Convert visaType to one of the allowed values in the database
+      let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
+      if (currentUser.visaType === "F1" || currentUser.visaType === "OPT" || currentUser.visaType === "H1B") {
+        normalizedVisaType = currentUser.visaType as "F1" | "OPT" | "H1B";
+      }
+      
       // Transform tasks to Supabase format
       const supabaseTasks = tasksToSave.map(task => ({
         user_id: currentUser.id,
@@ -64,7 +69,7 @@ export const useComplianceTasks = () => {
         category: task.category,
         phase: task.phase || 'general',
         priority: task.priority,
-        visa_type: currentUser.visaType || 'F1'
+        visa_type: normalizedVisaType
       }));
       
       // Insert tasks to the database

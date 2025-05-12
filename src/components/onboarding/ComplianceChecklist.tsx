@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -61,17 +60,25 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     
     try {
       // Transform tasks to database format
-      const dbTasks = tasks.map(task => ({
-        user_id: currentUser.id,
-        title: task.title,
-        description: task.description,
-        due_date: task.dueDate,
-        is_completed: !!task.completed,
-        category: task.category as DocumentCategory,
-        phase: task.phase || 'general',
-        priority: task.priority || 'medium',
-        visa_type: currentUser.visaType || 'F1'
-      }));
+      const dbTasks = tasks.map(task => {
+        // Convert visaType to one of the allowed values in the database
+        let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
+        if (currentUser.visaType === "F1" || currentUser.visaType === "OPT" || currentUser.visaType === "H1B") {
+          normalizedVisaType = currentUser.visaType as "F1" | "OPT" | "H1B";
+        }
+        
+        return {
+          user_id: currentUser.id,
+          title: task.title,
+          description: task.description,
+          due_date: task.dueDate,
+          is_completed: !!task.completed,
+          category: task.category as DocumentCategory,
+          phase: task.phase || 'general',
+          priority: task.priority || 'medium',
+          visa_type: normalizedVisaType
+        };
+      });
       
       // Insert the tasks into the database
       const { error } = await supabase
