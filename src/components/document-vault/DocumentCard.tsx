@@ -28,8 +28,21 @@ export function DocumentCard({ document, onSelect, onDelete, onRename, onToggleR
     }
   };
 
+  const getStatusVariant = (status?: string) => {
+    if (!status) return "outline";
+    switch (status) {
+      case "valid": return "success";
+      case "expiring": return "warning";
+      case "expired": return "danger";
+      default: return "outline";
+    }
+  };
+
   return (
-    <Card className="border relative group hover:shadow-md transition-shadow">
+    <Card 
+      className="relative group transition-all duration-300" 
+      hover={true}
+    >
       <div className="absolute top-2 right-2 z-10">
         <DocumentActions
           doc={document}
@@ -43,7 +56,7 @@ export function DocumentCard({ document, onSelect, onDelete, onRename, onToggleR
         className="p-4 flex flex-col items-center text-center cursor-pointer"
         onClick={() => onSelect(document)}
       >
-        <div className="h-20 w-20 flex items-center justify-center">
+        <div className="h-20 w-20 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
           {getFileIcon(document.type)}
         </div>
         <div className="mt-3 w-full">
@@ -61,7 +74,8 @@ export function DocumentCard({ document, onSelect, onDelete, onRename, onToggleR
             
             {document.expiryDate && (
               <Badge 
-                className={`text-xs flex items-center gap-1 ${getStatusColor(document.status || 'valid')}`}
+                variant={getStatusVariant(document.status)}
+                className="text-xs flex items-center gap-1"
               >
                 <Clock className="w-3 h-3" />
                 {document.status === "valid" && "Valid"}

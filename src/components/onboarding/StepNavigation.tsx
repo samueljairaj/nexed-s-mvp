@@ -26,7 +26,7 @@ export function StepNavigation({
         variant="outline"
         onClick={onPrevious}
         disabled={isFirstStep || isSubmitting}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 transition-all"
       >
         <ArrowLeft size={16} />
         Back
@@ -36,7 +36,8 @@ export function StepNavigation({
         type={isLastStep ? "button" : "submit"}
         onClick={isLastStep ? onNext : undefined}
         disabled={isSubmitting}
-        className="flex items-center gap-2"
+        variant={isLastStep ? "gradient" : "default"}
+        className="flex items-center gap-2 transition-all"
       >
         {isSubmitting ? (
           <>

@@ -13,7 +13,10 @@ interface TaskItemProps {
 
 export function TaskItem({ task, toggleTaskStatus }: TaskItemProps) {
   return (
-    <Card className={`nexed-card ${task.completed ? 'bg-gray-50' : ''}`}>
+    <Card 
+      className={`${task.completed ? 'bg-gray-50' : ''}`}
+      hover={!task.completed}
+    >
       <CardContent className="p-4">
         <div className="flex items-start">
           <Checkbox 
@@ -31,15 +34,15 @@ export function TaskItem({ task, toggleTaskStatus }: TaskItemProps) {
                   {task.description}
                 </p>
               </div>
-              <div className="ml-4 flex items-center space-x-2">
+              <div className="ml-4 flex flex-wrap gap-2 items-center">
                 <Badge variant="outline" className="capitalize">
                   {task.category}
                 </Badge>
                 <Badge 
-                  className={
-                    task.priority === "high" ? "bg-red-100 text-red-800 hover:bg-red-100" : 
-                    task.priority === "medium" ? "bg-amber-100 text-amber-800 hover:bg-amber-100" : 
-                    "bg-green-100 text-green-800 hover:bg-green-100"
+                  variant={
+                    task.priority === "high" ? "danger" : 
+                    task.priority === "medium" ? "warning" : 
+                    "success"
                   }
                 >
                   {task.priority}

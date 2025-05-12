@@ -161,6 +161,10 @@ export type Database = {
           file_url: string
           id: string
           is_required: boolean | null
+          review_comment: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
           title: string
           updated_at: string | null
           user_id: string
@@ -172,6 +176,10 @@ export type Database = {
           file_url: string
           id?: string
           is_required?: boolean | null
+          review_comment?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -183,6 +191,10 @@ export type Database = {
           file_url?: string
           id?: string
           is_required?: boolean | null
+          review_comment?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -191,33 +203,39 @@ export type Database = {
       }
       dso_profiles: {
         Row: {
+          approval_status: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string | null
           department: string | null
           id: string
+          is_admin: boolean | null
           office_hours: string | null
           office_location: string | null
           title: string | null
           updated_at: string | null
         }
         Insert: {
+          approval_status?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
           department?: string | null
           id: string
+          is_admin?: boolean | null
           office_hours?: string | null
           office_location?: string | null
           title?: string | null
           updated_at?: string | null
         }
         Update: {
+          approval_status?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
           department?: string | null
           id?: string
+          is_admin?: boolean | null
           office_hours?: string | null
           office_location?: string | null
           title?: string | null
@@ -319,6 +337,41 @@ export type Database = {
           },
         ]
       }
+      student_notes: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string | null
+          id: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_notes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       universities: {
         Row: {
           country: string
@@ -358,6 +411,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_approved_dso: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_dso: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -368,6 +425,14 @@ export type Database = {
       }
       is_same_university: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      is_same_university_as_student: {
+        Args: { student_id: string }
+        Returns: boolean
+      }
+      is_university_admin: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       log_audit_event: {
