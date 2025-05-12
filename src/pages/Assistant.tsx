@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
@@ -95,7 +95,7 @@ const Assistant = () => {
   ];
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <header className="mb-8">
         <h1 className="text-3xl font-bold">AI Immigration Assistant</h1>
         <p className="text-gray-600 mt-2">
@@ -105,12 +105,21 @@ const Assistant = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chat Section */}
-        <Card className="nexed-card lg:col-span-2">
+        <Card className="lg:col-span-2 shadow-md hover:shadow-lg transition-shadow duration-300">
+          <CardHeader className="bg-gradient-to-r from-nexed-50 to-white pb-3 border-b">
+            <CardTitle className="flex items-center text-xl">
+              <MessageCircle className="h-5 w-5 mr-2 text-nexed-600" />
+              Chat with your Assistant
+            </CardTitle>
+            <CardDescription>
+              Ask me anything about your visa status, compliance requirements, or deadlines
+            </CardDescription>
+          </CardHeader>
           <CardContent className="p-0">
-            <div className="flex flex-col h-[600px]">
+            <div className="flex flex-col h-[550px]">
               {/* Message History */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <div className="space-y-4">
+              <div className="flex-1 overflow-y-auto p-5">
+                <div className="space-y-5">
                   {messages.map(message => (
                     <div
                       key={message.id}
@@ -119,29 +128,31 @@ const Assistant = () => {
                       }`}
                     >
                       <div
-                        className={`flex max-w-[80%] ${
+                        className={`flex max-w-[85%] ${
                           message.role === "user" ? "flex-row-reverse" : ""
                         }`}
                       >
                         <Avatar className={`h-8 w-8 ${
                           message.role === "user" 
-                            ? "ml-2 bg-nexed-100" 
-                            : "mr-2 bg-nexed-600 text-white"
+                            ? "ml-3 bg-nexed-100 text-nexed-600 ring-2 ring-nexed-200" 
+                            : "mr-3 bg-nexed-600 text-white ring-2 ring-nexed-300"
                         }`}>
-                          {message.role === "user" ? "U" : "A"}
+                          <span className="text-xs font-medium">
+                            {message.role === "user" ? currentUser?.name?.charAt(0) || "U" : "A"}
+                          </span>
                         </Avatar>
                         <div>
                           <div
-                            className={`rounded-lg p-3 ${
+                            className={`rounded-xl p-4 ${
                               message.role === "user"
-                                ? "bg-nexed-100 text-nexed-900"
+                                ? "bg-nexed-500 text-white"
                                 : "bg-white border shadow-sm"
                             }`}
                           >
                             <p className="whitespace-pre-line">{message.content}</p>
                           </div>
-                          <div className={`text-xs text-gray-500 mt-1 ${
-                            message.role === "user" ? "text-right" : ""
+                          <div className={`text-xs text-gray-500 mt-1.5 ${
+                            message.role === "user" ? "text-right mr-1" : "ml-1"
                           }`}>
                             {message.timestamp}
                           </div>
@@ -152,14 +163,14 @@ const Assistant = () => {
                   {isLoading && (
                     <div className="flex justify-start">
                       <div className="flex">
-                        <Avatar className="h-8 w-8 mr-2 bg-nexed-600 text-white">
-                          A
+                        <Avatar className="h-8 w-8 mr-3 bg-nexed-600 text-white ring-2 ring-nexed-300">
+                          <span className="text-xs font-medium">A</span>
                         </Avatar>
-                        <div className="rounded-lg p-4 bg-white border shadow-sm">
+                        <div className="rounded-xl p-4 bg-white border shadow-sm">
                           <div className="flex space-x-2">
-                            <div className="h-2 w-2 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                            <div className="h-2 w-2 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                            <div className="h-2 w-2 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></div>
+                            <div className="h-2.5 w-2.5 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                            <div className="h-2.5 w-2.5 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                            <div className="h-2.5 w-2.5 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></div>
                           </div>
                         </div>
                       </div>
@@ -176,15 +187,18 @@ const Assistant = () => {
                     placeholder="Type your question..."
                     value={inputValue}
                     onChange={e => setInputValue(e.target.value)}
-                    className="flex-1"
+                    className="flex-1 shadow-sm focus-visible:ring-nexed-500"
                     disabled={isLoading}
                   />
                   <Button 
                     type="submit" 
                     disabled={!inputValue.trim() || isLoading}
-                    className="nexed-gradient"
+                    className="bg-gradient-to-br from-nexed-500 to-nexed-700 hover:shadow-md transition-all duration-200"
                   >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    {isLoading ? 
+                      <Loader2 className="h-4 w-4 animate-spin" /> : 
+                      <Send className="h-4 w-4" />
+                    }
                   </Button>
                 </form>
               </div>
@@ -192,73 +206,80 @@ const Assistant = () => {
           </CardContent>
         </Card>
 
-        {/* FAQ Section */}
+        {/* Sidebar Section */}
         <div className="space-y-6">
-          {/* New Reminder Examples Card */}
-          <Card className="nexed-card bg-nexed-50">
-            <CardContent className="pt-6">
-              <h2 className="text-lg font-semibold mb-3 flex items-center">
+          {/* Reminder Examples Card */}
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+            <CardHeader className="bg-nexed-50 pb-3 border-b">
+              <CardTitle className="flex items-center text-lg">
                 <BellPlus className="h-5 w-5 mr-2 text-nexed-600" />
                 Create Reminders
-              </h2>
-              <p className="text-sm text-gray-600 mb-3">
-                Try asking me to create reminders for your important tasks:
-              </p>
+              </CardTitle>
+              <CardDescription>
+                Ask me to create reminders for important tasks
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
               <div className="space-y-2">
                 {reminderExamples.map((example, index) => (
                   <Button 
                     key={`reminder-${index}`} 
                     variant="outline" 
-                    className="w-full justify-start text-left h-auto py-2 px-3 border-nexed-200"
+                    className="w-full justify-start text-left h-auto py-2.5 px-3 border-nexed-200 hover:bg-nexed-50 hover:border-nexed-300 transition-colors"
                     onClick={() => suggestQuestion(example)}
                   >
                     <Clock className="h-4 w-4 mr-2 flex-shrink-0 text-nexed-600" />
-                    <span className="truncate">{example}</span>
+                    <span className="truncate text-sm">{example}</span>
                   </Button>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="nexed-card">
-            <CardContent className="pt-6">
-              <h2 className="text-lg font-semibold mb-3 flex items-center">
-                <Info className="h-5 w-5 mr-2 text-nexed-600" />
+          {/* Common Questions Card */}
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+            <CardHeader className="bg-nexed-50 pb-3 border-b">
+              <CardTitle className="flex items-center text-lg">
+                <MessageCircle className="h-5 w-5 mr-2 text-nexed-600" />
                 Common Questions
-              </h2>
-
-              <div className="flex overflow-x-auto pb-2 mb-2 scrollbar-thin">
+              </CardTitle>
+              <CardDescription>
+                Quick access to frequently asked questions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex overflow-x-auto pb-2 mb-2 scrollbar-thin gap-2">
                 <Badge 
                   variant={selectedCategory === null ? "default" : "outline"} 
-                  className="mr-2 cursor-pointer whitespace-nowrap"
+                  className="cursor-pointer whitespace-nowrap"
                   onClick={() => setSelectedCategory(null)}
                 >
                   All
                 </Badge>
                 <Badge 
                   variant={selectedCategory === "F1" ? "default" : "outline"} 
-                  className="mr-2 cursor-pointer whitespace-nowrap"
+                  className="cursor-pointer whitespace-nowrap"
                   onClick={() => setSelectedCategory("F1")}
                 >
                   F-1 Visa
                 </Badge>
                 <Badge 
                   variant={selectedCategory === "OPT" ? "default" : "outline"} 
-                  className="mr-2 cursor-pointer whitespace-nowrap"
+                  className="cursor-pointer whitespace-nowrap"
                   onClick={() => setSelectedCategory("OPT")}
                 >
                   OPT
                 </Badge>
                 <Badge 
                   variant={selectedCategory === "H1B" ? "default" : "outline"} 
-                  className="mr-2 cursor-pointer whitespace-nowrap"
+                  className="cursor-pointer whitespace-nowrap"
                   onClick={() => setSelectedCategory("H1B")}
                 >
                   H1B
                 </Badge>
                 <Badge 
                   variant={selectedCategory === "Travel" ? "default" : "outline"} 
-                  className="mr-2 cursor-pointer whitespace-nowrap"
+                  className="cursor-pointer whitespace-nowrap"
                   onClick={() => setSelectedCategory("Travel")}
                 >
                   Travel
@@ -270,52 +291,65 @@ const Assistant = () => {
                   <Button 
                     key={faq.id} 
                     variant="outline" 
-                    className="w-full justify-start text-left h-auto py-2 px-3"
+                    className="w-full justify-start text-left h-auto py-2.5 px-3 hover:bg-nexed-50 hover:border-nexed-300 transition-colors"
                     onClick={() => suggestQuestion(faq.question)}
                   >
-                    <MessageCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="truncate">{faq.question}</span>
+                    <MessageCircle className="h-4 w-4 mr-2 flex-shrink-0 text-nexed-600" />
+                    <span className="truncate text-sm">{faq.question}</span>
                   </Button>
                 ))}
               </div>
             </CardContent>
           </Card>
           
-          <Card className="nexed-card">
-            <CardContent className="pt-6">
-              <Tabs defaultValue="resources">
-                <TabsList className="grid w-full grid-cols-2">
+          {/* Resources & Tips Card */}
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+            <CardHeader className="bg-nexed-50 pb-3 border-b">
+              <CardTitle className="flex items-center text-lg">
+                <Info className="h-5 w-5 mr-2 text-nexed-600" />
+                Resources & Tips
+              </CardTitle>
+              <CardDescription>
+                Helpful information for international students
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Tabs defaultValue="resources" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 rounded-none">
                   <TabsTrigger value="resources">Resources</TabsTrigger>
                   <TabsTrigger value="tips">Tips</TabsTrigger>
                 </TabsList>
-                <TabsContent value="resources" className="space-y-4 pt-4">
-                  <h3 className="font-medium text-lg">Official Links</h3>
+                <TabsContent value="resources" className="space-y-4 p-4">
+                  <h3 className="font-medium text-lg text-nexed-800">Official Links</h3>
                   <div className="space-y-2">
-                    <a href="https://www.uscis.gov/" target="_blank" rel="noopener noreferrer" className="flex items-center p-2 hover:bg-gray-50 rounded-md">
-                      <FileText className="h-4 w-4 mr-2 text-blue-500" />
-                      <span className="text-blue-600">USCIS Official Website</span>
+                    <a href="https://www.uscis.gov/" target="_blank" rel="noopener noreferrer" 
+                       className="flex items-center p-2.5 hover:bg-nexed-50 rounded-md border border-transparent hover:border-nexed-200 transition-colors">
+                      <FileText className="h-4 w-4 mr-2 text-nexed-600" />
+                      <span className="text-nexed-700 text-sm">USCIS Official Website</span>
                     </a>
-                    <a href="https://studyinthestates.dhs.gov/" target="_blank" rel="noopener noreferrer" className="flex items-center p-2 hover:bg-gray-50 rounded-md">
-                      <FileText className="h-4 w-4 mr-2 text-blue-500" />
-                      <span className="text-blue-600">Study in the States (DHS)</span>
+                    <a href="https://studyinthestates.dhs.gov/" target="_blank" rel="noopener noreferrer" 
+                       className="flex items-center p-2.5 hover:bg-nexed-50 rounded-md border border-transparent hover:border-nexed-200 transition-colors">
+                      <FileText className="h-4 w-4 mr-2 text-nexed-600" />
+                      <span className="text-nexed-700 text-sm">Study in the States (DHS)</span>
                     </a>
-                    <a href="https://www.ice.gov/sevis" target="_blank" rel="noopener noreferrer" className="flex items-center p-2 hover:bg-gray-50 rounded-md">
-                      <FileText className="h-4 w-4 mr-2 text-blue-500" />
-                      <span className="text-blue-600">SEVIS Information</span>
+                    <a href="https://www.ice.gov/sevis" target="_blank" rel="noopener noreferrer" 
+                       className="flex items-center p-2.5 hover:bg-nexed-50 rounded-md border border-transparent hover:border-nexed-200 transition-colors">
+                      <FileText className="h-4 w-4 mr-2 text-nexed-600" />
+                      <span className="text-nexed-700 text-sm">SEVIS Information</span>
                     </a>
                   </div>
                 </TabsContent>
-                <TabsContent value="tips" className="pt-4">
-                  <div className="space-y-3">
-                    <div className="flex items-start">
+                <TabsContent value="tips" className="p-4">
+                  <div className="space-y-4">
+                    <div className="flex items-start bg-nexed-50 p-3 rounded-lg">
                       <Clock className="h-4 w-4 mt-1 mr-2 text-nexed-600" />
                       <p className="text-sm">Always file applications well before deadlines to avoid status issues</p>
                     </div>
-                    <div className="flex items-start">
+                    <div className="flex items-start bg-amber-50 p-3 rounded-lg">
                       <AlertTriangle className="h-4 w-4 mt-1 mr-2 text-amber-500" />
                       <p className="text-sm">Keep digital and physical copies of all your immigration documents</p>
                     </div>
-                    <div className="flex items-start">
+                    <div className="flex items-start bg-nexed-50 p-3 rounded-lg">
                       <Info className="h-4 w-4 mt-1 mr-2 text-nexed-600" />
                       <p className="text-sm">Always consult with your DSO before making decisions that might affect your visa status</p>
                     </div>
@@ -328,13 +362,11 @@ const Assistant = () => {
       </div>
 
       <div className="mt-6">
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="flex items-center p-4">
-            <AlertTriangle className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" />
-            <p className="text-sm text-gray-700">
-              This AI assistant provides general guidance only. For official immigration advice, please consult with your university's international student office or a qualified immigration attorney.
-            </p>
-          </CardContent>
+        <Card className="bg-blue-50 border-blue-200 p-4 flex items-center shadow-sm">
+          <AlertTriangle className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" />
+          <p className="text-sm text-gray-700">
+            This AI assistant provides general guidance only. For official immigration advice, please consult with your university's international student office or a qualified immigration attorney.
+          </p>
         </Card>
       </div>
     </div>
