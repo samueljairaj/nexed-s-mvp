@@ -19,8 +19,14 @@ export function useOnboardingCompletion() {
       
       // Convert visaType to one of the allowed values in the database
       let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
-      if (visaType === "F1" || visaType === "OPT" || visaType === "H1B") {
-        normalizedVisaType = visaType as "F1" | "OPT" | "H1B";
+      
+      // Use strict equality check with explicit string values
+      if (visaType === "F1") {
+        normalizedVisaType = "F1";
+      } else if (visaType === "OPT") {
+        normalizedVisaType = "OPT";
+      } else if (visaType === "H1B") {
+        normalizedVisaType = "H1B";
       }
       
       // Transform tasks to database format

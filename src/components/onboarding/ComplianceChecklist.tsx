@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -63,8 +64,11 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
       const dbTasks = tasks.map(task => {
         // Convert visaType to one of the allowed values in the database
         let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
-        if (currentUser.visaType === "F1" || currentUser.visaType === "OPT" || currentUser.visaType === "H1B") {
-          normalizedVisaType = currentUser.visaType as "F1" | "OPT" | "H1B";
+        const userVisaType = currentUser.visaType || "";
+        
+        // Use strict equality check for string comparison
+        if (userVisaType === "F1" || userVisaType === "OPT" || userVisaType === "H1B") {
+          normalizedVisaType = userVisaType as "F1" | "OPT" | "H1B";
         }
         
         return {

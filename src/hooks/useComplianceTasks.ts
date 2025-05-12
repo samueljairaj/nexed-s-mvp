@@ -55,8 +55,15 @@ export const useComplianceTasks = () => {
     try {
       // Convert visaType to one of the allowed values in the database
       let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
-      if (currentUser.visaType === "F1" || currentUser.visaType === "OPT" || currentUser.visaType === "H1B") {
-        normalizedVisaType = currentUser.visaType as "F1" | "OPT" | "H1B";
+      const userVisaType = currentUser.visaType || "";
+      
+      // Use strict equality check with explicit string values
+      if (userVisaType === "F1") {
+        normalizedVisaType = "F1";
+      } else if (userVisaType === "OPT") {
+        normalizedVisaType = "OPT";
+      } else if (userVisaType === "H1B") {
+        normalizedVisaType = "H1B";
       }
       
       // Transform tasks to Supabase format
@@ -357,6 +364,18 @@ export const useComplianceTasks = () => {
     if (!currentUser?.id) return;
     
     try {
+      // Convert visaType to one of the allowed values in the database
+      let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
+      const userVisaType = currentUser.visaType || "";
+      
+      if (userVisaType === "F1") {
+        normalizedVisaType = "F1";
+      } else if (userVisaType === "OPT") {
+        normalizedVisaType = "OPT";
+      } else if (userVisaType === "H1B") {
+        normalizedVisaType = "H1B";
+      }
+      
       const { data, error } = await supabase
         .from('compliance_tasks')
         .insert({
@@ -368,7 +387,7 @@ export const useComplianceTasks = () => {
           category: task.category,
           phase: task.phase || 'general',
           priority: task.priority,
-          visa_type: currentUser.visaType || 'F1'
+          visa_type: normalizedVisaType
         })
         .select();
         
