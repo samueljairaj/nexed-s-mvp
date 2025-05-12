@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +29,9 @@ interface GroupedDocuments {
   personal: AITask[];
 }
 
+// Define type for database-accepted visa types
+type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
+
 export function ComplianceChecklist({ open, onOpenChange, userData }: ComplianceChecklistProps) {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -55,6 +57,14 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     employer: userData.employer || "Tech Company Inc.",
   });
   
+  // Helper function to normalize visa types for database compatibility
+  const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
+    if (visaType === "F1") return "F1";
+    if (visaType === "OPT") return "OPT"; 
+    if (visaType === "H1B") return "H1B";
+    return "Other";
+  };
+  
   // Save generated tasks to the database
   const saveGeneratedTasksToDatabase = async (tasks: AITask[]) => {
     if (!currentUser?.id) return;
@@ -62,15 +72,6 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     try {
       // Transform tasks to database format
       const dbTasks = tasks.map(task => {
-        // Convert visaType to one of the allowed values in the database
-        let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
-        const userVisaType = currentUser.visaType || "";
-        
-        // Use strict equality check for string comparison
-        if (userVisaType === "F1" || userVisaType === "OPT" || userVisaType === "H1B") {
-          normalizedVisaType = userVisaType as "F1" | "OPT" | "H1B";
-        }
-        
         return {
           user_id: currentUser.id,
           title: task.title,
@@ -80,7 +81,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
           category: task.category as DocumentCategory,
           phase: task.phase || 'general',
           priority: task.priority || 'medium',
-          visa_type: normalizedVisaType
+          visa_type: normalizeVisaType(currentUser.visaType)
         };
       });
       

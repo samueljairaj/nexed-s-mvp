@@ -6,10 +6,21 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { generateMockTasks } from "@/utils/mockTasks";
 
+// Type for database-accepted visa types
+type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
+
 export function useOnboardingCompletion() {
   const { completeOnboarding, isDSO, currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  // Helper function to normalize visa types for database compatibility
+  const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
+    if (visaType === "F1") return "F1";
+    if (visaType === "OPT") return "OPT";
+    if (visaType === "H1B") return "H1B";
+    return "Other";
+  };
 
   // Save personalized compliance tasks to database
   const saveTasksToDatabase = async (userId: string, visaType: string) => {
@@ -17,17 +28,8 @@ export function useOnboardingCompletion() {
       // Generate appropriate tasks based on visa type
       const tasks = generateMockTasks(visaType);
       
-      // Convert visaType to one of the allowed values in the database
-      let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
-      
-      // Use strict equality check with explicit string values
-      if (visaType === "F1") {
-        normalizedVisaType = "F1";
-      } else if (visaType === "OPT") {
-        normalizedVisaType = "OPT";
-      } else if (visaType === "H1B") {
-        normalizedVisaType = "H1B";
-      }
+      // Normalize the visa type for database compatibility
+      const normalizedVisaType = normalizeVisaType(visaType);
       
       // Transform tasks to database format
       const dbTasks = tasks.map(task => ({

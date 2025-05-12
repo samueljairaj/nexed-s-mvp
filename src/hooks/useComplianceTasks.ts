@@ -21,6 +21,9 @@ export interface Task {
   updatedAt?: Date;
 }
 
+// Type for database visa types
+export type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
+
 // Interface for custom task creation
 interface CustomTaskInput {
   title: string;
@@ -41,6 +44,14 @@ export const useComplianceTasks = () => {
   const [selectedPhase, setSelectedPhase] = useState<string>('all_phases');
   const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
 
+  // Helper function to normalize visa types for database compatibility
+  const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
+    if (visaType === "F1") return "F1";
+    if (visaType === "OPT") return "OPT";
+    if (visaType === "H1B") return "H1B";
+    return "Other";
+  };
+
   // Load tasks on component mount
   useEffect(() => {
     if (currentUser?.id) {
@@ -53,19 +64,6 @@ export const useComplianceTasks = () => {
     if (!currentUser?.id) return;
     
     try {
-      // Convert visaType to one of the allowed values in the database
-      let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
-      const userVisaType = currentUser.visaType || "";
-      
-      // Use strict equality check with explicit string values
-      if (userVisaType === "F1") {
-        normalizedVisaType = "F1";
-      } else if (userVisaType === "OPT") {
-        normalizedVisaType = "OPT";
-      } else if (userVisaType === "H1B") {
-        normalizedVisaType = "H1B";
-      }
-      
       // Transform tasks to Supabase format
       const supabaseTasks = tasksToSave.map(task => ({
         user_id: currentUser.id,
@@ -76,7 +74,7 @@ export const useComplianceTasks = () => {
         category: task.category,
         phase: task.phase || 'general',
         priority: task.priority,
-        visa_type: normalizedVisaType
+        visa_type: normalizeVisaType(currentUser.visaType)
       }));
       
       // Insert tasks to the database
@@ -326,7 +324,7 @@ export const useComplianceTasks = () => {
     try {
       const { error } = await supabase
         .from('compliance_tasks')
-        .update({ is_completed: isCompleted, updated_at: new Date() })
+        .update({ is_completed: isCompleted, updated_at: new Date().toISOString() })
         .eq('id', taskId)
         .eq('user_id', currentUser.id);
         
@@ -364,18 +362,6 @@ export const useComplianceTasks = () => {
     if (!currentUser?.id) return;
     
     try {
-      // Convert visaType to one of the allowed values in the database
-      let normalizedVisaType: "F1" | "OPT" | "H1B" | "Other" = "Other";
-      const userVisaType = currentUser.visaType || "";
-      
-      if (userVisaType === "F1") {
-        normalizedVisaType = "F1";
-      } else if (userVisaType === "OPT") {
-        normalizedVisaType = "OPT";
-      } else if (userVisaType === "H1B") {
-        normalizedVisaType = "H1B";
-      }
-      
       const { data, error } = await supabase
         .from('compliance_tasks')
         .insert({
@@ -387,7 +373,7 @@ export const useComplianceTasks = () => {
           category: task.category,
           phase: task.phase || 'general',
           priority: task.priority,
-          visa_type: normalizedVisaType
+          visa_type: normalizeVisaType(currentUser.visaType)
         })
         .select();
         
