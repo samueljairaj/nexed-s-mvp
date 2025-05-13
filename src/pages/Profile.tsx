@@ -1,8 +1,7 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 const Profile = () => {
   const { currentUser } = useAuth();
@@ -26,8 +25,11 @@ const Profile = () => {
     if (!date) return "Not specified";
     try {
       // Handle both string and Date inputs
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
-      return format(dateObj, "MMM d, yyyy");
+      if (typeof date === 'string') {
+        return format(parseISO(date), "MMM d, yyyy");
+      } else {
+        return format(date, "MMM d, yyyy");
+      }
     } catch (e) {
       return "Invalid date";
     }
@@ -43,6 +45,7 @@ const Profile = () => {
         </div>
 
         <div className="space-y-6">
+          {/* Document Checklist Card */}
           <Card>
             <CardHeader>
               <CardTitle>Document Checklist</CardTitle>
@@ -62,6 +65,7 @@ const Profile = () => {
             </CardContent>
           </Card>
           
+          {/* Visa Status Card */}
           <Card>
             <CardHeader>
               <CardTitle>Visa Status</CardTitle>

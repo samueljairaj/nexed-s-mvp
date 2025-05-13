@@ -275,6 +275,7 @@ export type Database = {
           university_id: string | null
           updated_at: string | null
           us_entry_date: string | null
+          visa_expiry_date: string | null
           visa_type: Database["public"]["Enums"]["visa_type"] | null
         }
         Insert: {
@@ -300,6 +301,7 @@ export type Database = {
           university_id?: string | null
           updated_at?: string | null
           us_entry_date?: string | null
+          visa_expiry_date?: string | null
           visa_type?: Database["public"]["Enums"]["visa_type"] | null
         }
         Update: {
@@ -325,6 +327,7 @@ export type Database = {
           university_id?: string | null
           updated_at?: string | null
           us_entry_date?: string | null
+          visa_expiry_date?: string | null
           visa_type?: Database["public"]["Enums"]["visa_type"] | null
         }
         Relationships: [

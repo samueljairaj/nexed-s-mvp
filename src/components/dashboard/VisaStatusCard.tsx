@@ -1,6 +1,6 @@
 
 import React from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,15 +12,26 @@ const VisaStatusCard: React.FC<VisaStatusCardProps> = ({ currentUser }) => {
   // Get visa details based on visa type
   let status = "Active";
   
-  // Use visa_expiry_date if available, otherwise fallback to passport expiry
-  let visaExpiryDate = currentUser?.visa_expiry_date;
-  let passportExpiryDate = currentUser?.passportExpiryDate;
+  // Format date safely with a fallback
+  const formatSafeDate = (dateStr: string | Date | null | undefined): string => {
+    if (!dateStr) return "Not specified";
+    try {
+      if (typeof dateStr === 'string') {
+        return format(parseISO(dateStr), "MMM d, yyyy");
+      } else {
+        return format(dateStr, "MMM d, yyyy");
+      }
+    } catch (e) {
+      return "Invalid date";
+    }
+  };
   
-  let validUntil = visaExpiryDate 
-    ? format(new Date(visaExpiryDate), "MMM d, yyyy")
-    : passportExpiryDate 
-    ? format(new Date(passportExpiryDate), "MMM d, yyyy") + " (passport)"
-    : "Not specified";
+  // Use visa_expiry_date if available, otherwise fallback to passport expiry
+  let validUntil = currentUser?.visa_expiry_date 
+    ? formatSafeDate(currentUser.visa_expiry_date)
+    : currentUser?.passportExpiryDate 
+      ? formatSafeDate(currentUser.passportExpiryDate) + " (passport)"
+      : "Not specified";
   
   let statusColor = "text-green-600";
   let statusBgColor = "bg-green-100";
@@ -61,7 +72,7 @@ const VisaStatusCard: React.FC<VisaStatusCardProps> = ({ currentUser }) => {
             </li>
             <li className="flex items-start">
               <CheckCircle2 size={14} className="text-green-500 mr-2 mt-1" />
-              <span>Passport {passportExpiryDate ? "valid until " + format(new Date(passportExpiryDate), "MMM d, yyyy") : "information needed"}</span>
+              <span>Passport {currentUser?.passportExpiryDate ? "valid until " + formatSafeDate(currentUser.passportExpiryDate) : "information needed"}</span>
             </li>
             <li className="flex items-start">
               <AlertTriangle size={14} className="text-amber-500 mr-2 mt-1" />

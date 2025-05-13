@@ -152,7 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           phone: data.phone || undefined,
           passportNumber: data.passport_number || undefined,
           address: data.address || undefined,
-          visa_expiry_date: data.visa_expiry_date || undefined // Map the visa expiry date
+          visa_expiry_date: data.visa_expiry_date || undefined
         };
         
         setCurrentUser(userProfile);
@@ -424,6 +424,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (data.isSTEM !== undefined) {
           dbData.is_stem = data.isSTEM;
           delete dbData.isSTEM;
+        }
+        
+        // Handle visa expiry date if it exists
+        if (data.visa_expiry_date !== undefined) {
+          dbData.visa_expiry_date = data.visa_expiry_date;
         }
         
         // Remove undefined fields
