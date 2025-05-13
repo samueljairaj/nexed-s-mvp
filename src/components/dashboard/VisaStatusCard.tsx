@@ -11,9 +11,16 @@ interface VisaStatusCardProps {
 const VisaStatusCard: React.FC<VisaStatusCardProps> = ({ currentUser }) => {
   // Get visa details based on visa type
   let status = "Active";
-  let validUntil = currentUser?.passportExpiryDate 
-    ? format(new Date(currentUser.passportExpiryDate), "MMM d, yyyy")
+  // Use visa expiry date if available, otherwise fallback to passport expiry
+  let visaExpiryDate = currentUser?.visaExpiryDate;
+  let passportExpiryDate = currentUser?.passportExpiryDate;
+  
+  let validUntil = visaExpiryDate 
+    ? format(new Date(visaExpiryDate), "MMM d, yyyy")
+    : passportExpiryDate 
+    ? format(new Date(passportExpiryDate), "MMM d, yyyy") + " (passport)"
     : "Not specified";
+  
   let statusColor = "text-green-600";
   let statusBgColor = "bg-green-100";
   
@@ -42,7 +49,7 @@ const VisaStatusCard: React.FC<VisaStatusCardProps> = ({ currentUser }) => {
             <CheckCircle2 size={12} className="mr-1" /> {status}
           </span>
           <span className="text-gray-600 text-sm">
-            <Clock size={12} className="inline mr-1" /> Valid until {validUntil}
+            <Clock size={12} className="inline mr-1" /> Visa valid until {validUntil}
           </span>
         </div>
         <div className="text-sm text-gray-600">
@@ -53,7 +60,7 @@ const VisaStatusCard: React.FC<VisaStatusCardProps> = ({ currentUser }) => {
             </li>
             <li className="flex items-start">
               <CheckCircle2 size={14} className="text-green-500 mr-2 mt-1" />
-              <span>Passport {currentUser?.passportExpiryDate ? "valid until " + format(new Date(currentUser.passportExpiryDate), "MMM d, yyyy") : "information needed"}</span>
+              <span>Passport {passportExpiryDate ? "valid until " + format(new Date(passportExpiryDate), "MMM d, yyyy") : "information needed"}</span>
             </li>
             <li className="flex items-start">
               <AlertTriangle size={14} className="text-amber-500 mr-2 mt-1" />

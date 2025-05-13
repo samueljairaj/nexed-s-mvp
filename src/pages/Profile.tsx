@@ -2,6 +2,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
+import { format } from "date-fns";
 
 const Profile = () => {
   const { currentUser } = useAuth();
@@ -18,6 +19,16 @@ const Profile = () => {
     }
 
     return docs;
+  };
+
+  // Format date safely with a fallback
+  const formatDate = (date: string | null | undefined): string => {
+    if (!date) return "Not specified";
+    try {
+      return format(new Date(date), "MMM d, yyyy");
+    } catch (e) {
+      return "Invalid date";
+    }
   };
 
   return (
@@ -58,6 +69,16 @@ const Profile = () => {
                 <div>
                   <span className="text-sm text-gray-500">Current Status:</span>
                   <p className="font-medium">{currentUser?.visaType || "Not specified"}</p>
+                </div>
+                
+                <div>
+                  <span className="text-sm text-gray-500">Passport Expiry:</span>
+                  <p className="font-medium">{formatDate(currentUser?.passportExpiryDate)}</p>
+                </div>
+                
+                <div>
+                  <span className="text-sm text-gray-500">Visa Expiry:</span>
+                  <p className="font-medium">{formatDate(currentUser?.visaExpiryDate)}</p>
                 </div>
                 
                 {currentUser?.visaType === "F1" && (

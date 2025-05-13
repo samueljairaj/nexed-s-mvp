@@ -60,7 +60,8 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
   // Helper function to normalize visa types for database compatibility
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
     if (visaType === "F1") return "F1";
-    if (visaType === "OPT") return "OPT"; 
+    if (visaType === "J1" || visaType === "J-1") return "Other"; // Map J1 to Other as it's not in the allowed types
+    if (visaType === "OPT") return "OPT";
     if (visaType === "H1B") return "H1B";
     return "Other";
   };
