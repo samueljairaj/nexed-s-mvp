@@ -1,84 +1,124 @@
 
 import React from "react";
-import { format, parseISO } from "date-fns";
-import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/utils";
+import { CalendarClock } from "lucide-react";
 
-interface VisaStatusCardProps {
-  currentUser: any;
-}
-
-const VisaStatusCard: React.FC<VisaStatusCardProps> = ({ currentUser }) => {
-  // Get visa details based on visa type
-  let status = "Active";
+const VisaStatusCard = () => {
+  const { currentUser } = useAuth();
   
-  // Format date safely with a fallback
-  const formatSafeDate = (dateStr: string | Date | null | undefined): string => {
-    if (!dateStr) return "Not specified";
+  // Visa expiry date, safely formatted
+  const visaExpiryDate = currentUser?.visa_expiry_date 
+    ? formatDate(currentUser.visa_expiry_date)
+    : "Not available";
+    
+  // Calculate days until expiry
+  const daysUntilExpiry = currentUser?.visa_expiry_date 
+    ? Math.floor((new Date(currentUser.visa_expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+    
+  // Determine visa status
+  const getVisaStatus = () => {
+    if (!daysUntilExpiry) return "Unknown";
+    if (daysUntilExpiry < 0) return "Expired";
+    if (daysUntilExpiry < 60) return "Expiring Soon";
+    return "Active";
+  };
+  
+  // Get status color
+  const getStatusColor = () => {
+    const status = getVisaStatus();
+    if (status === "Expired") return "bg-red-100 text-red-800";
+    if (status === "Expiring Soon") return "bg-amber-100 text-amber-800";
+    if (status === "Active") return "bg-green-100 text-green-800";
+    return "bg-gray-100 text-gray-800";
+  };
+  
+  // Calculate progress for visa validity (reverse percentage - 100% new, 0% expired)
+  const getExpiryProgress = () => {
+    if (!currentUser?.visa_expiry_date || !currentUser?.us_entry_date) return 100;
+    
     try {
-      if (typeof dateStr === 'string') {
-        return format(parseISO(dateStr), "MMM d, yyyy");
-      } else {
-        return format(dateStr, "MMM d, yyyy");
-      }
-    } catch (e) {
-      return "Invalid date";
+      // Convert both dates to timestamps
+      const entryDate = new Date(currentUser.us_entry_date).getTime();
+      const expiryDate = new Date(currentUser.visa_expiry_date).getTime();
+      const now = Date.now();
+      
+      // Calculate total visa duration and time elapsed
+      const totalDuration = expiryDate - entryDate;
+      const elapsed = now - entryDate;
+      
+      // Return remaining percentage (100% when new, 0% when expired)
+      return Math.max(0, Math.min(100, ((totalDuration - elapsed) / totalDuration) * 100));
+    } catch (error) {
+      console.error("Error calculating visa expiry progress:", error);
+      return 100;
     }
   };
   
-  // Use visa_expiry_date if available, otherwise fallback to passport expiry
-  let validUntil = currentUser?.visa_expiry_date 
-    ? formatSafeDate(currentUser.visa_expiry_date)
-    : currentUser?.passportExpiryDate 
-      ? formatSafeDate(currentUser.passportExpiryDate) + " (passport)"
-      : "Not specified";
+  // Format US entry date
+  const entryDate = currentUser?.us_entry_date 
+    ? formatDate(currentUser.us_entry_date)
+    : "Not available";
   
-  let statusColor = "text-green-600";
-  let statusBgColor = "bg-green-100";
-  
-  // If there's no visa type, show warning status
-  if (!currentUser?.visaType) {
-    status = "Unknown";
-    statusColor = "text-amber-600";
-    statusBgColor = "bg-amber-100";
-  }
-
   return (
-    <Card className="nexed-card border-l-4 border-l-nexed-500">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium">Visa Status</CardTitle>
         <CardDescription>
-          {currentUser?.visaType === "F1" && "F-1 Student Visa"}
-          {currentUser?.visaType === "J1" && "J-1 Exchange Visitor Visa"}
-          {currentUser?.visaType === "OPT" && "Optional Practical Training (OPT)"}
-          {currentUser?.visaType === "H1B" && "H-1B Work Visa"}
-          {(!currentUser?.visaType || currentUser?.visaType === "Other") && "Visa Information"}
+          {currentUser?.visaType || "Unknown"} Visa Information
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center mb-3">
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusBgColor} ${statusColor} mr-2`}>
-            <CheckCircle2 size={12} className="mr-1" /> {status}
-          </span>
-          <span className="text-gray-600 text-sm">
-            <Clock size={12} className="inline mr-1" /> Visa valid until {validUntil}
-          </span>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <div className="text-sm text-gray-500">Status</div>
+            <Badge className={getStatusColor()}>{getVisaStatus()}</Badge>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500">Valid Until</div>
+            <div className="font-medium flex items-center gap-1">
+              <CalendarClock size={16} className="text-gray-500" />
+              {visaExpiryDate}
+            </div>
+          </div>
         </div>
-        <div className="text-sm text-gray-600">
-          <ul className="space-y-1">
-            <li className="flex items-start">
-              <CheckCircle2 size={14} className="text-green-500 mr-2 mt-1" />
-              <span>{currentUser?.visaType ? `${currentUser.visaType} visa status active` : "Visa information pending"}</span>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle2 size={14} className="text-green-500 mr-2 mt-1" />
-              <span>Passport {currentUser?.passportExpiryDate ? "valid until " + formatSafeDate(currentUser.passportExpiryDate) : "information needed"}</span>
-            </li>
-            <li className="flex items-start">
-              <AlertTriangle size={14} className="text-amber-500 mr-2 mt-1" />
-              <span>{currentUser?.university ? `Enrolled at ${currentUser.university}` : "University information needed"}</span>
-            </li>
-          </ul>
+        
+        <div className="space-y-1">
+          <div className="text-sm flex justify-between">
+            <span>Validity Remaining</span>
+            <span>{daysUntilExpiry !== null ? `${daysUntilExpiry} days` : "Unknown"}</span>
+          </div>
+          <Progress 
+            value={getExpiryProgress()} 
+            className="h-2"
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
+          <div>
+            <span className="text-gray-500">Entry Date:</span>{" "}
+            <span className="font-medium">{entryDate}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">University:</span>{" "}
+            <span className="font-medium">{currentUser?.university || "Not provided"}</span>
+          </div>
+          {currentUser?.field_of_study && (
+            <div>
+              <span className="text-gray-500">Field:</span>{" "}
+              <span className="font-medium">{currentUser.field_of_study}</span>
+            </div>
+          )}
+          {currentUser?.is_stem === true && (
+            <div>
+              <span className="text-gray-500">STEM:</span>{" "}
+              <span className="font-medium">Yes</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

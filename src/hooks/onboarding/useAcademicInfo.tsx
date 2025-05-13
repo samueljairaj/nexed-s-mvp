@@ -7,42 +7,32 @@ import { AcademicInfoFormValues } from "@/types/onboarding";
 export function useAcademicInfo() {
   const { updateProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [academicData, setAcademicData] = useState<Partial<AcademicInfoFormValues>>({
-    university: "",
-    degreeLevel: "",
-    fieldOfStudy: ""
-  });
+  const [academicData, setAcademicData] = useState<Partial<AcademicInfoFormValues>>({});
 
   const handleAcademicInfo = async (data: AcademicInfoFormValues) => {
+    // Store the full data in the component state
     setAcademicData(data);
     setIsSubmitting(true);
     
     try {
-      // Map the form field names to match the database column names
-      const updateData: Record<string, any> = {
+      // Format data for the profiles table
+      const formattedData: Record<string, any> = {
         university: data.university,
-        degree_level: data.degreeLevel,  // Use snake_case for database columns
-        field_of_study: data.fieldOfStudy,  // Use snake_case for database columns
+        field_of_study: data.fieldOfStudy,
+        degree_level: data.degreeLevel,
+        is_stem: data.isSTEM || false
       };
       
-      // Format program start date as YYYY-MM-DD string if it exists
+      // Handle dates
       if (data.programStartDate) {
-        updateData.course_start_date = formatDateToString(data.programStartDate);
+        formattedData.course_start_date = formatDateToString(data.programStartDate);
       }
-
-      // The column "graduationDate" doesn't exist in the database schema
-      // We need to either remove this or map to a column that does exist
-      // Based on the schema, we don't have a direct column for this value
-      // So we'll remove it from the update data
       
-      if (data.isTransferStudent) {
-        updateData.previous_university = data.previousUniversity;
-        updateData.has_transferred = true;
-      }
-
-      console.log("Updating profile with academic data:", updateData);
+      console.log("Saving academic data to profile:", formattedData);
       
-      await updateProfile(updateData);
+      // Update the user profile with the academic information
+      await updateProfile(formattedData);
+      
       return true;
     } catch (error) {
       toast.error("Failed to save academic information");
@@ -67,9 +57,7 @@ export function useAcademicInfo() {
       return `${year}-${month}-${day}`;
     } catch (error) {
       console.error("Date formatting error:", error);
-      // Return today's date as fallback
-      const today = new Date();
-      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      return "";
     }
   };
 

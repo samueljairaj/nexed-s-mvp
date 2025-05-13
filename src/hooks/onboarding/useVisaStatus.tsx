@@ -23,7 +23,7 @@ export function useVisaStatus() {
       const formattedData: Record<string, any> = {
         visa_type: data.visaType as VisaType,
         // Remove all fields not in the profiles table schema:
-        // visaStatus, sevisId, i94Number, visaExpiryDate, totalUnemployedDays, etc.
+        // visaStatus, sevisId, i94Number, totalUnemployedDays, etc.
       };
       
       // Format dates as YYYY-MM-DD strings
@@ -40,7 +40,7 @@ export function useVisaStatus() {
         formattedData.visa_expiry_date = formatDateToString(data.visaExpiryDate);
       }
       
-      console.log("Attempting to update profile with visa data:", formattedData);
+      console.log("Saving visa data to profile:", formattedData);
       
       // Update the user profile with the visa status information
       await updateProfile(formattedData);

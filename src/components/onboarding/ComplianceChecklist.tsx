@@ -46,16 +46,35 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
   // New state for phase-based grouping
   const [phaseGroups, setPhaseGroups] = useState<{[key: string]: AITask[]}>({});
   const [loadingState, setLoadingState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  
+  // Use actual user data from props rather than hardcoded values
   const [studentInfo, setStudentInfo] = useState({
-    university: userData.university || "Stanford University",
-    program: userData.fieldOfStudy || "Master of Science in Computer Science",
-    optStartDate: "March 15, 2025",
-    optEndDate: "March 14, 2026",
-    recentUSEntry: "February 5, 2025",
-    i20EndDate: "December 15, 2024",
-    visaExpiration: "June 15, 2025",
-    employer: userData.employer || "Tech Company Inc.",
+    university: userData.university || "Not provided",
+    program: userData.fieldOfStudy || "Not provided",
+    optStartDate: currentUser?.course_start_date ? formatDateDisplay(currentUser.course_start_date) : "Not provided",
+    optEndDate: "Not provided", // This might need to be calculated or fetched
+    recentUSEntry: currentUser?.us_entry_date ? formatDateDisplay(currentUser.us_entry_date) : "Not provided",
+    i20EndDate: "Not provided", // This might need to be fetched
+    visaExpiration: currentUser?.visa_expiry_date ? formatDateDisplay(currentUser.visa_expiry_date) : "Not provided",
+    employer: userData.employer || "Not provided",
   });
+  
+  // Helper function to format dates for display
+  function formatDateDisplay(dateString: string | null | undefined): string {
+    if (!dateString) return "Not provided";
+    
+    try {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(date);
+    } catch (e) {
+      console.error("Error formatting date:", e);
+      return dateString.toString();
+    }
+  }
   
   // Helper function to normalize visa types for database compatibility
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
@@ -114,6 +133,20 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     }
   }, [open]);
   
+  // Update student info whenever userData or currentUser changes
+  useEffect(() => {
+    setStudentInfo({
+      university: userData.university || "Not provided",
+      program: userData.fieldOfStudy || "Not provided",
+      optStartDate: currentUser?.course_start_date ? formatDateDisplay(currentUser.course_start_date) : "Not provided",
+      optEndDate: "Not provided", 
+      recentUSEntry: currentUser?.us_entry_date ? formatDateDisplay(currentUser.us_entry_date) : "Not provided",
+      i20EndDate: "Not provided",
+      visaExpiration: currentUser?.visa_expiry_date ? formatDateDisplay(currentUser.visa_expiry_date) : "Not provided",
+      employer: userData.employer || "Not provided",
+    });
+  }, [userData, currentUser]);
+  
   const generateAIChecklist = async () => {
     if (isGenerating) return;
     
@@ -156,7 +189,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
           t.title.toLowerCase().includes("visa") && 
           t.description.toLowerCase().includes("expir"));
           
-        if (visaTask && visaTask.dueDate) {
+        if (visaTask && visaTask.dueDate && !currentUser?.visa_expiry_date) {
           setStudentInfo(prev => ({
             ...prev,
             visaExpiration: new Date(visaTask.dueDate).toLocaleDateString('en-US', {
@@ -210,8 +243,20 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
       insights.push(`Request an employment verification letter that specifically mentions how your role at ${userData.employer} relates to your ${userData.fieldOfStudy || "degree"}`);
     }
     
-    // Add visa renewal planning
-    insights.push(`Start visa renewal planning by ${new Date(new Date(studentInfo.visaExpiration).getTime() - 60*24*60*60*1000).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})} (2 months before expiration) if you intend to travel internationally`);
+    // Add visa renewal planning if visa expiration exists
+    const visaExpiry = studentInfo.visaExpiration;
+    if (visaExpiry && visaExpiry !== "Not provided") {
+      try {
+        // Only attempt if we have an actual date
+        const expiryDate = new Date(visaExpiry);
+        const twoBefore = new Date(expiryDate);
+        twoBefore.setDate(twoBefore.getDate() - 60);
+        
+        insights.push(`Start visa renewal planning by ${twoBefore.toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})} (2 months before expiration) if you intend to travel internationally`);
+      } catch (e) {
+        insights.push(`Plan your visa renewal well ahead of the expiration date (${visaExpiry})`);
+      }
+    }
     
     // Add STEM OPT extension if applicable
     if (userData.fieldOfStudy && ["computer science", "engineering", "mathematics", "technology"].some(stem => userData.fieldOfStudy?.toLowerCase().includes(stem))) {
@@ -219,7 +264,11 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     }
     
     // Add unemployment grace period reminder
-    insights.push(`Based on your I-94 entry date of ${studentInfo.recentUSEntry}, you must maintain continuous employment with no more than 90 cumulative days of unemployment`);
+    if (studentInfo.recentUSEntry && studentInfo.recentUSEntry !== "Not provided") {
+      insights.push(`Based on your I-94 entry date of ${studentInfo.recentUSEntry}, you must maintain continuous employment with no more than 90 cumulative days of unemployment`);
+    } else {
+      insights.push(`Remember that F-1 OPT students must maintain continuous employment with no more than 90 cumulative days of unemployment`);
+    }
     
     return insights;
   };
@@ -404,7 +453,9 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
 
           {/* Student Info Section */}
           <div className="bg-blue-50 p-4 rounded-md mb-4">
-            <h3 className="text-lg font-medium text-blue-800 mb-2">{userData.visaType || "F-1"} Student on OPT (Post-Completion)</h3>
+            <h3 className="text-lg font-medium text-blue-800 mb-2">
+              {userData.visaType || currentUser?.visaType || "F-1"} Student{userData.visaType === "F1" ? " on OPT (Post-Completion)" : ""}
+            </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -416,21 +467,25 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
                 <p className="font-medium">{studentInfo.program}</p>
               </div>
               <div>
-                <p className="text-sm text-blue-600">OPT Start Date</p>
+                <p className="text-sm text-blue-600">Program Start Date</p>
                 <p className="font-medium">{studentInfo.optStartDate}</p>
               </div>
-              <div>
-                <p className="text-sm text-blue-600">OPT End Date</p>
-                <p className="font-medium">{studentInfo.optEndDate}</p>
-              </div>
+              {studentInfo.optEndDate !== "Not provided" && (
+                <div>
+                  <p className="text-sm text-blue-600">OPT End Date</p>
+                  <p className="font-medium">{studentInfo.optEndDate}</p>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-blue-600">Most Recent US Entry</p>
                 <p className="font-medium">{studentInfo.recentUSEntry}</p>
               </div>
-              <div>
-                <p className="text-sm text-blue-600">I-20 Program End Date</p>
-                <p className="font-medium">{studentInfo.i20EndDate}</p>
-              </div>
+              {studentInfo.i20EndDate !== "Not provided" && (
+                <div>
+                  <p className="text-sm text-blue-600">I-20 Program End Date</p>
+                  <p className="font-medium">{studentInfo.i20EndDate}</p>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-blue-600">Visa Expiration</p>
                 <p className="font-medium">{studentInfo.visaExpiration}</p>
@@ -442,18 +497,20 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
             </div>
           </div>
 
-          {/* Time-Sensitive Alert */}
-          <div className="bg-amber-50 border border-amber-200 p-4 rounded-md mb-4 flex">
-            <AlertTriangle className="text-amber-500 mr-3 flex-shrink-0" size={20} />
-            <div>
-              <p className="font-medium text-amber-800">Time-Sensitive Requirements:</p>
-              <p className="text-amber-700">
-                Your visa expires in 90 days ({studentInfo.visaExpiration}) which falls during your OPT period. 
-                You should plan to either renew your visa if traveling internationally or prepare for status 
-                adjustment if applicable.
-              </p>
+          {/* Time-Sensitive Alert - only show if visa expires within 90 days */}
+          {currentUser?.visa_expiry_date && new Date(currentUser.visa_expiry_date) < new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) && (
+            <div className="bg-amber-50 border border-amber-200 p-4 rounded-md mb-4 flex">
+              <AlertTriangle className="text-amber-500 mr-3 flex-shrink-0" size={20} />
+              <div>
+                <p className="font-medium text-amber-800">Time-Sensitive Requirements:</p>
+                <p className="text-amber-700">
+                  Your visa expires in {Math.ceil((new Date(currentUser.visa_expiry_date).getTime() - Date.now()) / (24 * 60 * 60 * 1000))} days ({formatDateDisplay(currentUser.visa_expiry_date)}) which falls during your program period. 
+                  You should plan to either renew your visa if traveling internationally or prepare for status 
+                  adjustment if applicable.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Document Tabs */}
           <Tabs defaultValue="by-phase" className="w-full" value={tab} onValueChange={setTab}>

@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useAccountCreation } from "./onboarding/useAccountCreation";
@@ -50,7 +51,7 @@ export function useOnboardingState() {
       visaType: visaStatus.visaData.visaType,
       university: academicInfo.academicData.university,
       fieldOfStudy: academicInfo.academicData.fieldOfStudy,
-      employer: employmentInfo.employmentData.employerName, // Fixed: using employerName instead of employer
+      employer: employmentInfo.employmentData.employerName,
     };
   };
 
