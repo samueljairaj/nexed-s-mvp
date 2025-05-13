@@ -23,18 +23,8 @@ export const AppLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/");
-      return;
-    }
-
-    if (currentUser && currentUser.role === 'student' && !currentUser.onboardingComplete) {
-      navigate("/onboarding");
-      return;
-    }
-  }, [isAuthenticated, currentUser, navigate]);
-
+  // Remove the redirection logic from here since it's handled in RoleBasedRedirect
+  
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
@@ -68,6 +58,12 @@ export const AppLayout = () => {
   };
 
   const navItems = getNavItems();
+
+  // Handle logout with navigation
+  const handleLogout = async () => {
+    await logout();
+    navigate("/", { replace: true });
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -113,7 +109,7 @@ export const AppLayout = () => {
                 <span>{item.label}</span>
               </NavLink>
             ))}
-            <Button variant="ghost" size="sm" onClick={logout}>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut size={18} className="mr-2" />
               <span>Log out</span>
             </Button>
@@ -141,7 +137,7 @@ export const AppLayout = () => {
                 <span className="text-lg">{item.label}</span>
               </NavLink>
             ))}
-            <Button variant="ghost" className="justify-start" onClick={logout}>
+            <Button variant="ghost" className="justify-start" onClick={handleLogout}>
               <LogOut size={20} className="mr-3" />
               <span className="text-lg">Log out</span>
             </Button>

@@ -19,7 +19,14 @@ import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Prevent refetching data when window regains focus
+      retry: 1, // Limit retry attempts
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
