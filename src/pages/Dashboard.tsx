@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,7 +102,7 @@ const Dashboard = () => {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <VisaStatusCard currentUser={currentUser} />
+        <VisaStatusCard />
         <ComplianceChecklist 
           complianceProgress={complianceProgress} 
           tasksCount={tasksCount}

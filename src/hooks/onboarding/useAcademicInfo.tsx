@@ -15,17 +15,17 @@ export function useAcademicInfo() {
     setIsSubmitting(true);
     
     try {
-      // Format data for the profiles table
+      // Format data using camelCase for the userProfile object
       const formattedData: Record<string, any> = {
         university: data.university,
-        field_of_study: data.fieldOfStudy,
-        degree_level: data.degreeLevel,
-        is_stem: data.isSTEM || false
+        fieldOfStudy: data.fieldOfStudy,
+        degreeLevel: data.degreeLevel,
+        isSTEM: data.isSTEM || false
       };
       
       // Handle dates
       if (data.programStartDate) {
-        formattedData.course_start_date = formatDateToString(data.programStartDate);
+        formattedData.courseStartDate = formatDateToString(data.programStartDate);
       }
       
       console.log("Saving academic data to profile:", formattedData);

@@ -39,11 +39,11 @@ const VisaStatusCard = () => {
   
   // Calculate progress for visa validity (reverse percentage - 100% new, 0% expired)
   const getExpiryProgress = () => {
-    if (!currentUser?.visa_expiry_date || !currentUser?.us_entry_date) return 100;
+    if (!currentUser?.visa_expiry_date || !currentUser?.usEntryDate) return 100;
     
     try {
       // Convert both dates to timestamps
-      const entryDate = new Date(currentUser.us_entry_date).getTime();
+      const entryDate = new Date(currentUser.usEntryDate).getTime();
       const expiryDate = new Date(currentUser.visa_expiry_date).getTime();
       const now = Date.now();
       
@@ -60,8 +60,8 @@ const VisaStatusCard = () => {
   };
   
   // Format US entry date
-  const entryDate = currentUser?.us_entry_date 
-    ? formatDate(currentUser.us_entry_date)
+  const entryDate = currentUser?.usEntryDate 
+    ? formatDate(currentUser.usEntryDate)
     : "Not available";
   
   return (
@@ -107,13 +107,13 @@ const VisaStatusCard = () => {
             <span className="text-gray-500">University:</span>{" "}
             <span className="font-medium">{currentUser?.university || "Not provided"}</span>
           </div>
-          {currentUser?.field_of_study && (
+          {currentUser?.fieldOfStudy && (
             <div>
               <span className="text-gray-500">Field:</span>{" "}
-              <span className="font-medium">{currentUser.field_of_study}</span>
+              <span className="font-medium">{currentUser.fieldOfStudy}</span>
             </div>
           )}
-          {currentUser?.is_stem === true && (
+          {currentUser?.isSTEM === true && (
             <div>
               <span className="text-gray-500">STEM:</span>{" "}
               <span className="font-medium">Yes</span>

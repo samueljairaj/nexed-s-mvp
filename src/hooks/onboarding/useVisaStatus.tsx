@@ -18,21 +18,18 @@ export function useVisaStatus() {
     setIsSubmitting(true);
     
     try {
-      // Only include fields that exist in the profiles table
-      // Based on the database schema, we need to use visa_status, not visaStatus
+      // Format data using camelCase for the userProfile object
       const formattedData: Record<string, any> = {
-        visa_type: data.visaType as VisaType,
-        // Remove all fields not in the profiles table schema:
-        // visaStatus, sevisId, i94Number, totalUnemployedDays, etc.
+        visaType: data.visaType as VisaType,
       };
       
       // Format dates as YYYY-MM-DD strings
       if (data.entryDate) {
-        formattedData.us_entry_date = formatDateToString(data.entryDate);
+        formattedData.usEntryDate = formatDateToString(data.entryDate);
       }
       
       if (data.programStartDate) {
-        formattedData.course_start_date = formatDateToString(data.programStartDate);
+        formattedData.courseStartDate = formatDateToString(data.programStartDate);
       }
       
       // Add visa expiry date if available

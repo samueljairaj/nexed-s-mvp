@@ -51,9 +51,9 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
   const [studentInfo, setStudentInfo] = useState({
     university: userData.university || "Not provided",
     program: userData.fieldOfStudy || "Not provided",
-    optStartDate: currentUser?.course_start_date ? formatDateDisplay(currentUser.course_start_date) : "Not provided",
+    optStartDate: currentUser?.courseStartDate ? formatDateDisplay(currentUser.courseStartDate) : "Not provided",
     optEndDate: "Not provided", // This might need to be calculated or fetched
-    recentUSEntry: currentUser?.us_entry_date ? formatDateDisplay(currentUser.us_entry_date) : "Not provided",
+    recentUSEntry: currentUser?.usEntryDate ? formatDateDisplay(currentUser.usEntryDate) : "Not provided",
     i20EndDate: "Not provided", // This might need to be fetched
     visaExpiration: currentUser?.visa_expiry_date ? formatDateDisplay(currentUser.visa_expiry_date) : "Not provided",
     employer: userData.employer || "Not provided",
@@ -138,9 +138,9 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     setStudentInfo({
       university: userData.university || "Not provided",
       program: userData.fieldOfStudy || "Not provided",
-      optStartDate: currentUser?.course_start_date ? formatDateDisplay(currentUser.course_start_date) : "Not provided",
+      optStartDate: currentUser?.courseStartDate ? formatDateDisplay(currentUser.courseStartDate) : "Not provided",
       optEndDate: "Not provided", 
-      recentUSEntry: currentUser?.us_entry_date ? formatDateDisplay(currentUser.us_entry_date) : "Not provided",
+      recentUSEntry: currentUser?.usEntryDate ? formatDateDisplay(currentUser.usEntryDate) : "Not provided",
       i20EndDate: "Not provided",
       visaExpiration: currentUser?.visa_expiry_date ? formatDateDisplay(currentUser.visa_expiry_date) : "Not provided",
       employer: userData.employer || "Not provided",
