@@ -11,8 +11,9 @@ interface VisaStatusCardProps {
 const VisaStatusCard: React.FC<VisaStatusCardProps> = ({ currentUser }) => {
   // Get visa details based on visa type
   let status = "Active";
-  // Use visa expiry date if available, otherwise fallback to passport expiry
-  let visaExpiryDate = currentUser?.visaExpiryDate;
+  
+  // Use visa_expiry_date if available, otherwise fallback to passport expiry
+  let visaExpiryDate = currentUser?.visa_expiry_date;
   let passportExpiryDate = currentUser?.passportExpiryDate;
   
   let validUntil = visaExpiryDate 

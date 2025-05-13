@@ -25,7 +25,9 @@ const Profile = () => {
   const formatDate = (date: string | null | undefined): string => {
     if (!date) return "Not specified";
     try {
-      return format(new Date(date), "MMM d, yyyy");
+      // Convert date to string format that date-fns can parse
+      const dateString = typeof date === 'object' ? (date as Date).toISOString() : date;
+      return format(new Date(dateString), "MMM d, yyyy");
     } catch (e) {
       return "Invalid date";
     }
@@ -78,7 +80,7 @@ const Profile = () => {
                 
                 <div>
                   <span className="text-sm text-gray-500">Visa Expiry:</span>
-                  <p className="font-medium">{formatDate(currentUser?.visaExpiryDate)}</p>
+                  <p className="font-medium">{formatDate(currentUser?.visa_expiry_date)}</p>
                 </div>
                 
                 {currentUser?.visaType === "F1" && (
