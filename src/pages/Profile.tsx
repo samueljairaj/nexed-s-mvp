@@ -22,12 +22,12 @@ const Profile = () => {
   };
 
   // Format date safely with a fallback
-  const formatDate = (date: string | null | undefined): string => {
+  const formatDate = (date: string | Date | null | undefined): string => {
     if (!date) return "Not specified";
     try {
-      // Convert date to string format that date-fns can parse
-      const dateString = typeof date === 'object' ? (date as Date).toISOString() : date;
-      return format(new Date(dateString), "MMM d, yyyy");
+      // Handle both string and Date inputs
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      return format(dateObj, "MMM d, yyyy");
     } catch (e) {
       return "Invalid date";
     }

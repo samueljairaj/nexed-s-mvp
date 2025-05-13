@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -29,6 +28,7 @@ export interface UserProfile {
   phone?: string;
   passportNumber?: string;
   address?: string;
+  visa_expiry_date?: string; // Adding the missing property
 }
 
 interface DSOProfile {
@@ -151,7 +151,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           passportExpiryDate: data.passport_expiry_date || undefined,
           phone: data.phone || undefined,
           passportNumber: data.passport_number || undefined,
-          address: data.address || undefined
+          address: data.address || undefined,
+          visa_expiry_date: data.visa_expiry_date || undefined // Map the visa expiry date
         };
         
         setCurrentUser(userProfile);
