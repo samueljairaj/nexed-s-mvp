@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -241,7 +240,7 @@ export function VisaStatusStep({
 
             {isVisaExpiringSoon() && (
               <div className="md:col-span-2">
-                <Alert variant="warning" className="bg-amber-50 border-amber-200">
+                <Alert type="default" className="bg-amber-50 border-amber-200 text-amber-800">
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
                   <AlertTitle className="text-amber-800">Your visa is expiring soon</AlertTitle>
                   <AlertDescription className="text-amber-700">

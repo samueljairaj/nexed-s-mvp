@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { EmploymentInfoFormValues } from "@/types/onboarding";
+import { EmploymentInfoFormValues, OptStatus } from "@/types/onboarding";
 import { dateUtils } from "@/lib/date-utils";
 
 export function useEmploymentInfo() {
@@ -15,8 +15,8 @@ export function useEmploymentInfo() {
     employmentStartDate: undefined,
     employmentEndDate: undefined,
     jobLocation: "",
-    isFieldRelated: undefined,
-    authorizationType: undefined,
+    isFieldRelated: "No",
+    authorizationType: "None",
     authStartDate: undefined,
     authEndDate: undefined,
     eadNumber: "",
@@ -25,36 +25,58 @@ export function useEmploymentInfo() {
     previousEmployers: []
   });
 
-  const handleEmploymentInfo = async (data: EmploymentInfoFormValues): Promise<boolean> => {
+  const handleEmploymentInfo = async (data: EmploymentInfoFormValues) => {
     setEmploymentData(data);
     setIsSubmitting(true);
     
     try {
-      // Format data for profile update
+      // Create a plain object with string values only - no Date objects
       const updateData: Record<string, any> = {
-        employmentStatus: data.employmentStatus
+        // Basic employment data
+        employmentStatus: data.employmentStatus,
       };
       
-      // Only include employment details if employed
+      // Only add employment related fields if employed
       if (data.employmentStatus === "Employed") {
         updateData.employerName = data.employerName;
         updateData.jobTitle = data.jobTitle;
         updateData.jobLocation = data.jobLocation;
         
-        // Format dates with our utility
+        // Add field relation info if available
+        if (data.isFieldRelated) {
+          updateData.isJobRelatedToField = data.isFieldRelated;
+        }
+        
+        // Format employment start date if provided
         if (data.employmentStartDate) {
           updateData.employmentStartDate = dateUtils.formatToYYYYMMDD(data.employmentStartDate);
         }
         
+        // Format employment end date if provided
         if (data.employmentEndDate) {
           updateData.employmentEndDate = dateUtils.formatToYYYYMMDD(data.employmentEndDate);
         }
         
-        // Add authorization details if applicable
-        if (data.authorizationType) {
+        // Add authorization data if provided
+        if (data.authorizationType && data.authorizationType !== "None") {
           updateData.authorizationType = data.authorizationType;
-          updateData.isFieldRelated = data.isFieldRelated;
           
+          // Map authorization type to opt status for database consistency
+          switch (data.authorizationType) {
+            case "CPT":
+              updateData.optStatus = OptStatus.None;
+              break;
+            case "OPT":
+              updateData.optStatus = OptStatus.Opt;
+              break;
+            case "STEM OPT":
+              updateData.optStatus = OptStatus.StemOpt;
+              break;
+            default:
+              updateData.optStatus = OptStatus.None;
+          }
+          
+          // Add authorization dates if provided
           if (data.authStartDate) {
             updateData.authStartDate = dateUtils.formatToYYYYMMDD(data.authStartDate);
           }
@@ -63,32 +85,23 @@ export function useEmploymentInfo() {
             updateData.authEndDate = dateUtils.formatToYYYYMMDD(data.authEndDate);
           }
           
+          // Add EAD number if provided
           if (data.eadNumber) {
             updateData.eadNumber = data.eadNumber;
           }
           
+          // Add unemployment days if provided
           if (data.unemploymentDaysUsed) {
-            updateData.unemploymentDaysUsed = data.unemploymentDaysUsed;
+            updateData.unemploymentDays = data.unemploymentDaysUsed;
           }
           
-          // STEM OPT specific fields
+          // Add E-Verify number for STEM OPT
           if (data.authorizationType === "STEM OPT" && data.eVerifyNumber) {
             updateData.eVerifyNumber = data.eVerifyNumber;
           }
         }
-        
-        // Add previous employment history if available
-        if (data.previousEmployers && data.previousEmployers.length > 0) {
-          updateData.previousEmployers = data.previousEmployers.map(employer => ({
-            employerName: employer.employerName,
-            jobTitle: employer.jobTitle,
-            jobLocation: employer.jobLocation,
-            startDate: dateUtils.formatToYYYYMMDD(employer.startDate),
-            endDate: employer.endDate ? dateUtils.formatToYYYYMMDD(employer.endDate) : null
-          }));
-        }
       }
-
+      
       console.log("Updating profile with employment data:", updateData);
       
       await updateProfile(updateData);
@@ -101,29 +114,13 @@ export function useEmploymentInfo() {
       setIsSubmitting(false);
     }
   };
-  
-  const handleEmploymentStatusChange = (status: string) => {
-    setEmploymentData(prev => ({ ...prev, employmentStatus: status }));
-  };
-  
-  const isF1OrJ1 = () => {
-    // Get visa type from auth context or from local state
-    const visaType = localStorage.getItem('visaType') || 'F1';
-    return visaType === "F1" || visaType === "J1";
-  };
-  
-  const isEmployed = () => {
-    return employmentData.employmentStatus === "Employed";
-  };
-  
-  const isOptOrCpt = () => {
-    return employmentData.authorizationType === "OPT" || 
-           employmentData.authorizationType === "CPT" || 
-           employmentData.authorizationType === "STEM OPT";
-  };
-  
-  const isStemOpt = () => {
-    return employmentData.authorizationType === "STEM OPT";
+
+  // Fixed type issue by ensuring we're returning the same type we're setting
+  const handleEmploymentStatusChange = (status: "Employed" | "Not Employed") => {
+    setEmploymentData((prev) => ({
+      ...prev,
+      employmentStatus: status
+    }));
   };
 
   return {
@@ -131,10 +128,6 @@ export function useEmploymentInfo() {
     setEmploymentData,
     handleEmploymentInfo,
     handleEmploymentStatusChange,
-    isF1OrJ1,
-    isEmployed,
-    isOptOrCpt,
-    isStemOpt,
     isSubmitting
   };
 }

@@ -18,7 +18,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { countries } from "@/types/onboarding";
+import { countries } from "@/lib/countries"; // Fixed import to use the correct path
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 

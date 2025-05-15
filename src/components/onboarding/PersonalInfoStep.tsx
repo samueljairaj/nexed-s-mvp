@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PersonalInfoFormValues, personalInfoSchema } from "@/types/onboarding";
+import { PersonalInfoFormValues, personalInfoSchema, countries } from "@/types/onboarding"; // Updated import
 import { FormDatePicker } from "@/components/ui/form-date-picker";
 import { Calendar, Phone, MapPin, User } from "lucide-react";
 import {
@@ -22,9 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Import country list
-import { countries } from "@/lib/countries";
 
 interface PersonalInfoStepProps {
   defaultValues: Partial<PersonalInfoFormValues>;
@@ -89,8 +86,8 @@ export function PersonalInfoStep({
                     </FormControl>
                     <SelectContent>
                       {countries.map((country) => (
-                        <SelectItem key={country.code} value={country.name}>
-                          {country.name}
+                        <SelectItem key={country} value={country}>
+                          {country}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -115,8 +112,8 @@ export function PersonalInfoStep({
                     </FormControl>
                     <SelectContent>
                       {countries.map((country) => (
-                        <SelectItem key={country.code} value={country.name}>
-                          {country.name}
+                        <SelectItem key={country} value={country}>
+                          {country}
                         </SelectItem>
                       ))}
                     </SelectContent>

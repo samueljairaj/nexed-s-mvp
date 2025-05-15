@@ -1,4 +1,3 @@
-
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -164,7 +163,7 @@ export function EmploymentStep({
           
           {/* Warning for F-1/J-1 students who are not employed */}
           {isF1OrJ1 && employmentStatus === "Not Employed" && (
-            <Alert variant="warning" className="bg-amber-50 border-amber-200">
+            <Alert type="default" className="bg-amber-50 border-amber-200 text-amber-800">
               <AlertCircle className="h-4 w-4 text-amber-600" />
               <AlertDescription className="text-amber-700">
                 F-1 and J-1 students on OPT have limited unemployment time. Make sure you understand the restrictions.
