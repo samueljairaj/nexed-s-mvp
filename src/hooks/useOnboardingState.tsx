@@ -70,10 +70,10 @@ export const useOnboardingState = () => {
         updatedState.visaStatus = {
           visaType: currentUser.visaType,
           visaStatus: "Active", // Default for existing users
-          sevisId: currentUser?.sevisId || "", // Add null check with optional chaining
-          i94Number: currentUser?.i94Number || "", // Add null check with optional chaining
+          sevisId: currentUser?.sevisId || "", // Using sevisId property
+          i94Number: currentUser?.i94Number || "", // Using i94Number property
           entryDate: currentUser.usEntryDate ? new Date(currentUser.usEntryDate) : undefined,
-          visaExpiryDate: currentUser.visaExpiryDate ? new Date(currentUser.visaExpiryDate) : undefined
+          visaExpiryDate: currentUser.visa_expiry_date ? new Date(currentUser.visa_expiry_date) : undefined // Using visa_expiry_date property
         };
       }
 
@@ -94,8 +94,8 @@ export const useOnboardingState = () => {
       if (currentUser?.employerName || currentUser?.employmentStartDate) {
         updatedState.employmentInfo = {
           employmentStatus: "Employed",
-          employerName: currentUser?.employerName || "", // Add null check with optional chaining
-          jobTitle: currentUser?.jobTitle || "", // Add null check with optional chaining
+          employerName: currentUser?.employerName || "", // Using employerName property
+          jobTitle: currentUser?.jobTitle || "", // Using jobTitle property
           employmentStartDate: currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate) : undefined,
           jobLocation: "", // No direct mapping in current schema
         };

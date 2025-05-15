@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { countries } from "@/types/onboarding";
+import { countries } from "@/lib/countries"; // Updated import path
 import {
   Form,
   FormControl,
@@ -42,21 +43,24 @@ const profileEditorSchema = z.object({
 });
 
 interface ProfileEditorProps {
-  user: any;
+  user?: any; // Make user prop optional
 }
 
 export function ProfileEditor({ user }: ProfileEditorProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { updateProfile } = useAuth();
+  const { updateProfile, currentUser } = useAuth();
+  
+  // Use either provided user or currentUser from auth context
+  const userData = user || currentUser;
 
   const form = useForm<z.infer<typeof profileEditorSchema>>({
     resolver: zodResolver(profileEditorSchema),
     defaultValues: {
-      name: user?.name || "",
-      email: user?.email || "",
-      country: user?.country || "",
-      address: user?.address || "",
-      bio: user?.bio || "",
+      name: userData?.name || "",
+      email: userData?.email || "",
+      country: userData?.country || "",
+      address: userData?.address || "",
+      bio: userData?.bio || "",
     },
   });
 
@@ -122,8 +126,8 @@ export function ProfileEditor({ user }: ProfileEditorProps) {
                 </FormControl>
                 <SelectContent>
                   {countries.map((country) => (
-                    <SelectItem key={country} value={country}>
-                      {country}
+                    <SelectItem key={country.code} value={country.code}>
+                      {country.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

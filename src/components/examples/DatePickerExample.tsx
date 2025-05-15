@@ -19,7 +19,7 @@ export function DatePickerExample() {
   const disableDatesOutsideRange = (date: Date) => {
     const today = new Date();
     const oneMonthFromNow = addDays(today, 30);
-    return !dateUtils.isWithinRange(date, { from: today, to: oneMonthFromNow });
+    return !dateUtils.isWithinRange(date, today, oneMonthFromNow);
   };
   
   // Validate the date range

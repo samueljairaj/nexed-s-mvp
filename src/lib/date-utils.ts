@@ -1,3 +1,4 @@
+
 import { format, formatISO, parse, parseISO, differenceInDays, isBefore, isAfter, addDays } from 'date-fns';
 
 // Add DateRange interface needed by CalendarView component
@@ -83,7 +84,7 @@ export const dateUtils = {
     
     try {
       const dateObj = typeof date === 'string' ? parseISO(date) : date;
-      return format(dateObj, 'MMM d, yyyy');
+      return format(dateObj, "MMM d, yyyy");
     } catch (e) {
       console.error('Error formatting date to short format:', e);
       return '';
@@ -103,6 +104,7 @@ export const dateUtils = {
     }
   },
   
+  // Fixing the isWithinRange function to accept Date objects instead of DateRange
   isWithinRange: (date: Date, rangeStart: Date, rangeEnd: Date): boolean => {
     if (!date || !rangeStart || !rangeEnd) return false;
     
