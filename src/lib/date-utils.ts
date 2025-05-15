@@ -8,12 +8,12 @@ export interface DateRange {
 
 export const dateUtils = {
   // Existing functions
-  formatDate: (date: string | Date, format: string = 'yyyy-MM-dd'): string => {
+  formatDate: (date: string | Date, formatString: string = 'yyyy-MM-dd'): string => {
     if (!date) return '';
     
     try {
       const dateObj = typeof date === 'string' ? parseISO(date) : date;
-      return format(dateObj, format);
+      return format(dateObj, formatString);
     } catch (e) {
       console.error('Error formatting date:', e);
       return '';

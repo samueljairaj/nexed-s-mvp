@@ -240,7 +240,7 @@ export function VisaStatusStep({
 
             {isVisaExpiringSoon() && (
               <div className="md:col-span-2">
-                <Alert type="default" className="bg-amber-50 border-amber-200 text-amber-800">
+                <Alert className="bg-amber-50 border-amber-200 text-amber-800">
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
                   <AlertTitle className="text-amber-800">Your visa is expiring soon</AlertTitle>
                   <AlertDescription className="text-amber-700">
