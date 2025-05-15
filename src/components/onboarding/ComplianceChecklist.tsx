@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -62,13 +61,13 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
   });
   
   // Helper function to format dates for display
-  function formatDateDisplay(dateString: string | null | undefined): string {
+  function formatDateDisplay(dateString: string | Date | null | undefined): string {
     if (!dateString) return "Not provided";
     
     try {
-      // Make sure we're working with a string
-      const dateStr = typeof dateString === 'string' ? dateString : String(dateString);
-      const date = new Date(dateStr);
+      // If it's already a Date object, use it directly
+      const date = dateString instanceof Date ? dateString : new Date(dateString);
+      
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'long',
@@ -279,6 +278,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
 
   const insights = generateInsights();
 
+  // Render document list based on category
   const renderDocumentList = (category: keyof GroupedDocuments) => {
     if (loadingState === "loading") {
       return (
@@ -340,7 +340,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     ));
   };
 
-  // New function to render documents grouped by phase
+  // Render documents grouped by phase
   const renderPhaseDocuments = () => {
     if (loadingState === "loading") {
       return (
