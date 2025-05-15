@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +10,7 @@ import { useAICompliance, AITask } from "@/hooks/useAICompliance";
 import { DocumentCategory } from "@/types/document";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { dateUtils } from "@/lib/date-utils";
 
 interface ComplianceChecklistProps {
   open: boolean;
@@ -64,7 +66,9 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     if (!dateString) return "Not provided";
     
     try {
-      const date = new Date(dateString);
+      // Make sure we're working with a string
+      const dateStr = typeof dateString === 'string' ? dateString : String(dateString);
+      const date = new Date(dateStr);
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'long',
@@ -72,7 +76,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
       }).format(date);
     } catch (e) {
       console.error("Error formatting date:", e);
-      return dateString.toString();
+      return String(dateString);
     }
   }
   
