@@ -1,15 +1,20 @@
 
 import { useState } from "react";
-import { useAuth, VisaType } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { VisaStatusFormValues } from "@/types/onboarding";
+import { VisaStatusFormValues, VisaType } from "@/types/onboarding";
+import { dateUtils } from "@/lib/date-utils";
 
 export function useVisaStatus() {
   const { updateProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visaData, setVisaData] = useState<Partial<VisaStatusFormValues>>({
-    visaType: "F1",
-    visaStatus: ""
+    visaType: VisaType.F1,
+    visaStatus: "",
+    sevisId: "",
+    i94Number: "",
+    entryDate: undefined,
+    visaExpiryDate: undefined
   });
 
   const handleVisaStatus = async (data: VisaStatusFormValues) => {
@@ -20,21 +25,26 @@ export function useVisaStatus() {
     try {
       // Format data using camelCase for the userProfile object
       const formattedData: Record<string, any> = {
-        visaType: data.visaType as VisaType,
+        visaType: data.visaType,
+        sevisId: data.sevisId,
+        i94Number: data.i94Number
       };
       
       // Format dates as YYYY-MM-DD strings
       if (data.entryDate) {
-        formattedData.usEntryDate = formatDateToString(data.entryDate);
+        formattedData.usEntryDate = dateUtils.formatToYYYYMMDD(data.entryDate);
       }
       
       if (data.programStartDate) {
-        formattedData.courseStartDate = formatDateToString(data.programStartDate);
+        formattedData.courseStartDate = dateUtils.formatToYYYYMMDD(data.programStartDate);
       }
       
-      // Add visa expiry date if available
       if (data.visaExpiryDate) {
-        formattedData.visa_expiry_date = formatDateToString(data.visaExpiryDate);
+        formattedData.visaExpiryDate = dateUtils.formatToYYYYMMDD(data.visaExpiryDate);
+      }
+
+      if (data.i20ExpiryDate) {
+        formattedData.i20ExpiryDate = dateUtils.formatToYYYYMMDD(data.i20ExpiryDate);
       }
       
       console.log("Saving visa data to profile:", formattedData);
@@ -58,28 +68,8 @@ export function useVisaStatus() {
   const handleVisaTypeChange = (visaType: string) => {
     setVisaData(prev => ({ 
       ...prev, 
-      visaType: visaType as "F1" | "J1" | "H1B" | "Other"
+      visaType: visaType as VisaType
     }));
-  };
-
-  // Helper function to safely format dates
-  const formatDateToString = (date: Date | string): string => {
-    if (typeof date === 'string') {
-      return date;
-    }
-    
-    try {
-      // Format as YYYY-MM-DD manually
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } catch (error) {
-      console.error("Date formatting error:", error);
-      // Return today's date as fallback
-      const today = new Date();
-      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    }
   };
 
   return {

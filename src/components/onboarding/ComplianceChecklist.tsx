@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AlertTriangle, FileCheck, Upload, User, Briefcase, GraduationCap, Info, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAICompliance, AITask } from "@/hooks/useAICompliance";
-import { DocumentCategory } from "@/types/document";
+import { DocumentCategory } from "@/types/onboarding";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { dateUtils } from "@/lib/date-utils";
@@ -442,7 +443,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
             </div>
             <div className="flex-1">
               <p className="text-blue-700 font-medium">
-                neXed AI has analyzed your {userData.visaType || "F-1 OPT"} status and created a tailored compliance plan based on your specific details.
+                neXed AI has analyzed your {userData.visaType || "F-1"} status and created a tailored compliance plan based on your specific details.
               </p>
               <div className="flex items-center text-blue-600 text-sm mt-1">
                 <div className="flex space-x-1 mr-2">
@@ -565,7 +566,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
                 {renderDocumentList('educational')}
               </div>
               
-              <div>
+              <div className="mb-4">
                 <h3 className="flex items-center text-lg font-medium mb-3">
                   <User className="mr-2 text-blue-600" size={20} />
                   Personal Documents
@@ -578,83 +579,50 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
             </TabsContent>
             
             <TabsContent value="immigration">
-              <h3 className="flex items-center text-lg font-medium mb-3">
-                <FileCheck className="mr-2 text-blue-600" size={20} />
-                Immigration Documents
-                <span className="ml-2 text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                  {documents.immigration.length} documents
-                </span>
-              </h3>
               {renderDocumentList('immigration')}
             </TabsContent>
             
             <TabsContent value="employment">
-              <h3 className="flex items-center text-lg font-medium mb-3">
-                <Briefcase className="mr-2 text-blue-600" size={20} />
-                Employment Documents
-                <span className="ml-2 text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                  {documents.employment.length} documents
-                </span>
-              </h3>
               {renderDocumentList('employment')}
             </TabsContent>
             
             <TabsContent value="educational">
-              <h3 className="flex items-center text-lg font-medium mb-3">
-                <GraduationCap className="mr-2 text-blue-600" size={20} />
-                Educational Documents
-                <span className="ml-2 text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                  {documents.educational.length} documents
-                </span>
-              </h3>
               {renderDocumentList('educational')}
             </TabsContent>
             
             <TabsContent value="personal">
-              <h3 className="flex items-center text-lg font-medium mb-3">
-                <User className="mr-2 text-blue-600" size={20} />
-                Personal Documents
-                <span className="ml-2 text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                  {documents.personal.length} documents
-                </span>
-              </h3>
               {renderDocumentList('personal')}
             </TabsContent>
           </Tabs>
 
-          {/* Personalized Insights */}
-          <div className="bg-green-50 p-4 rounded-md mt-6">
-            <h3 className="flex items-center text-lg font-medium text-green-800 mb-3">
-              <Info className="mr-2 text-green-600" size={20} />
-              Personalized Insights for Your Situation
+          {/* Insights Section */}
+          <div className="mt-6 border-t pt-6">
+            <h3 className="flex items-center text-lg font-medium mb-4">
+              <Info className="mr-2 text-blue-600" size={20} />
+              Key Insights for Your Situation
             </h3>
-            <p className="mb-3 text-green-700">
-              Based on your specific profile ({studentInfo.university} {studentInfo.program} with OPT starting {studentInfo.optStartDate}, and visa expiring during OPT period), we recommend:
-            </p>
-            <ul className="space-y-2">
+            
+            <ul className="space-y-3">
               {insights.map((insight, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="text-green-600 mr-2">✓</span>
-                  <span className="text-green-700">{insight}</span>
+                <li key={index} className="bg-gray-50 p-3 rounded-md flex items-start">
+                  <div className="bg-blue-100 p-1 rounded-full text-blue-700 mr-3 mt-0.5">
+                    <FileCheck size={16} />
+                  </div>
+                  <span className="text-gray-700">{insight}</span>
                 </li>
               ))}
             </ul>
           </div>
-        </div>
-        
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t mt-4">
-          <div className="text-sm text-gray-700">
-            <span className="font-medium">0 of {totalDocuments}</span> documents uploaded
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Do This Later
-            </Button>
-            <Button onClick={() => {
-              onOpenChange(false);
-              navigate("/app/dashboard");
-            }}>
+          
+          {/* Call to Action for Dashboard */}
+          <div className="mt-8 flex justify-center">
+            <Button 
+              onClick={() => {
+                onOpenChange(false);
+                navigate("/app/dashboard");
+              }}
+              className="px-6"
+            >
               Continue to Dashboard
             </Button>
           </div>

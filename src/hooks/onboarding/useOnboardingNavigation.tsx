@@ -1,43 +1,64 @@
-
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 
 export function useOnboardingNavigation() {
-  const { isAuthenticated } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
+
+  // Total number of steps in the onboarding process
+  const totalSteps = 6; // 0: Account, 1: Personal, 2: Visa, 3: Academic, 4: Employment, 5: Complete
+
+  // Check if we're on the first step
+  const isFirstStep = () => currentStep === 0;
   
-  console.log("Navigation Hook - Current Step:", currentStep);
+  // Check if we're on the last main step (before completion)
+  const isLastStep = () => currentStep === 4;
+  
+  // Check if we're on completion step
+  const isCompletionStep = () => currentStep === 5;
 
+  // Function to navigate to next step
   const goToNextStep = () => {
-    const nextStep = currentStep + 1;
-    console.log("Moving to next step:", nextStep);
-    setCurrentStep(nextStep);
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep(currentStep + 1);
+    }
   };
 
+  // Function to navigate to previous step with conditional logic
   const goToPreviousStep = () => {
-    const prevStep = currentStep - 1;
-    console.log("Moving to previous step:", prevStep);
-    setCurrentStep(prevStep);
+    if (currentStep > 0) {
+      // Special case: If we're on Employment step (4) and should skip Academic step (3)
+      if (currentStep === 4) {
+        const shouldSkipAcademic = localStorage.getItem('skipAcademic') === 'true';
+        if (shouldSkipAcademic) {
+          setCurrentStep(2); // Go back to Visa step
+          return;
+        }
+      }
+      
+      // Otherwise do normal navigation
+      setCurrentStep(currentStep - 1);
+    }
   };
 
-  // Determine if step is the first step
-  const isFirstStep = () => {
-    // If authenticated, first visible step is step 1 (Personal Info)
-    return isAuthenticated ? currentStep === 1 : currentStep === 0;
+  // Calculate progress percentage for the progress bar
+  const calculateProgress = (): number => {
+    // -1 because step 5 is completion which should show as 100%
+    return Math.round((currentStep / (totalSteps - 1)) * 100);
   };
 
-  // Determine if step is the last step
-  const isLastStep = () => {
-    // For students, the last step is step 4
-    return currentStep === 4;
+  // Jump to a specific step (for special navigation)
+  const jumpToStep = (step: number) => {
+    if (step >= 0 && step < totalSteps) {
+      setCurrentStep(step);
+    }
   };
 
-  // Calculate the progress percentage
-  const calculateProgress = () => {
-    // We have 5 steps (0-4)
-    const totalSteps = 5;
-    const effectiveStep = isAuthenticated ? currentStep : currentStep + 1;
-    return Math.min((effectiveStep / totalSteps) * 100, 100);
+  // Skip steps based on conditions (e.g., visa type)
+  const skipToStep = (targetStep: number, condition: boolean) => {
+    if (condition) {
+      setCurrentStep(targetStep);
+    } else {
+      goToNextStep();
+    }
   };
 
   return {
@@ -47,6 +68,9 @@ export function useOnboardingNavigation() {
     goToPreviousStep,
     isFirstStep,
     isLastStep,
-    calculateProgress
+    isCompletionStep,
+    calculateProgress,
+    jumpToStep,
+    skipToStep
   };
 }

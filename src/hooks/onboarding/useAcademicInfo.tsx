@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { AcademicInfoFormValues } from "@/types/onboarding";
+import { dateUtils } from "@/lib/date-utils";
 
 export function useAcademicInfo() {
   const { updateProfile } = useAuth();
@@ -23,9 +24,32 @@ export function useAcademicInfo() {
         isSTEM: data.isSTEM || false
       };
       
-      // Handle dates
+      // Handle dates using our utilities
       if (data.programStartDate) {
-        formattedData.courseStartDate = formatDateToString(data.programStartDate);
+        formattedData.courseStartDate = dateUtils.formatToYYYYMMDD(data.programStartDate);
+      }
+
+      if (data.programCompletionDate) {
+        formattedData.programCompletionDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
+      }
+      
+      // Add transfer student information if applicable
+      if (data.isTransferStudent && data.transferHistory && data.transferHistory.length > 0) {
+        formattedData.transferHistory = data.transferHistory.map(transfer => ({
+          universityName: transfer.universityName,
+          startDate: dateUtils.formatToYYYYMMDD(transfer.startDate),
+          endDate: dateUtils.formatToYYYYMMDD(transfer.endDate),
+          reason: transfer.reason
+        }));
+      }
+
+      // Add DSO contact info if provided
+      if (data.dsoName || data.dsoEmail || data.dsoPhone) {
+        formattedData.dsoContact = {
+          name: data.dsoName,
+          email: data.dsoEmail,
+          phone: data.dsoPhone
+        };
       }
       
       console.log("Saving academic data to profile:", formattedData);
@@ -40,24 +64,6 @@ export function useAcademicInfo() {
       return false;
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Helper function to safely format dates
-  const formatDateToString = (date: Date | string): string => {
-    if (typeof date === 'string') {
-      return date;
-    }
-    
-    try {
-      // Format as YYYY-MM-DD manually
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } catch (error) {
-      console.error("Date formatting error:", error);
-      return "";
     }
   };
 

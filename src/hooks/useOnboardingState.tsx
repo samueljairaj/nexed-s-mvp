@@ -8,6 +8,7 @@ import { useAcademicInfo } from "./onboarding/useAcademicInfo";
 import { useEmploymentInfo } from "./onboarding/useEmploymentInfo";
 import { useOnboardingCompletion } from "./onboarding/useOnboardingCompletion";
 import { useOnboardingNavigation } from "./onboarding/useOnboardingNavigation";
+import { VisaType } from "@/types/onboarding";
 
 export function useOnboardingState() {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
@@ -28,18 +29,54 @@ export function useOnboardingState() {
         firstName: currentUser.name?.split(" ")[0] || "",
         lastName: currentUser.name?.split(" ")[1] || "",
         email: currentUser.email || "",
+        password: "",
+        confirmPassword: "",
+        acceptTerms: true
       });
       
+      // Pre-fill personal info if available
       if (currentUser.country) {
-        personalInfo.setPersonalData(prev => ({ ...prev, country: currentUser.country || "" }));
+        personalInfo.setPersonalData(prev => ({ 
+          ...prev, 
+          country: currentUser.country || "",
+          currentCountry: currentUser.country || "United States",
+          address: currentUser.address || "",
+          phoneNumber: currentUser.phone || "",
+          passportNumber: currentUser.passportNumber || ""
+        }));
       }
       
+      // Pre-fill visa info if available
       if (currentUser.visaType) {
-        visaStatus.setVisaData(prev => ({ ...prev, visaType: currentUser.visaType }));
+        visaStatus.setVisaData(prev => ({ 
+          ...prev, 
+          visaType: currentUser.visaType as VisaType || VisaType.F1,
+          sevisId: currentUser.sevisId || ""
+        }));
+        
+        // Store visa type in localStorage for conditional navigation
+        localStorage.setItem('visaType', currentUser.visaType);
       }
       
+      // Pre-fill academic info if available
       if (currentUser.university) {
-        academicInfo.setAcademicData(prev => ({ ...prev, university: currentUser.university || "" }));
+        academicInfo.setAcademicData(prev => ({ 
+          ...prev, 
+          university: currentUser.university || "",
+          fieldOfStudy: currentUser.fieldOfStudy || "",
+          degreeLevel: currentUser.degreeLevel || "",
+          isSTEM: currentUser.isSTEM || false
+        }));
+      }
+      
+      // Pre-fill employment info if available
+      if (currentUser.employerName) {
+        employmentInfo.setEmploymentData(prev => ({ 
+          ...prev,
+          employmentStatus: "Employed",
+          employerName: currentUser.employerName || "",
+          jobTitle: currentUser.jobTitle || ""
+        }));
       }
     }
   }, [isAuthenticated, currentUser]);
@@ -73,14 +110,20 @@ export function useOnboardingState() {
     return success;
   };
 
-  // Handle visa status and navigate to next step if successful
+  // Handle visa status with enhanced conditional navigation
   const handleVisaStatus = async (data: any): Promise<boolean> => {
     const success = await visaStatus.handleVisaStatus(data);
     if (success) {
+      // Store visa type for later use in conditional logic
+      localStorage.setItem('visaType', data.visaType);
+      
       // Skip to employment step for non-student visas
-      if (data.visaType !== "F1" && data.visaType !== "J1") {
-        navigation.setCurrentStep(navigation.currentStep + 2);
+      if (data.visaType !== VisaType.F1 && data.visaType !== VisaType.J1) {
+        localStorage.setItem('skipAcademic', 'true');
+        navigation.setCurrentStep(navigation.currentStep + 2); // Skip Academic step
       } else {
+        // Regular student visa flow
+        localStorage.setItem('skipAcademic', 'false');
         navigation.goToNextStep();
       }
     }
@@ -105,8 +148,10 @@ export function useOnboardingState() {
     return success;
   };
 
+  // Check if visa type is F1 or J1 (student visas)
   const isF1OrJ1 = () => {
-    return visaStatus.visaData.visaType === "F1" || visaStatus.visaData.visaType === "J1";
+    const visaType = visaStatus.visaData.visaType;
+    return visaType === VisaType.F1 || visaType === VisaType.J1;
   };
 
   return {

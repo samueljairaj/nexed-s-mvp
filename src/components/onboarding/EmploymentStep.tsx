@@ -1,9 +1,10 @@
-import { z } from "zod";
-import { useForm } from "react-hook-form";
+
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Briefcase, Building, Calendar } from "lucide-react";
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { employmentInfoSchema, EmploymentInfoFormValues } from "@/types/onboarding";
+import { FormDatePicker } from "@/components/ui/form-date-picker";
 import {
   Form,
   FormControl,
@@ -13,7 +14,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -22,454 +22,557 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
-const employmentSchema = z.object({
-  employmentStatus: z.string().min(1, "Please select your employment status"),
-  employer: z.string().optional(),
-  jobTitle: z.string().optional(),
-  workStartDate: z.date().optional(),
-  workEndDate: z.date().optional(),
-  isRelatedToField: z.enum(["yes", "no", "unknown"]).optional(),
-  authorizationStartDate: z.date().optional(),
-  authorizationEndDate: z.date().optional(),
-  unemploymentDays: z.string().optional(),
-  eadCardNumber: z.string().optional(),
-  eVerifyNumber: z.string().optional(),
-});
-
-export type EmploymentFormData = z.infer<typeof employmentSchema>;
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Briefcase, Calendar, MapPin, Plus, X, AlertCircle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 interface EmploymentStepProps {
-  defaultValues: Partial<EmploymentFormData>;
-  onSubmit: (data: EmploymentFormData) => void;
+  defaultValues: Partial<EmploymentInfoFormValues>;
+  onSubmit: (data: EmploymentInfoFormValues) => Promise<boolean>;
   onEmploymentStatusChange: (status: string) => void;
-  isSubmitting?: boolean;
+  isSubmitting: boolean;
   isOptOrCpt: boolean;
   isEmployed: boolean;
   isStemOpt: boolean;
   isF1OrJ1: boolean;
 }
 
-export function EmploymentStep({ 
+export function EmploymentStep({
   defaultValues,
   onSubmit,
   onEmploymentStatusChange,
-  isSubmitting = false,
+  isSubmitting,
   isOptOrCpt,
   isEmployed,
   isStemOpt,
-  isF1OrJ1
+  isF1OrJ1,
 }: EmploymentStepProps) {
-  const form = useForm<EmploymentFormData>({
-    resolver: zodResolver(employmentSchema),
+  const form = useForm<EmploymentInfoFormValues>({
+    resolver: zodResolver(employmentInfoSchema),
     defaultValues: {
-      employmentStatus: "",
-      ...defaultValues
-    }
+      ...defaultValues,
+      employmentStatus: defaultValues.employmentStatus || "Not Employed",
+      employerName: defaultValues.employerName || "",
+      jobTitle: defaultValues.jobTitle || "",
+      jobLocation: defaultValues.jobLocation || "",
+      previousEmployers: defaultValues.previousEmployers || [],
+    },
   });
 
-  // Determine if showing employment details is needed based on status
-  const showEmploymentDetails = isEmployed;
-  
-  // Determine status options based on visa type
-  const getStatusOptions = () => {
-    if (isF1OrJ1) {
-      return [
-        { value: "Not_Employed", label: "Not Currently Employed" },
-        { value: "On_Campus", label: "On-Campus Employment" },
-        { value: "CPT", label: "Curricular Practical Training (CPT)" },
-        { value: "OPT", label: "Optional Practical Training (OPT)" },
-        { value: "STEM_OPT", label: "STEM OPT Extension" },
-      ];
-    } else {
-      return [
-        { value: "Not_Employed", label: "Not Currently Employed" },
-        { value: "Employed", label: "Employed" },
-      ];
+  // For managing the previous employers array
+  const { fields, append, remove } = useFieldArray({
+    name: "previousEmployers",
+    control: form.control,
+  });
+
+  // Watch fields for conditional rendering
+  const employmentStatus = form.watch("employmentStatus");
+  const authorizationType = form.watch("authorizationType");
+
+  // Handle form submission
+  const handleFormSubmit = (data: EmploymentInfoFormValues) => {
+    console.log("Employment info submitted:", data);
+    onSubmit(data);
+  };
+
+  // Handle employment status change
+  const handleStatusChange = (status: string) => {
+    onEmploymentStatusChange(status);
+    
+    // Reset relevant fields when changing employment status
+    if (status === "Not Employed") {
+      form.reset({
+        ...form.getValues(),
+        employmentStatus: status,
+        employerName: "",
+        jobTitle: "",
+        employmentStartDate: undefined,
+        employmentEndDate: undefined,
+        jobLocation: "",
+        isFieldRelated: undefined
+      });
     }
   };
 
-  // Handle status change
-  const handleStatusChange = (value: string) => {
-    onEmploymentStatusChange(value);
-    form.reset({
-      ...form.getValues(),
-      employmentStatus: value,
-      // Clear employment fields if not employed
-      ...(!value || value === "Not_Employed" ? {
-        employer: "",
-        jobTitle: "",
-        workStartDate: undefined,
-        workEndDate: undefined,
-        isRelatedToField: undefined,
-      } : {}),
+  // Add a new previous employer
+  const addPreviousEmployer = () => {
+    append({
+      employerName: "",
+      jobTitle: "",
+      startDate: new Date(),
+      endDate: undefined,
+      jobLocation: ""
     });
+  };
+  
+  // Calculate the maximum days of unemployment allowed based on authorization type
+  const getMaxUnemploymentDays = () => {
+    if (authorizationType === "STEM OPT") return 150;
+    if (authorizationType === "OPT") return 90;
+    return 0;
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold">Employment Status</h2>
-        <p className="text-muted-foreground mt-2">Please provide details about your current employment status in the United States.</p>
+        <h2 className="text-2xl font-semibold">Employment Information</h2>
+        <p className="text-muted-foreground">Please provide details about your current and previous employment.</p>
       </div>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+          {/* Employment Status */}
           <FormField
             control={form.control}
             name="employmentStatus"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Current Employment Status</FormLabel>
-                <Select 
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    handleStatusChange(value);
-                  }} 
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your employment status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {getStatusOptions().map(option => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormLabel>Employment Status <span className="text-destructive">*</span></FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      handleStatusChange(value);
+                    }}
+                    defaultValue={field.value}
+                    className="flex flex-row space-x-4"
+                  >
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="Employed" />
+                      </FormControl>
+                      <FormLabel className="font-normal cursor-pointer">Employed</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="Not Employed" />
+                      </FormControl>
+                      <FormLabel className="font-normal cursor-pointer">Not Employed</FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           
-          {showEmploymentDetails && (
-            <>
-              <FormField
-                control={form.control}
-                name="employer"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Employer Name</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          placeholder="Enter your employer's name" 
-                          className="pl-10" 
-                          {...field} 
-                          value={field.value || ""}
-                        />
-                        <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="jobTitle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Job Title/Position</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          placeholder="Enter your job title" 
-                          className="pl-10" 
-                          {...field} 
-                          value={field.value || ""}
-                        />
-                        <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Warning for F-1/J-1 students who are not employed */}
+          {isF1OrJ1 && employmentStatus === "Not Employed" && (
+            <Alert variant="warning" className="bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-700">
+                F-1 and J-1 students on OPT have limited unemployment time. Make sure you understand the restrictions.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Current Employment Information - Only show if employed */}
+          {employmentStatus === "Employed" && (
+            <div className="border p-4 rounded-md space-y-4">
+              <h3 className="font-medium">Current Employment Information</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Employer Name */}
                 <FormField
                   control={form.control}
-                  name="workStartDate"
+                  name="employerName"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Employment Start Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                            >
-                              <div className="relative w-full">
-                                <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                                <span className="pl-2">
-                                  {field.value ? format(field.value, "PPP") : "Select start date"}
-                                </span>
-                              </div>
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <CalendarComponent
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
+                    <FormItem>
+                      <FormLabel>Employer Name <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            placeholder="Enter employer name" 
+                            {...field}
+                            value={field.value || ""}
+                            className="pl-10"
                           />
-                        </PopoverContent>
-                      </Popover>
+                          <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
+                {/* Job Title */}
                 <FormField
                   control={form.control}
-                  name="workEndDate"
+                  name="jobTitle"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Employment End Date (if applicable)</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                            >
-                              <div className="relative w-full">
-                                <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                                <span className="pl-2">
-                                  {field.value ? format(field.value, "PPP") : "Select end date (if applicable)"}
-                                </span>
-                              </div>
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <CalendarComponent
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
+                    <FormItem>
+                      <FormLabel>Job Title/Position <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter job title" 
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Employment Start Date */}
+                <FormField
+                  control={form.control}
+                  name="employmentStartDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Job Start Date <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <FormDatePicker
+                            name="employmentStartDate"
+                            placeholder="Select start date"
                           />
-                        </PopoverContent>
-                      </Popover>
+                          <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Employment End Date */}
+                <FormField
+                  control={form.control}
+                  name="employmentEndDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Job End Date</FormLabel>
+                      <FormControl>
+                        <FormDatePicker
+                          name="employmentEndDate"
+                          placeholder="Select end date (if applicable)"
+                        />
+                      </FormControl>
                       <FormDescription>
-                        Leave blank if currently employed
+                        Leave blank if this is your current job with no end date
                       </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Job Location */}
+                <FormField
+                  control={form.control}
+                  name="jobLocation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Job Location <span className="text-destructive">*</span></FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            placeholder="City, State or Remote" 
+                            {...field}
+                            value={field.value || ""}
+                            className="pl-10"
+                          />
+                          <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
               
+              {/* CPT/OPT/STEM OPT Specific Fields */}
               {isOptOrCpt && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="isRelatedToField"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>Is this position related to your field of study?</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex flex-row space-x-4"
-                          >
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="yes" />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                Yes
-                              </FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="no" />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                No
-                              </FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="unknown" />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                Not sure
-                              </FormLabel>
-                            </FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <div className="pt-4 border-t mt-4 space-y-4">
+                  <h3 className="font-medium">Work Authorization Details</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Authorization Type */}
                     <FormField
                       control={form.control}
-                      name="authorizationStartDate"
+                      name="authorizationType"
                       render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>{form.getValues().employmentStatus} Authorization Start Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                                >
-                                  <div className="relative w-full">
-                                    <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                                    <span className="pl-2">
-                                      {field.value ? format(field.value, "PPP") : "Select authorization start date"}
-                                    </span>
-                                  </div>
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <CalendarComponent
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                        <FormItem>
+                          <FormLabel>Authorization Type <span className="text-destructive">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select authorization type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="CPT">CPT</SelectItem>
+                              <SelectItem value="OPT">OPT</SelectItem>
+                              <SelectItem value="STEM OPT">STEM OPT Extension</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                     
+                    {/* Is Job Related to Field of Study */}
                     <FormField
                       control={form.control}
-                      name="authorizationEndDate"
+                      name="isFieldRelated"
                       render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>{form.getValues().employmentStatus} Authorization End Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={`w-full pl-10 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                                >
-                                  <div className="relative w-full">
-                                    <Calendar className="absolute left-0 top-0.5 h-4 w-4 text-muted-foreground" />
-                                    <span className="pl-2">
-                                      {field.value ? format(field.value, "PPP") : "Select authorization end date"}
-                                    </span>
-                                  </div>
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <CalendarComponent
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
+                        <FormItem>
+                          <FormLabel>Is Job Related to Field of Study? <span className="text-destructive">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select option" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Yes">Yes</SelectItem>
+                              <SelectItem value="No">No</SelectItem>
+                              <SelectItem value="Not Sure">Not Sure</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            CPT and OPT employment must be related to your field of study
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                    
+                    {/* Authorization Start Date */}
+                    <FormField
+                      control={form.control}
+                      name="authStartDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Authorization Start Date <span className="text-destructive">*</span></FormLabel>
+                          <FormDatePicker
+                            name="authStartDate"
+                            placeholder="Select start date"
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Authorization End Date */}
+                    <FormField
+                      control={form.control}
+                      name="authEndDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Authorization End Date <span className="text-destructive">*</span></FormLabel>
+                          <FormDatePicker
+                            name="authEndDate"
+                            placeholder="Select end date"
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* EAD Card Number */}
+                    <FormField
+                      control={form.control}
+                      name="eadNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>EAD Card Number</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Enter EAD card number" 
+                              {...field}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* Unemployment Days Used */}
+                    <FormField
+                      control={form.control}
+                      name="unemploymentDaysUsed"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Unemployment Days Used</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Total days of unemployment" 
+                              type="number"
+                              {...field}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            You have used {field.value || "0"} of {getMaxUnemploymentDays()} allowed days
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {/* STEM OPT E-Verify Number */}
+                    {isStemOpt && (
+                      <FormField
+                        control={form.control}
+                        name="eVerifyNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Employer E-Verify Number</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter employer E-Verify number" 
+                                {...field}
+                                value={field.value || ""}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Required for employers of STEM OPT students
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
-                </>
+                </div>
               )}
-              
-              {(form.getValues().employmentStatus === "OPT" || form.getValues().employmentStatus === "STEM_OPT") && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="unemploymentDays"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Unemployment Days Used (Optional)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number"
-                            placeholder="e.g., 30" 
-                            {...field} 
-                            value={field.value || ""}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          {form.getValues().employmentStatus === "OPT" ? 
-                            "Regular OPT allows up to 90 days of unemployment." : 
-                            "STEM OPT allows up to 150 days of unemployment (including days used during regular OPT)."
-                          }
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="eadCardNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>EAD Card Number</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter your EAD card number" 
-                            {...field} 
-                            value={field.value || ""}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
-              
-              {form.getValues().employmentStatus === "STEM_OPT" && (
-                <FormField
-                  control={form.control}
-                  name="eVerifyNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Employer E-Verify Number</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter employer E-Verify number" 
-                          {...field} 
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Required for STEM OPT extension. Your employer must be enrolled in E-Verify.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </>
+            </div>
           )}
           
+          {/* Previous Employment Section */}
+          {employmentStatus === "Employed" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Previous Employment</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addPreviousEmployer}
+                >
+                  <Plus size={16} className="mr-2" /> Add Previous Employer
+                </Button>
+              </div>
+              
+              {fields.length === 0 ? (
+                <p className="text-muted-foreground text-sm italic">No previous employment added</p>
+              ) : (
+                fields.map((field, index) => (
+                  <Card key={field.id} className="overflow-hidden">
+                    <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                      <CardTitle className="text-base">Previous Job #{index + 1}</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="h-8 px-2 text-red-500 hover:text-red-600"
+                      >
+                        <X size={16} />
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Previous Employer Name */}
+                        <FormField
+                          control={form.control}
+                          name={`previousEmployers.${index}.employerName`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Employer Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter employer name" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* Previous Job Title */}
+                        <FormField
+                          control={form.control}
+                          name={`previousEmployers.${index}.jobTitle`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Job Title</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter job title" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* Previous Employment Start Date */}
+                        <FormField
+                          control={form.control}
+                          name={`previousEmployers.${index}.startDate`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start Date</FormLabel>
+                              <FormDatePicker
+                                name={`previousEmployers.${index}.startDate`}
+                                placeholder="Select start date"
+                              />
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* Previous Employment End Date */}
+                        <FormField
+                          control={form.control}
+                          name={`previousEmployers.${index}.endDate`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End Date</FormLabel>
+                              <FormDatePicker
+                                name={`previousEmployers.${index}.endDate`}
+                                placeholder="Select end date"
+                              />
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* Previous Job Location */}
+                        <FormField
+                          control={form.control}
+                          name={`previousEmployers.${index}.jobLocation`}
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Job Location</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="City, State or Remote" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
+
           <Button 
             type="submit" 
             className="w-full mt-6"
@@ -481,7 +584,7 @@ export function EmploymentStep({
                 Saving...
               </>
             ) : (
-              "Complete Onboarding"
+              "Continue"
             )}
           </Button>
         </form>

@@ -1,99 +1,148 @@
-
-import { parse, format, isValid, isAfter, isBefore, isSameDay } from "date-fns";
-
-export interface DateRange {
-  from: Date;
-  to: Date;
-}
-
+/**
+ * Date utility functions for consistent date handling across the application
+ */
 export const dateUtils = {
   /**
-   * Format a date in "PPP" format (e.g., April 12th, 2023)
+   * Format a date object or string to a human-readable format
+   * @param date The date to format
+   * @param format Optional format (default: 'MMMM d, yyyy')
+   * @returns Formatted date string
    */
-  formatDate: (date: Date | number): string => {
-    return format(date, "PPP");
-  },
-  
-  /**
-   * Format a date in a short format (e.g., May 12, 2023)
-   */
-  formatShort: (date: Date | number): string => {
-    return format(date, "MMM d, yyyy");
-  },
-  
-  /**
-   * Format a date in a compact format (e.g., 05/12/2023)
-   */
-  formatCompact: (date: Date | number): string => {
-    return format(date, "MM/dd/yyyy");
-  },
-  
-  /**
-   * Parse a date string in various formats
-   */
-  parseDate: (dateString: string): Date | null => {
-    // Try common formats
-    const formats = ["MM/dd/yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM-dd-yyyy", "yyyy/MM/dd", "MMM d, yyyy"];
+  formatDate: (date: Date | string | null | undefined, format?: string): string => {
+    if (!date) return "Not specified";
     
-    for (const dateFormat of formats) {
-      const parsedDate = parse(dateString, dateFormat, new Date());
-      if (isValid(parsedDate)) {
-        return parsedDate;
-      }
+    try {
+      // Convert to Date object if it's a string
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(dateObj);
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return String(date);
     }
+  },
+  
+  /**
+   * Calculate if a date is within a certain number of days from now
+   * @param date The date to check
+   * @param days The number of days threshold
+   * @returns boolean indicating if date is within specified days
+   */
+  isWithinDays: (date: Date | string | null | undefined, days: number): boolean => {
+    if (!date) return false;
     
-    return null;
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const today = new Date();
+      const futureDate = new Date();
+      futureDate.setDate(today.getDate() + days);
+      
+      return dateObj <= futureDate && dateObj >= today;
+    } catch (error) {
+      console.error("Date comparison error:", error);
+      return false;
+    }
   },
   
   /**
-   * Validate a date range to ensure the "to" date is after the "from" date
+   * Convert a date string from API to a Date object
+   * @param dateString The date string from API (usually in ISO format)
+   * @returns Date object
    */
-  validateDateRange: (from: Date | null, to: Date | null): boolean => {
-    if (!from || !to) return false;
-    return isAfter(to, from) || isSameDay(from, to);
+  parseApiDate: (dateString: string | null | undefined): Date | null => {
+    if (!dateString) return null;
+    
+    try {
+      return new Date(dateString);
+    } catch (error) {
+      console.error("Date parsing error:", error);
+      return null;
+    }
   },
   
   /**
-   * Check if a date is in the past
+   * Format a date for API submission (ISO format with time zone)
+   * @param date The date to format
+   * @returns ISO date string
    */
-  isPast: (date: Date): boolean => {
-    return isBefore(date, new Date());
+  formatForApi: (date: Date | string | null | undefined): string | null => {
+    if (!date) return null;
+    
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      return dateObj.toISOString();
+    } catch (error) {
+      console.error("API date formatting error:", error);
+      return null;
+    }
   },
   
   /**
-   * Check if a date is in the future
+   * Format a date to YYYY-MM-DD string
+   * @param date The date to format 
+   * @returns YYYY-MM-DD formatted string or null if invalid
    */
-  isFuture: (date: Date): boolean => {
-    return isAfter(date, new Date());
+  formatToYYYYMMDD: (date: Date | string | null | undefined): string | null => {
+    if (!date) return null;
+    
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      
+      // Format as YYYY-MM-DD
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error("YYYY-MM-DD formatting error:", error);
+      return null;
+    }
   },
-  
+
   /**
-   * Check if a date is between a range
+   * Calculate days between two dates
+   * @param date1 First date
+   * @param date2 Second date (default: today)
+   * @returns Number of days between dates
    */
-  isWithinRange: (date: Date, range: DateRange): boolean => {
-    return (
-      (isAfter(date, range.from) || isSameDay(date, range.from)) && 
-      (isBefore(date, range.to) || isSameDay(date, range.to))
-    );
-  },
-  
-  /**
-   * Get month name from month number (0-11)
-   */
-  getMonthName: (month: number): string => {
-    const date = new Date();
-    date.setMonth(month);
-    return format(date, "MMMM");
-  },
-  
-  /**
-   * Get an array of short month names
-   */
-  getMonthNames: (): string[] => {
-    return Array.from({ length: 12 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(i);
-      return format(date, "MMM");
-    });
+  daysBetween: (date1: Date | string | null | undefined, date2?: Date | string): number => {
+    if (!date1) return 0;
+    
+    try {
+      const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
+      const d2 = date2 ? (typeof date2 === 'string' ? new Date(date2) : date2) : new Date();
+      
+      // Convert time difference to days
+      const timeDiff = Math.abs(d2.getTime() - d1.getTime());
+      return Math.ceil(timeDiff / (1000 * 3600 * 24));
+    } catch (error) {
+      console.error("Days calculation error:", error);
+      return 0;
+    }
   }
 };
+
+/**
+ * Format dates for display consistently across the application
+ */
+export function formatDisplayDate(dateInput: string | Date | null | undefined): string {
+  return dateUtils.formatDate(dateInput);
+}
+
+/**
+ * Create a utility function to create a countrires array
+ * @returns Array of countries with name and code
+ */
+export function createCountriesArray() {
+  return [
+    { name: "United States", code: "US" },
+    { name: "Afghanistan", code: "AF" },
+    { name: "Albania", code: "AL" },
+    // ... other countries
+  ];
+}

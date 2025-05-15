@@ -1,10 +1,11 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { visaStatusSchema, VisaStatusFormValues } from "@/types/onboarding";
+import { visaStatusSchema, VisaStatusFormValues, VisaType } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { ArrowLeft, Calendar, FileText, FileIcon } from "lucide-react";
+import { ArrowLeft, Calendar, FileText, Info, AlertTriangle } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -29,9 +30,8 @@ import {
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
-// Export the form data type - use the schema-derived type
-export type VisaStatusFormData = VisaStatusFormValues;
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { dateUtils } from "@/lib/date-utils";
 
 interface VisaStatusStepProps {
   defaultValues: Partial<VisaStatusFormValues>;
@@ -49,7 +49,7 @@ export function VisaStatusStep({
   handleBackToLogin
 }: VisaStatusStepProps) {
   // Convert the string visa type to the enum type expected by the schema
-  const initialVisaType = defaultValues.visaType as "F1" | "J1" | "H1B" | "Other";
+  const initialVisaType = defaultValues.visaType || VisaType.F1;
 
   console.log("VisaStatusStep rendering with defaultValues:", defaultValues);
 
@@ -57,7 +57,7 @@ export function VisaStatusStep({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
       ...defaultValues,
-      visaType: initialVisaType || "F1",
+      visaType: initialVisaType,
       visaStatus: defaultValues.visaStatus || "",
       sevisId: defaultValues.sevisId || "",
       i94Number: defaultValues.i94Number || "",
@@ -68,6 +68,7 @@ export function VisaStatusStep({
   const visaType = form.watch("visaType");
   const visaStatus = form.watch("visaStatus");
   const hadUnemploymentPeriods = form.watch("hadUnemploymentPeriods");
+  const visaExpiryDate = form.watch("visaExpiryDate");
   
   // Handle submit to ensure data is properly typed
   const handleFormSubmit = (data: VisaStatusFormValues) => {
@@ -75,9 +76,10 @@ export function VisaStatusStep({
     onSubmit(data);
   };
 
+  // Get visa status options based on selected visa type
   const getVisaStatusOptions = () => {
     switch(visaType) {
-      case "F1":
+      case VisaType.F1:
         return [
           { value: "active", label: "Active Student" },
           { value: "cpt", label: "CPT" },
@@ -85,13 +87,13 @@ export function VisaStatusStep({
           { value: "stem_opt", label: "STEM OPT" },
           { value: "grace_period", label: "Grace Period" }
         ];
-      case "J1":
+      case VisaType.J1:
         return [
           { value: "active_program", label: "Active Program" },
           { value: "academic_training", label: "Academic Training" },
           { value: "grace_period", label: "Grace Period" }
         ];
-      case "H1B":
+      case VisaType.H1B:
         return [
           { value: "active_employment", label: "Active Employment" },
           { value: "portability", label: "Portability" }
@@ -103,6 +105,17 @@ export function VisaStatusStep({
           { value: "other", label: "Other" }
         ];
     }
+  };
+
+  // Check if visa is expiring soon (within 90 days)
+  const isVisaExpiringSoon = () => {
+    if (!visaExpiryDate) return false;
+    
+    const today = new Date();
+    const ninetyDaysFromNow = new Date();
+    ninetyDaysFromNow.setDate(today.getDate() + 90);
+    
+    return visaExpiryDate < ninetyDaysFromNow;
   };
 
   // Check if the selected visa status is OPT or STEM OPT
@@ -135,7 +148,7 @@ export function VisaStatusStep({
               name="visaType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Visa Type</FormLabel>
+                  <FormLabel>Visa Type <span className="text-destructive">*</span></FormLabel>
                   <Select 
                     value={field.value} 
                     onValueChange={(value) => {
@@ -149,10 +162,10 @@ export function VisaStatusStep({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="F1">F-1 Student Visa</SelectItem>
-                      <SelectItem value="J1">J-1 Exchange Visitor Visa</SelectItem>
-                      <SelectItem value="H1B">H-1B Specialty Occupation Visa</SelectItem>
-                      <SelectItem value="Other">Other Visa Type</SelectItem>
+                      <SelectItem value={VisaType.F1}>F-1 Student Visa</SelectItem>
+                      <SelectItem value={VisaType.J1}>J-1 Exchange Visitor Visa</SelectItem>
+                      <SelectItem value={VisaType.H1B}>H-1B Specialty Occupation Visa</SelectItem>
+                      <SelectItem value={VisaType.Other}>Other Visa Type</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -165,7 +178,7 @@ export function VisaStatusStep({
               name="visaStatus"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Visa Status</FormLabel>
+                  <FormLabel>Current Visa Status <span className="text-destructive">*</span></FormLabel>
                   <Select 
                     value={field.value || ""} 
                     onValueChange={(value) => {
@@ -193,7 +206,7 @@ export function VisaStatusStep({
               name="entryDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Most Recent Entry to the U.S.</FormLabel>
+                  <FormLabel>Most Recent Entry to the U.S. <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <div className="relative">
                       <FormDatePicker
@@ -203,6 +216,9 @@ export function VisaStatusStep({
                       <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     </div>
                   </FormControl>
+                  <FormDescription>
+                    Date of your most recent entry into the U.S. (I-94 admission date)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -213,7 +229,7 @@ export function VisaStatusStep({
               name="visaExpiryDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Visa Stamp Expiration Date</FormLabel>
+                  <FormLabel>Visa Stamp Expiration Date {visaType !== VisaType.Other && <span className="text-destructive">*</span>}</FormLabel>
                   <FormDatePicker
                     name="visaExpiryDate"
                     placeholder="Select your visa expiration date"
@@ -223,13 +239,27 @@ export function VisaStatusStep({
               )}
             />
 
-            {/* We keep these fields for UI purposes but don't send them to the database */}
+            {isVisaExpiringSoon() && (
+              <div className="md:col-span-2">
+                <Alert variant="warning" className="bg-amber-50 border-amber-200">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertTitle className="text-amber-800">Your visa is expiring soon</AlertTitle>
+                  <AlertDescription className="text-amber-700">
+                    Your visa expires on {dateUtils.formatDate(visaExpiryDate)}, which is less than 90 days from now. 
+                    You should plan to either renew your visa if traveling internationally or prepare for status 
+                    adjustment if applicable.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+
+            {/* SEVIS ID */}
             <FormField
               control={form.control}
               name="sevisId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>SEVIS ID</FormLabel>
+                  <FormLabel>SEVIS ID <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input 
@@ -254,7 +284,7 @@ export function VisaStatusStep({
               name="i94Number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>I-94 Number</FormLabel>
+                  <FormLabel>I-94 Number <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input 
@@ -267,7 +297,7 @@ export function VisaStatusStep({
                     </div>
                   </FormControl>
                   <FormDescription>
-                    Your I-94 number can be retrieved from the CBP website
+                    Your I-94 number can be retrieved from the <a href="https://i94.cbp.dhs.gov" target="_blank" rel="noopener noreferrer" className="text-primary underline">CBP website</a>
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -343,7 +373,7 @@ export function VisaStatusStep({
           
           {/* Visa type specific fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {visaType === "F1" && (
+            {visaType === VisaType.F1 && (
               <FormField
                 control={form.control}
                 name="i20ExpiryDate"
@@ -360,7 +390,7 @@ export function VisaStatusStep({
               />
             )}
 
-            {visaType === "J1" && (
+            {visaType === VisaType.J1 && (
               <FormField
                 control={form.control}
                 name="hasDS2019"
@@ -421,7 +451,10 @@ export function VisaStatusStep({
           />
           
           <div className="bg-blue-50 p-4 rounded-md mt-6">
-            <h4 className="font-medium text-blue-800">Important Note About Visa Status</h4>
+            <h4 className="font-medium text-blue-800 flex items-center">
+              <Info className="inline-block mr-2 h-4 w-4 text-blue-700" />
+              Important Note About Visa Status
+            </h4>
             <p className="text-sm text-blue-700 mt-1">
               Maintaining proper visa status is critical. Always ensure all your immigration documents are up to date and report any changes to your DSO or immigration advisor promptly.
             </p>
