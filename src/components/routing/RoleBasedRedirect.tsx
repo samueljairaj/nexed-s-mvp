@@ -12,19 +12,26 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectedRef = useRef(false);
+  const hasRunRef = useRef(false);
 
   useEffect(() => {
-    // Skip redirection if we're still loading or have already redirected in this render cycle
-    if (isLoading || redirectedRef.current) return;
-
     // Reset the redirect flag on location change
+    redirectedRef.current = false;
+    
+    // Return a cleanup function
     return () => {
-      redirectedRef.current = false;
+      // This will run when the location changes or component unmounts
     };
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!isLoading && currentUser && !redirectedRef.current) {
+    // Skip redirection if we're still loading or have already redirected
+    if (isLoading || redirectedRef.current || hasRunRef.current) return;
+    
+    // Set flag to prevent this effect from running multiple times
+    hasRunRef.current = true;
+
+    if (!isLoading && currentUser) {
       redirectedRef.current = true; // Set flag to prevent multiple redirects
       
       // Redirect based on user role

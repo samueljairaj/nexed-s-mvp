@@ -34,10 +34,10 @@ export const useOnboardingState = () => {
     currentStep: 0
   });
 
-  // Load any existing user data into onboarding state
+  // Load any existing user data into onboarding state - with dependency array to prevent infinite reloading
   useEffect(() => {
-    // Only attempt to load user data if we have a user
-    if (currentUser) {
+    // Only attempt to load user data if we have a user and we're in the loading state
+    if (currentUser && loading) {
       const updatedState = { ...state };
       
       // Pre-fill personal info if available
@@ -107,10 +107,12 @@ export const useOnboardingState = () => {
 
       // Update state with pre-filled values
       setState(updatedState);
+      setLoading(false);
+    } else if (!currentUser) {
+      // If no user, just set loading to false
+      setLoading(false);
     }
-    
-    setLoading(false);
-  }, [currentUser]);
+  }, [currentUser]); // Only depend on currentUser changes, not on state
 
   // Function to calculate progress percentage
   const calculateProgress = () => {
@@ -128,7 +130,7 @@ export const useOnboardingState = () => {
   const updateStep = (step: keyof OnboardingState, data: any) => {
     setState(prev => ({
       ...prev,
-      [step]: { ...(prev[step] as object), ...data },
+      [step]: { ...((prev[step] as object) || {}), ...data },
       completedSteps: [...new Set([...prev.completedSteps, step])]
     }));
   };
@@ -222,7 +224,7 @@ export const useOnboardingState = () => {
   const handleVisaTypeChange = (visaType: string) => {
     setState(prev => ({
       ...prev,
-      visaStatus: { ...(prev.visaStatus as object), visaType: visaType as any }
+      visaStatus: { ...((prev.visaStatus as object) || {}), visaType: visaType as any }
     }));
   };
 
@@ -260,7 +262,7 @@ export const useOnboardingState = () => {
   const handleEmploymentStatusChange = (status: string) => {
     setState(prev => ({
       ...prev,
-      employmentInfo: { ...(prev.employmentInfo as object), employmentStatus: status as "Employed" | "Not Employed" }
+      employmentInfo: { ...((prev.employmentInfo as object) || {}), employmentStatus: status as "Employed" | "Not Employed" }
     }));
   };
 
