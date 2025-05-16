@@ -70,10 +70,11 @@ export const useOnboardingState = () => {
         updatedState.visaStatus = {
           visaType: currentUser.visaType,
           visaStatus: "Active", // Default for existing users
-          sevisId: currentUser?.sevisId || "", // Using sevisId property
-          i94Number: currentUser?.i94Number || "", // Using i94Number property
+          // Use optional chaining for properties that might not exist in UserProfile
+          sevisId: currentUser?.sevis_id || "", 
+          i94Number: currentUser?.i94_number || "", 
           entryDate: currentUser.usEntryDate ? new Date(currentUser.usEntryDate) : undefined,
-          visaExpiryDate: currentUser.visa_expiry_date ? new Date(currentUser.visa_expiry_date) : undefined // Using visa_expiry_date property
+          visaExpiryDate: currentUser.visa_expiry_date ? new Date(currentUser.visa_expiry_date) : undefined 
         };
       }
 
@@ -91,11 +92,11 @@ export const useOnboardingState = () => {
 
       // Pre-fill employment info if available
       // Use optional chaining to safely access properties that might not exist
-      if (currentUser?.employerName || currentUser?.employmentStartDate) {
+      if (currentUser?.employer_name || currentUser?.employmentStartDate) {
         updatedState.employmentInfo = {
           employmentStatus: "Employed",
-          employerName: currentUser?.employerName || "", // Using employerName property
-          jobTitle: currentUser?.jobTitle || "", // Using jobTitle property
+          employerName: currentUser?.employer_name || "", 
+          jobTitle: currentUser?.job_title || "", 
           employmentStartDate: currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate) : undefined,
           jobLocation: "", // No direct mapping in current schema
         };
@@ -128,7 +129,7 @@ export const useOnboardingState = () => {
   const updateStep = (step: keyof OnboardingState, data: any) => {
     setState(prev => ({
       ...prev,
-      [step]: { ...prev[step], ...data },
+      [step]: { ...(prev[step] as object), ...data },
       completedSteps: [...new Set([...prev.completedSteps, step])]
     }));
   };
@@ -222,7 +223,7 @@ export const useOnboardingState = () => {
   const handleVisaTypeChange = (visaType: string) => {
     setState(prev => ({
       ...prev,
-      visaStatus: { ...prev.visaStatus, visaType: visaType as any }
+      visaStatus: { ...(prev.visaStatus as object), visaType: visaType as any }
     }));
   };
 
@@ -260,7 +261,7 @@ export const useOnboardingState = () => {
   const handleEmploymentStatusChange = (status: string) => {
     setState(prev => ({
       ...prev,
-      employmentInfo: { ...prev.employmentInfo, employmentStatus: status as "Employed" | "Not Employed" }
+      employmentInfo: { ...(prev.employmentInfo as object), employmentStatus: status as "Employed" | "Not Employed" }
     }));
   };
 
