@@ -11,6 +11,7 @@ export function useAcademicInfo() {
   const [academicData, setAcademicData] = useState<Partial<AcademicInfoFormValues>>({});
 
   const handleAcademicInfo = async (data: AcademicInfoFormValues) => {
+    console.log("handleAcademicInfo called with data:", data);
     // Store the full data in the component state
     setAcademicData(data);
     setIsSubmitting(true);
@@ -56,6 +57,7 @@ export function useAcademicInfo() {
       
       // Update the user profile with the academic information
       await updateProfile(formattedData);
+      toast.success("Academic information saved successfully");
       
       return true;
     } catch (error) {

@@ -110,7 +110,7 @@ export const AcademicInfoStep = forwardRef<AcademicInfoStepRef, AcademicInfoStep
         </div>
 
         <Form {...form}>
-          <form className="space-y-4">
+          <form id="academic-step-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* University Name */}
             <FormField
               control={form.control}

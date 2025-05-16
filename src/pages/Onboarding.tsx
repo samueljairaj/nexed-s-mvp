@@ -8,6 +8,7 @@ import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { AcademicInfoStepRef } from "@/components/onboarding/AcademicInfoStep";
+import { toast } from "sonner";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -68,18 +69,40 @@ const Onboarding = () => {
     navigate("/", { replace: true });
   };
 
-  // Handle continue button click
+  // Handle continue button click - Enhanced for debugging
   const handleContinue = async () => {
+    console.log("Continue button clicked, current step:", currentStep);
+    
+    // For academic step (step 3), submit the form directly
+    if (currentStep === 3) {
+      console.log("Academic step - submitting form");
+      
+      if (academicStepRef.current) {
+        try {
+          console.log("Using academic step ref to submit form");
+          await academicStepRef.current.submitForm();
+        } catch (error) {
+          console.error("Error submitting academic form:", error);
+          toast.error("There was an error submitting the form. Please check your inputs.");
+        }
+      } else {
+        console.warn("Academic step ref is null - cannot submit form");
+      }
+      return;
+    }
+    
     // Get the ref for the current step
     const activeStepRef = getActiveStepRef(currentStep, { academicStepRef });
     
     if (activeStepRef && activeStepRef.current) {
       // If we have a ref, call submitForm method
       try {
+        console.log("Using step ref to submit form");
         await activeStepRef.current.submitForm();
         // Form submission is handled within the step component
       } catch (error) {
         console.error("Form submission error:", error);
+        toast.error("There was an error submitting the form");
       }
     } else {
       // For steps without a ref, just proceed to the next step
