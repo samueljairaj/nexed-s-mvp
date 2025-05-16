@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -114,13 +113,14 @@ export function VisaStatusStep({
   };
 
   // Handle form submission
-  const handleSubmit = (data: VisaStatusFormValues) => {
+  const handleSubmit = async (data: VisaStatusFormValues) => {
     // If type is "Other", add the custom visa type to the data
     if (data.visaType === "Other" && otherVisaType) {
       data.otherVisaType = otherVisaType;
     }
     
-    onSubmit(data);
+    // Call the onSubmit function passed from the parent component
+    return await onSubmit(data);
   };
 
   // Check if the selected status is OPT or STEM OPT
@@ -203,7 +203,7 @@ export function VisaStatusStep({
       )}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <form id="current-step-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           {/* Hidden field for visa type */}
           <FormField
             control={form.control}

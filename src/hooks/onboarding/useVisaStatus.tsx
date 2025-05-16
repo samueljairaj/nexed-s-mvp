@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { VisaStatusFormValues, VisaType } from "@/types/onboarding";
@@ -20,11 +20,11 @@ export function useVisaStatus() {
   });
 
   const handleVisaStatus = async (data: VisaStatusFormValues) => {
-    // Store the full data in the component state
-    setVisaData(data);
-    setIsSubmitting(true);
-    
     try {
+      // Store the full data in the component state
+      setVisaData(data);
+      setIsSubmitting(true);
+      
       // Format data using camelCase for the userProfile object
       const formattedData: Record<string, any> = {
         visaType: data.visaType,
@@ -80,9 +80,12 @@ export function useVisaStatus() {
   };
 
   const handleVisaTypeChange = (visaType: string) => {
+    // Update the visa type in the local state immediately
     setVisaData(prev => ({ 
       ...prev, 
-      visaType: visaType as VisaType
+      visaType: visaType as VisaType,
+      // Also reset visa status when visa type changes
+      visaStatus: ""
     }));
   };
 

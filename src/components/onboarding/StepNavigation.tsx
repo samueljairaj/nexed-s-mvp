@@ -37,6 +37,7 @@ export function StepNavigation({
         onClick={isLastStep ? onNext : undefined}
         disabled={isSubmitting}
         className="flex items-center gap-2 transition-all bg-nexed-500 hover:bg-nexed-600 text-white"
+        form="current-step-form" // This will connect the button to the form
       >
         {isSubmitting ? (
           <>
