@@ -110,7 +110,7 @@ export function useOnboardingCompletion() {
       visaType: currentUser?.visaType || 'F1',
       university: currentUser?.university || '',
       fieldOfStudy: currentUser?.fieldOfStudy || '',
-      employer: currentUser?.employerName || ''  // Use employerName consistently
+      employer: currentUser?.employerName || currentUser?.employer || '' // Fixed to check for both employerName and employer
     };
   };
 

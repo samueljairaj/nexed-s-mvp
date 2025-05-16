@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { VisaStatusFormValues, VisaType, visaStatusSchema } from "@/types/onboarding";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
-import { FileText, Calendar, Id } from "lucide-react";
+import { FileText, Calendar, IdCard } from "lucide-react"; // Changed Id to IdCard
 import {
   Form,
   FormControl,
@@ -152,7 +152,7 @@ export function VisaStatusStep({
                           className="pl-10"
                           {...field} 
                         />
-                        <Id className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <IdCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       </div>
                     </FormControl>
                     <FormDescription>
@@ -256,18 +256,18 @@ export function VisaStatusStep({
                 />
               )}
 
-              {/* Form DS-2019 Expiry Date for J1 students */}
+              {/* Form DS-2019 Expiry Date for J1 students - Fixed field name */}
               {visaType === "J1" && (
                 <FormField
                   control={form.control}
-                  name="ds2019ExpiryDate"
+                  name="i20ExpiryDate" // Changed from ds2019ExpiryDate to i20ExpiryDate
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Form DS-2019 Expiry Date <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
                         <div className="relative">
                           <FormDatePicker 
-                            name="ds2019ExpiryDate"
+                            name="i20ExpiryDate" // Changed from ds2019ExpiryDate to i20ExpiryDate
                             placeholder="Select DS-2019 expiry date"
                           />
                           <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -347,9 +347,10 @@ export function VisaStatusStep({
                         </div>
                       </FormControl>
                       <FormDescription>
-                        {visaType === "OPT" ? "OPT End Date" : 
-                         visaType === "H1B" ? "H-1B Expiry Date" : 
-                         "Authorization End Date"}
+                        {visaType === "OPT" || visaType === "CPT" ? // Fixed comparison to check both OPT and CPT
+                          (visaType === "OPT" ? "OPT End Date" : "CPT End Date") : 
+                          visaType === "H1B" ? "H-1B Expiry Date" : 
+                          "Authorization End Date"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

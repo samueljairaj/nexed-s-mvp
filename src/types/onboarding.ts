@@ -82,7 +82,7 @@ export type PreferencesFormValues = z.infer<typeof preferencesSchema>;
 
 // Visa status schema
 export const visaStatusSchema = z.object({
-  visaType: z.enum(["F1", "J1", "H1B", "Other"]),
+  visaType: z.enum(["F1", "J1", "H1B", "Other", "OPT", "CPT"]), // Added OPT and CPT as valid types
   visaStatus: z.string().min(1, "Please select your current visa status"),
   sevisId: z.string().min(1, "Please enter your SEVIS ID"),
   i94Number: z.string().min(1, "Please enter your I-94 number"),
@@ -91,7 +91,7 @@ export const visaStatusSchema = z.object({
   }),
   visaExpiryDate: z.date().optional(),
   programStartDate: z.date().optional(),
-  i20ExpiryDate: z.date().optional(),
+  i20ExpiryDate: z.date().optional(), // Use this for both I-20 and DS-2019
   hasDS2019: z.boolean().optional(),
   hasDependents: z.boolean().optional(),
   hadUnemploymentPeriods: z.boolean().optional(),
@@ -165,6 +165,8 @@ export enum VisaType {
   F1 = "F1",
   J1 = "J1",
   H1B = "H1B",
+  OPT = "OPT", // Added OPT to match schema
+  CPT = "CPT", // Added CPT to match schema
   Other = "Other"
 }
 
