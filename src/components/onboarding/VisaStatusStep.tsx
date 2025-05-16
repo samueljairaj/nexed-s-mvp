@@ -96,28 +96,34 @@ export function VisaStatusStep({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        {VISA_TYPES.map((visa) => (
-          <Card 
-            key={visa.id} 
-            className={`cursor-pointer transition-all ${selectedVisaType === visa.id ? "bg-nexed-50 border-nexed-500" : "hover:bg-gray-50"}`}
-            onClick={() => handleVisaTypeChange(visa.id)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <RadioGroupItem
-                  value={visa.id}
-                  id={visa.id}
-                  checked={selectedVisaType === visa.id}
-                  className="data-[state=checked]:border-nexed-500 data-[state=checked]:bg-nexed-500"
-                />
-                <div>
-                  <div className="font-medium">{visa.name}</div>
-                  <div className="text-xs text-muted-foreground">{visa.description}</div>
+        <RadioGroup 
+          value={selectedVisaType}
+          onValueChange={handleVisaTypeChange}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 contents"
+        >
+          {VISA_TYPES.map((visa) => (
+            <Card 
+              key={visa.id} 
+              className={`cursor-pointer transition-all ${selectedVisaType === visa.id ? "bg-nexed-50 border-nexed-500" : "hover:bg-gray-50"}`}
+              onClick={() => handleVisaTypeChange(visa.id)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem
+                    value={visa.id}
+                    id={visa.id}
+                    checked={selectedVisaType === visa.id}
+                    className="data-[state=checked]:border-nexed-500 data-[state=checked]:bg-nexed-500"
+                  />
+                  <div>
+                    <div className="font-medium">{visa.name}</div>
+                    <div className="text-xs text-muted-foreground">{visa.description}</div>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </RadioGroup>
       </div>
 
       <Form {...form}>
