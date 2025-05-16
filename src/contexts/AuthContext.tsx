@@ -30,8 +30,8 @@ export interface UserProfile {
   passportNumber?: string;
   address?: string;
   visa_expiry_date?: string;
-  employerName?: string; // Added this missing property
-  employer?: string; // Added this missing property
+  employerName?: string;
+  employer?: string;
 }
 
 interface DSOProfile {
@@ -156,9 +156,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           passportNumber: data.passport_number || undefined,
           address: data.address || undefined,
           visa_expiry_date: data.visa_expiry_date || undefined,
-          // Fix: Use optional chaining for employer-related fields that may not exist in the database
-          employerName: data.employer_name || undefined,
-          employer: data.employer || undefined
+          // Access employer fields safely
+          employerName: data.employer_name !== undefined ? data.employer_name : undefined,
+          employer: data.employer !== undefined ? data.employer : undefined
         };
         
         setCurrentUser(userProfile);
