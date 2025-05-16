@@ -66,13 +66,12 @@ export const useOnboardingState = () => {
 
       // Pre-fill visa status if available
       if (currentUser.visaType) {
-        // Use optional chaining to safely access properties that might not exist
         updatedState.visaStatus = {
           visaType: currentUser.visaType,
           visaStatus: "Active", // Default for existing users
-          // Use optional chaining for properties that might not exist in UserProfile
-          sevisId: currentUser?.sevis_id || "", 
-          i94Number: currentUser?.i94_number || "", 
+          // Don't try to access non-existent properties
+          sevisId: "", 
+          i94Number: "", 
           entryDate: currentUser.usEntryDate ? new Date(currentUser.usEntryDate) : undefined,
           visaExpiryDate: currentUser.visa_expiry_date ? new Date(currentUser.visa_expiry_date) : undefined 
         };
@@ -91,12 +90,12 @@ export const useOnboardingState = () => {
       }
 
       // Pre-fill employment info if available
-      // Use optional chaining to safely access properties that might not exist
-      if (currentUser?.employer_name || currentUser?.employmentStartDate) {
+      // Don't try to access non-existent properties
+      if (currentUser?.employmentStartDate) {
         updatedState.employmentInfo = {
           employmentStatus: "Employed",
-          employerName: currentUser?.employer_name || "", 
-          jobTitle: currentUser?.job_title || "", 
+          employerName: "", 
+          jobTitle: "", 
           employmentStartDate: currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate) : undefined,
           jobLocation: "", // No direct mapping in current schema
         };
