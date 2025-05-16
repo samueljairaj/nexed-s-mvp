@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -210,7 +209,11 @@ export const useOnboardingState = () => {
     setIsSubmitting(true);
     try {
       updateStep('visaStatus', data);
-      setCurrentStep(3);
+      
+      // Skip to Employment step if not F1 or J1
+      const skipAcademicStep = data.visaType !== "F1" && data.visaType !== "J1";
+      setCurrentStep(skipAcademicStep ? 4 : 3);
+      
       return true;
     } catch (error) {
       console.error("Visa status error:", error);

@@ -14,7 +14,9 @@ export function useVisaStatus() {
     sevisId: "",
     i94Number: "",
     entryDate: undefined,
-    visaExpiryDate: undefined
+    visaExpiryDate: undefined,
+    hadUnemploymentPeriods: false,
+    totalUnemployedDays: ""
   });
 
   const handleVisaStatus = async (data: VisaStatusFormValues) => {
@@ -26,9 +28,15 @@ export function useVisaStatus() {
       // Format data using camelCase for the userProfile object
       const formattedData: Record<string, any> = {
         visaType: data.visaType,
+        visaStatus: data.visaStatus,
         sevisId: data.sevisId,
         i94Number: data.i94Number
       };
+
+      // Add other visa type if applicable
+      if (data.visaType === "Other" && data.otherVisaType) {
+        formattedData.otherVisaType = data.otherVisaType;
+      }
       
       // Format dates as YYYY-MM-DD strings
       if (data.entryDate) {
@@ -45,6 +53,12 @@ export function useVisaStatus() {
 
       if (data.i20ExpiryDate) {
         formattedData.i20ExpiryDate = dateUtils.formatToYYYYMMDD(data.i20ExpiryDate);
+      }
+
+      // Add unemployment information if applicable
+      if (data.hadUnemploymentPeriods) {
+        formattedData.hadUnemploymentPeriods = data.hadUnemploymentPeriods;
+        formattedData.totalUnemployedDays = data.totalUnemployedDays;
       }
       
       console.log("Saving visa data to profile:", formattedData);
@@ -72,11 +86,17 @@ export function useVisaStatus() {
     }));
   };
 
+  // Check if visa type is F1 or J1
+  const isF1OrJ1 = () => {
+    return visaData.visaType === "F1" || visaData.visaType === "J1";
+  };
+
   return {
     visaData,
     setVisaData,
     handleVisaStatus,
     handleVisaTypeChange,
-    isSubmitting
+    isSubmitting,
+    isF1OrJ1
   };
 }
