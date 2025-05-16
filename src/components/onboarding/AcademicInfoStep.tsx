@@ -1,4 +1,3 @@
-
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -33,6 +32,7 @@ import { GraduationCap, CalendarRange, BookOpen, User, Plus, X } from "lucide-re
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
+import { forwardRef, useImperativeHandle, useRef } from "react";
 
 interface AcademicInfoStepProps {
   defaultValues: Partial<AcademicInfoFormValues>;
@@ -42,13 +42,14 @@ interface AcademicInfoStepProps {
   handleBackToLogin?: () => void;
 }
 
-export function AcademicInfoStep({
+// Add ref forwarding to expose form submission method
+export const AcademicInfoStep = forwardRef(({
   defaultValues,
   onSubmit,
   isSubmitting,
   isF1OrJ1,
   handleBackToLogin,
-}: AcademicInfoStepProps) {
+}: AcademicInfoStepProps, ref) => {
   const form = useForm<AcademicInfoFormValues>({
     resolver: zodResolver(academicInfoSchema),
     defaultValues: {
@@ -71,6 +72,13 @@ export function AcademicInfoStep({
     control: form.control,
   });
 
+  // Expose submit method to parent via ref
+  useImperativeHandle(ref, () => ({
+    submitForm: () => {
+      return form.handleSubmit(handleFormSubmit)();
+    }
+  }));
+
   // Watch fields for conditional rendering
   const isTransferStudent = form.watch("isTransferStudent");
   const isSTEM = form.watch("isSTEM");
@@ -92,7 +100,7 @@ export function AcademicInfoStep({
   // Handle form submission
   const handleFormSubmit = (data: AcademicInfoFormValues) => {
     console.log("Academic info submitted:", data);
-    onSubmit(data);
+    return onSubmit(data);
   };
 
   // Add a new transfer record
@@ -465,7 +473,15 @@ export function AcademicInfoStep({
       </Form>
     </div>
   );
-}
+});
+
+// Add display name
+AcademicInfoStep.displayName = "AcademicInfoStep";
+
+// Define the ref type for TypeScript
+export type AcademicInfoStepRef = {
+  submitForm: () => Promise<void>;
+};
 
 // ChevronDown component for the collapsible trigger
 function ChevronDown(props: any) {

@@ -1,17 +1,21 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOnboardingState } from "../hooks/useOnboardingState";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
-import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepContent";
+import { OnboardingStepContent, getActiveStepRef } from "@/components/onboarding/OnboardingStepContent";
 import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { AcademicInfoStepRef } from "@/components/onboarding/AcademicInfoStep";
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const onboardingState = useOnboardingState();
+  
+  // Create refs for form steps
+  const academicStepRef = useRef<AcademicInfoStepRef>(null);
   
   const {
     currentStep,
@@ -62,6 +66,28 @@ const Onboarding = () => {
     logout();
     // Navigate back to login page
     navigate("/", { replace: true });
+  };
+
+  // Handle continue button click
+  const handleContinue = async () => {
+    // Get the ref for the current step
+    const activeStepRef = getActiveStepRef(currentStep, { academicStepRef });
+    
+    if (activeStepRef && activeStepRef.current) {
+      // If we have a ref, call submitForm method
+      try {
+        await activeStepRef.current.submitForm();
+        // Form submission is handled within the step component
+      } catch (error) {
+        console.error("Form submission error:", error);
+      }
+    } else {
+      // For steps without a ref, just proceed to the next step
+      if (currentStep === 4) {
+        // If on last step, call handleFinish
+        await handleFinish();
+      }
+    }
   };
 
   console.log("Onboarding Page - Current step:", currentStep);
@@ -118,9 +144,7 @@ const Onboarding = () => {
           currentStep={currentStep}
           isFirstStep={isFirstStep()}
           isLastStep={isLastStep()}
-          onNext={() => {
-            // This is handled by the individual form submissions
-          }}
+          onNext={handleContinue}
           onPrevious={goToPreviousStep}
           isSubmitting={isSubmitting}
         />

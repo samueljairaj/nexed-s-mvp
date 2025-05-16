@@ -1,8 +1,9 @@
 
+import { useRef } from "react";
 import { AccountCreationStep } from "./AccountCreationStep";
 import { PersonalInfoStep } from "./PersonalInfoStep";
 import { VisaStatusStep } from "./VisaStatusStep"; 
-import { AcademicInfoStep } from "./AcademicInfoStep";
+import { AcademicInfoStep, AcademicInfoStepRef } from "./AcademicInfoStep";
 import { EmploymentStep } from "./EmploymentStep";
 import { OnboardingComplete } from "./OnboardingComplete";
 import { ComplianceChecklist } from "./ComplianceChecklist";
@@ -57,6 +58,9 @@ export const OnboardingStepContent = ({
 }: OnboardingStepContentProps) => {
   console.log("OnboardingStepContent - currentStep:", currentStep);
   console.log("OnboardingStepContent - isF1OrJ1:", isF1OrJ1);
+  
+  // Create refs for form components
+  const academicStepRef = useRef<AcademicInfoStepRef>(null);
 
   // Prepare user data for compliance checklist
   const userData = {
@@ -99,6 +103,7 @@ export const OnboardingStepContent = ({
       case 3:
         return (
           <AcademicInfoStep
+            ref={academicStepRef}
             defaultValues={academicData}
             onSubmit={handleAcademicInfo}
             isSubmitting={isSubmitting}
@@ -146,3 +151,15 @@ export const OnboardingStepContent = ({
     </>
   );
 }
+
+// Add a method to get the ref for the current step
+export const getActiveStepRef = (currentStep: number, refs: {
+  academicStepRef: React.RefObject<AcademicInfoStepRef>
+}) => {
+  switch (currentStep) {
+    case 3:
+      return refs.academicStepRef;
+    default:
+      return null;
+  }
+};
