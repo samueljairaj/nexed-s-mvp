@@ -1,83 +1,79 @@
 
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ComplianceChecklist } from "./ComplianceChecklist";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface OnboardingCompleteProps {
-  handleFinish: () => Promise<any>;
+  handleFinish: () => Promise<boolean>;
   isSubmitting: boolean;
-  role: "student" | "dso" | "admin";
+  role?: "student" | "dso";
 }
 
-export const OnboardingComplete = ({ 
+export function OnboardingComplete({ 
   handleFinish, 
-  isSubmitting,
-  role = "student"
-}: OnboardingCompleteProps) => {
+  isSubmitting = false,
+  role = "student" 
+}: OnboardingCompleteProps) {
+  const navigate = useNavigate();
+  const { isDSO } = useAuth();
+  
+  // Handle the dashboard navigation
+  const handleGoToDashboard = async () => {
+    try {
+      const success = await handleFinish();
+      if (success) {
+        // Use direct navigation instead of relying on the handleFinish function
+        navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard", { replace: true });
+      }
+    } catch (error) {
+      console.error("Error navigating to dashboard:", error);
+    }
+  };
+
   return (
-    <div className="text-center max-w-lg mx-auto space-y-6">
-      <div className="flex justify-center">
-        <div className="h-24 w-24 rounded-full bg-green-100 flex items-center justify-center">
-          <CheckCircle className="h-12 w-12 text-green-600" />
-        </div>
+    <div className="text-center py-6">
+      <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6">
+        <CheckCircle2 className="h-8 w-8 text-green-600" />
       </div>
-      
-      <h2 className="text-2xl font-bold">
-        {role === "dso" 
-          ? "Your DSO Profile is Complete!" 
-          : "Your Student Profile is Complete!"}
-      </h2>
-      
-      <p className="text-muted-foreground">
-        {role === "dso" 
-          ? "You've successfully set up your DSO account. You can now access the DSO dashboard to manage international students and compliance tasks." 
-          : "You've successfully completed your onboarding. Your personalized compliance checklist is being prepared."}
+      <h3 className="text-2xl font-bold mb-2">Profile Setup Complete!</h3>
+      <p className="text-gray-600 mb-6">
+        We've personalized your experience based on your {isDSO ? 'role' : 'visa type'} and details. 
+        {!isDSO && ' Your personalized compliance checklist has been created and you\'re now ready to start managing your documents.'}
       </p>
-      
-      <div className="py-8">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="bg-nexed-50 p-4 rounded-lg text-sm text-nexed-700">
-            {role === "dso" ? (
-              <>
-                <p className="font-semibold">What's next?</p>
-                <ul className="list-disc text-left ml-5 mt-2 space-y-1">
-                  <li>Access your DSO dashboard</li>
-                  <li>View student compliance status</li>
-                  <li>Manage document verification</li>
-                  <li>Set up compliance templates</li>
-                </ul>
-              </>
-            ) : (
-              <>
-                <p className="font-semibold">What's next?</p>
-                <ul className="list-disc text-left ml-5 mt-2 space-y-1">
-                  <li>View your personalized compliance timeline</li>
-                  <li>Upload required documents</li>
-                  <li>Set up reminders for important deadlines</li>
-                  <li>Connect with your DSO</li>
-                </ul>
-              </>
-            )}
-          </div>
-        </div>
+      <div className="bg-nexed-50 p-4 rounded-lg mb-6">
+        <h4 className="font-medium text-nexed-700 mb-2">Your Next Steps:</h4>
+        <ol className="text-left text-nexed-600 list-decimal list-inside space-y-2">
+          {isDSO ? (
+            <>
+              <li>Manage student visa information</li>
+              <li>Review compliance tasks for students</li>
+              <li>Set up notifications for important deadlines</li>
+              <li>Explore the dashboard to support your students</li>
+            </>
+          ) : (
+            <>
+              <li>Upload your required visa documents</li>
+              <li>Complete any urgent compliance tasks</li>
+              <li>Set up notifications for important deadlines</li>
+              <li>Explore the dashboard to understand your visa status</li>
+            </>
+          )}
+        </ol>
       </div>
-      
       <Button 
-        onClick={handleFinish}
+        onClick={handleGoToDashboard} 
+        className="nexed-gradient-button" 
         disabled={isSubmitting}
-        className="w-full"
       >
         {isSubmitting ? (
-          <>
-            <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
-            Processing...
-          </>
-        ) : (
-          <>
-            {role === "dso" ? "Go to DSO Dashboard" : "Go to Dashboard"}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </>
-        )}
+          <span className="flex items-center">
+            <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+            Redirecting...
+          </span>
+        ) : "Go to Dashboard"}
       </Button>
     </div>
   );
-};
+}

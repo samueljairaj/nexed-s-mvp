@@ -68,7 +68,7 @@ export const OnboardingStepContent = ({
     visaType: visaData.visaType,
     university: academicData.university,
     fieldOfStudy: academicData.fieldOfStudy,
-    employer: employmentData.employerName, // Use employerName from employment data
+    employer: employmentData.employerName || "", // Provide fallback value
   };
 
   // Student onboarding flow
@@ -140,7 +140,7 @@ export const OnboardingStepContent = ({
   return (
     <>
       {renderStep()}
-      {/* Pass user data directly to CompletionStep when on the final step */}
+      {/* Pass user data directly to ComplianceChecklist when on the final step */}
       {currentStep === 5 && (
         <ComplianceChecklist
           open={true}
