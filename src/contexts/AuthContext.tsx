@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -155,8 +156,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           passportNumber: data.passport_number || undefined,
           address: data.address || undefined,
           visa_expiry_date: data.visa_expiry_date || undefined,
-          employerName: data.employer_name || undefined, // Added this field mapping
-          employer: data.employer || undefined // Added this field mapping
+          // Fix: Use optional chaining for employer-related fields that may not exist in the database
+          employerName: data.employer_name || undefined,
+          employer: data.employer || undefined
         };
         
         setCurrentUser(userProfile);
