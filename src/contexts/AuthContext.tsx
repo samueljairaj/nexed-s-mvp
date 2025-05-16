@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -156,9 +155,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           passportNumber: data.passport_number || undefined,
           address: data.address || undefined,
           visa_expiry_date: data.visa_expiry_date || undefined,
-          // Access employer fields safely
-          employerName: data.employer_name !== undefined ? data.employer_name : undefined,
-          employer: data.employer !== undefined ? data.employer : undefined
+          // Handle employer fields - use a type assertion to tell TypeScript these fields could exist
+          employerName: (data as any).employer_name || undefined,
+          employer: (data as any).employer || undefined
         };
         
         setCurrentUser(userProfile);
