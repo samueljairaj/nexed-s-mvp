@@ -28,7 +28,9 @@ export interface UserProfile {
   phone?: string;
   passportNumber?: string;
   address?: string;
-  visa_expiry_date?: string; // Adding the missing property
+  visa_expiry_date?: string;
+  employerName?: string; // Added this missing property
+  employer?: string; // Added this missing property
 }
 
 interface DSOProfile {
@@ -152,7 +154,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           phone: data.phone || undefined,
           passportNumber: data.passport_number || undefined,
           address: data.address || undefined,
-          visa_expiry_date: data.visa_expiry_date || undefined
+          visa_expiry_date: data.visa_expiry_date || undefined,
+          employerName: data.employer_name || undefined, // Added this field mapping
+          employer: data.employer || undefined // Added this field mapping
         };
         
         setCurrentUser(userProfile);
@@ -429,6 +433,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Handle visa expiry date if it exists
         if (data.visa_expiry_date !== undefined) {
           dbData.visa_expiry_date = data.visa_expiry_date;
+        }
+        
+        // Handle employer fields
+        if (data.employerName !== undefined) {
+          dbData.employer_name = data.employerName;
+          delete dbData.employerName;
+        }
+
+        if (data.employer !== undefined) {
+          dbData.employer = data.employer;
+          delete dbData.employer;
         }
         
         // Remove undefined fields
