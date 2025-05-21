@@ -47,7 +47,7 @@ const academicInfoSchema = z.object({
     })
   ).default([{ universityName: '', startDate: new Date(), endDate: new Date(), reason: '' }]),
   dsoName: z.string().optional(),
-  dsoEmail: z.string().email("Please enter a valid email").optional(), // Keep as optional
+  dsoEmail: z.string().email("Please enter a valid email").optional().or(z.literal('')), // Keep as optional
   dsoPhone: z.string().optional(),
 });
 

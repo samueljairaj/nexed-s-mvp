@@ -1,35 +1,22 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { ComplianceChecklist } from "./ComplianceChecklist";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
 
 interface OnboardingCompleteProps {
-  handleFinish: () => Promise<boolean>;
+  handleFinish: () => void;
   isSubmitting: boolean;
-  role?: "student" | "dso";
+  role?: 'student' | 'dso';
 }
 
 export function OnboardingComplete({ 
   handleFinish, 
-  isSubmitting = false,
-  role = "student" 
+  isSubmitting = false, 
+  role = 'student' 
 }: OnboardingCompleteProps) {
-  const navigate = useNavigate();
-  const { isDSO } = useAuth();
-  
-  // Handle the dashboard navigation
-  const handleGoToDashboard = async () => {
-    try {
-      const success = await handleFinish();
-      if (success) {
-        // Use direct navigation instead of relying on the handleFinish function
-        navigate(isDSO ? "/app/dso-dashboard" : "/app/dashboard", { replace: true });
-      }
-    } catch (error) {
-      console.error("Error navigating to dashboard:", error);
-    }
+  const handleGoToDashboard = () => {
+    console.log("Finish button clicked, calling handleFinish");
+    handleFinish();
   };
 
   return (
@@ -39,13 +26,13 @@ export function OnboardingComplete({
       </div>
       <h3 className="text-2xl font-bold mb-2">Profile Setup Complete!</h3>
       <p className="text-gray-600 mb-6">
-        We've personalized your experience based on your {isDSO ? 'role' : 'visa type'} and details. 
-        {!isDSO && ' Your personalized compliance checklist has been created and you\'re now ready to start managing your documents.'}
+        We've personalized your experience based on your {role === 'dso' ? 'role' : 'visa type'} and details. 
+        {role !== 'dso' && ' Your personalized compliance checklist has been created and you\'re now ready to start managing your documents.'}
       </p>
       <div className="bg-nexed-50 p-4 rounded-lg mb-6">
         <h4 className="font-medium text-nexed-700 mb-2">Your Next Steps:</h4>
         <ol className="text-left text-nexed-600 list-decimal list-inside space-y-2">
-          {isDSO ? (
+          {role === 'dso' ? (
             <>
               <li>Manage student visa information</li>
               <li>Review compliance tasks for students</li>

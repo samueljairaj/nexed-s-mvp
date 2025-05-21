@@ -99,7 +99,7 @@ const Onboarding = () => {
     
     // For academic step (step 3), submit the form directly through ref
     if (currentStep === 3 && academicStepRef.current) {
-      console.log("Academic step - submitting form");
+      console.log("Academic step - submitting form through ref");
       try {
         console.log("Using academic step ref to submit form");
         await academicStepRef.current.submitForm();

@@ -45,10 +45,13 @@ export function useOnboardingCompletion() {
       }));
       
       try {
-        // Insert the tasks into the database - wrap in try/catch to prevent errors from stopping the flow
+        // Insert the tasks with ON CONFLICT DO NOTHING to avoid errors
         const { error } = await supabase
           .from('compliance_tasks')
-          .upsert(dbTasks);
+          .upsert(dbTasks, {
+            onConflict: 'user_id,title,phase', 
+            ignoreDuplicates: true
+          });
           
         if (error) {
           console.error('Error saving onboarding tasks to database:', error);
@@ -77,7 +80,7 @@ export function useOnboardingCompletion() {
       // Call completeOnboarding() which marks the user's onboarding as complete
       await completeOnboarding();
       
-      // Generate and save tasks if user completed onboarding - but don't block on this
+      // Generate and save tasks if user completed onboarding
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Generating tasks for user:", currentUser.id, "with visa type:", currentUser.visaType);
         try {
@@ -94,7 +97,11 @@ export function useOnboardingCompletion() {
       // Navigate to the appropriate dashboard based on user role
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Redirecting to:", targetPath);
-      navigate(targetPath, { replace: true });
+      
+      // Force a hard navigation to ensure proper redirect
+      setTimeout(() => {
+        navigate(targetPath, { replace: true });
+      }, 100);
       
       return true;
     } catch (error) {

@@ -45,6 +45,7 @@ export function useAcademicInfo() {
       }
 
       // Add DSO contact info if provided - only include fields that have values
+      // Important: Make this optional, not required
       const dsoContactData: Record<string, string> = {};
       if (data.dsoName) dsoContactData.name = data.dsoName;
       if (data.dsoEmail) dsoContactData.email = data.dsoEmail;

@@ -49,16 +49,25 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
   const [phaseGroups, setPhaseGroups] = useState<{[key: string]: AITask[]}>({});
   const [loadingState, setLoadingState] = useState<"idle" | "loading" | "success" | "error">("idle");
   
+  // Merge userData and currentUser data to ensure we have the most complete information
+  const mergedUserData = {
+    name: userData.name || currentUser?.name || "",
+    visaType: userData.visaType || currentUser?.visaType || "F1",
+    university: userData.university || currentUser?.university || "",
+    fieldOfStudy: userData.fieldOfStudy || currentUser?.fieldOfStudy || "",
+    employer: userData.employer || currentUser?.employerName || currentUser?.employer || ""
+  };
+  
   // Use actual user data from props rather than hardcoded values
   const [studentInfo, setStudentInfo] = useState({
-    university: userData.university || "Not provided",
-    program: userData.fieldOfStudy || "Not provided",
+    university: mergedUserData.university || "Not provided",
+    program: mergedUserData.fieldOfStudy || "Not provided",
     optStartDate: currentUser?.courseStartDate ? formatDateDisplay(currentUser.courseStartDate) : "Not provided",
     optEndDate: "Not provided", // This might need to be calculated or fetched
     recentUSEntry: currentUser?.usEntryDate ? formatDateDisplay(currentUser.usEntryDate) : "Not provided",
     i20EndDate: "Not provided", // This might need to be fetched
     visaExpiration: currentUser?.visa_expiry_date ? formatDateDisplay(currentUser.visa_expiry_date) : "Not provided",
-    employer: userData.employer || "Not provided",
+    employer: mergedUserData.employer || "Not provided",
   });
   
   // Helper function to format dates for display
@@ -109,12 +118,12 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
         };
       });
       
-      // Insert the tasks into the database
+      // Insert the tasks into the database using UPSERT with ON CONFLICT DO NOTHING
       const { error } = await supabase
         .from('compliance_tasks')
         .upsert(dbTasks, {
-          onConflict: 'user_id, title, phase',
-          ignoreDuplicates: false
+          onConflict: 'user_id,title,phase',
+          ignoreDuplicates: true
         });
         
       if (error) {
@@ -139,16 +148,26 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
   
   // Update student info whenever userData or currentUser changes
   useEffect(() => {
+    const mergedData = {
+      name: userData.name || currentUser?.name || "",
+      visaType: userData.visaType || currentUser?.visaType || "F1",
+      university: userData.university || currentUser?.university || "",
+      fieldOfStudy: userData.fieldOfStudy || currentUser?.fieldOfStudy || "",
+      employer: userData.employer || currentUser?.employerName || currentUser?.employer || ""
+    };
+    
     setStudentInfo({
-      university: userData.university || "Not provided",
-      program: userData.fieldOfStudy || "Not provided",
+      university: mergedData.university || "Not provided",
+      program: mergedData.fieldOfStudy || "Not provided",
       optStartDate: currentUser?.courseStartDate ? formatDateDisplay(currentUser.courseStartDate) : "Not provided",
       optEndDate: "Not provided", 
       recentUSEntry: currentUser?.usEntryDate ? formatDateDisplay(currentUser.usEntryDate) : "Not provided",
       i20EndDate: "Not provided",
       visaExpiration: currentUser?.visa_expiry_date ? formatDateDisplay(currentUser.visa_expiry_date) : "Not provided",
-      employer: userData.employer || "Not provided",
+      employer: mergedData.employer || "Not provided",
     });
+    
+    console.log("Updated user data for compliance checklist:", mergedData);
   }, [userData, currentUser]);
   
   const generateAIChecklist = async () => {
@@ -157,7 +176,17 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
     setLoadingState("loading");
     
     try {
-      const tasks = await generateCompliance(userData);
+      // Use the merged data to ensure we have the most complete information
+      const mergedData = {
+        name: userData.name || currentUser?.name || "",
+        visaType: userData.visaType || currentUser?.visaType || "F1",
+        university: userData.university || currentUser?.university || "",
+        fieldOfStudy: userData.fieldOfStudy || currentUser?.fieldOfStudy || "",
+        employer: userData.employer || currentUser?.employerName || currentUser?.employer || ""
+      };
+      
+      console.log("Generating compliance with merged data:", mergedData);
+      const tasks = await generateCompliance(mergedData);
       
       // Save the generated tasks to the database
       if (currentUser?.id) {

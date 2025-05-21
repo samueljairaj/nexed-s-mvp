@@ -35,11 +35,11 @@ export function StepNavigation({
       </Button>
       
       <Button
-        type={isLastStep ? "button" : "submit"}
-        onClick={onNext}  // Always use onNext for consistent behavior
+        type={isLastStep ? "submit" : "submit"}
+        onClick={isLastStep ? onNext : undefined}  // Only use onClick for last step
         disabled={isSubmitting}
         className="flex items-center gap-2 transition-all bg-nexed-500 hover:bg-nexed-600 text-white"
-        form={isLastStep ? undefined : formId}  // Only associate with form if not the last step
+        form={formId}  // Always associate with the form
       >
         {isSubmitting ? (
           <>

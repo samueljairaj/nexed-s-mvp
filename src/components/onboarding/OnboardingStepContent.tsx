@@ -64,12 +64,14 @@ export const OnboardingStepContent = ({
 
   // Prepare user data for compliance checklist
   const userData = {
-    name: currentUser?.name,
-    visaType: visaData.visaType,
-    university: academicData.university,
-    fieldOfStudy: academicData.fieldOfStudy,
-    employer: employmentData.employerName || "", // Provide fallback value
+    name: currentUser?.name || accountData?.firstName + " " + accountData?.lastName,
+    visaType: visaData?.visaType || currentUser?.visaType || "F1",
+    university: academicData?.university || currentUser?.university || "",
+    fieldOfStudy: academicData?.fieldOfStudy || currentUser?.fieldOfStudy || "",
+    employer: employmentData?.employerName || currentUser?.employerName || currentUser?.employer || "", 
   };
+  
+  console.log("User data prepared for compliance checklist:", userData);
 
   // Student onboarding flow
   const renderStep = () => {
