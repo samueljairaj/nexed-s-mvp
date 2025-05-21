@@ -56,17 +56,14 @@ export function useOnboardingCompletion() {
           
         if (error) {
           console.error('Error saving onboarding tasks to database:', error);
-          // Don't throw here, just log the error
         } else {
           console.log('Successfully saved onboarding tasks to database');
         }
       } catch (dbError) {
         console.error('Failed to save tasks to database:', dbError);
-        // Don't throw here, allow the onboarding to complete anyway
       }
     } catch (error) {
       console.error('Failed to save onboarding tasks:', error);
-      // Don't throw here, allow the onboarding to complete anyway
     }
   };
 
@@ -78,34 +75,29 @@ export function useOnboardingCompletion() {
       // Set a temporary flag in localStorage to prevent redirection loops
       localStorage.setItem('onboarding_completion_in_progress', 'true');
       
-      // Call completeOnboarding() which marks the user's onboarding as complete
-      // Fix: Make sure we handle this properly whether it returns boolean or void
+      // Complete the onboarding process in the database first
       await completeOnboarding();
       
-      // Generate and save tasks if user completed onboarding
+      // Generate and save tasks if user completed onboarding - do this in the background
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Generating tasks for user:", currentUser.id, "with visa type:", currentUser.visaType);
-        // Don't await or check result - we don't want this to block completion
-        saveTasksToDatabase(currentUser.id, currentUser.visaType).catch(err => {
-          console.error("Error saving tasks:", err);
-          // Silently continue - task creation should not block onboarding completion
-        });
+        // Start the task creation process but don't await it
+        saveTasksToDatabase(currentUser.id, currentUser.visaType)
+          .catch(err => console.error("Error saving tasks:", err));
       }
       
-      // Assume success if no error was thrown
+      // Mark onboarding as fully completed successfully
       toast.success("Onboarding completed successfully!");
       
-      // Navigate to the appropriate dashboard based on user role
+      // Determine the target path based on user role
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Redirecting to:", targetPath);
       
       // Clear the temporary flag
       localStorage.removeItem('onboarding_completion_in_progress');
       
-      // Add a slight delay before navigation to ensure state updates are processed
-      setTimeout(() => {
-        navigate(targetPath, { replace: true });
-      }, 100);
+      // Navigate immediately to prevent any redirection loops
+      navigate(targetPath, { replace: true });
       
       return true;
     } catch (error) {
@@ -127,7 +119,7 @@ export function useOnboardingCompletion() {
       visaType: currentUser?.visaType || 'F1',
       university: currentUser?.university || '',
       fieldOfStudy: currentUser?.fieldOfStudy || '',
-      employer: currentUser?.employerName || currentUser?.employer || '' // Both properties now exist in UserProfile
+      employer: currentUser?.employerName || currentUser?.employer || ''
     };
   };
 

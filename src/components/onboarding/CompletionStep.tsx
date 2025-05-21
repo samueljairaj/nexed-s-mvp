@@ -19,7 +19,6 @@ interface CompletionStepProps {
 }
 
 export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }: CompletionStepProps) {
-  // Always start with checklist visible for non-DSO users
   const [showChecklist, setShowChecklist] = useState(true);
   const navigate = useNavigate();
   const { isDSO } = useAuth();
@@ -33,9 +32,6 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
     if (!hasStartedOnboarding) {
       setHasStartedOnboarding(true);
       
-      // Prevent redirection loop by setting the flag immediately
-      localStorage.setItem('onboarding_completion_in_progress', 'true');
-      
       // Call the parent's onFinish handler which completes onboarding
       onFinish();
       
@@ -43,6 +39,14 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
       // handle navigation and clearing the onboarding_completion_in_progress flag
     }
   };
+
+  // Track checklist display and completion
+  useEffect(() => {
+    // Force the checklist to be visible for non-DSO users when component mounts
+    if (!isDSO) {
+      setShowChecklist(true);
+    }
+  }, [isDSO]);
 
   // Ensure we have the user data before showing the checklist
   const userDataComplete = userData && (userData.visaType || userData.university || userData.fieldOfStudy);
