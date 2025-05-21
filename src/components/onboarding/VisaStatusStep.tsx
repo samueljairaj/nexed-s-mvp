@@ -114,6 +114,7 @@ export function VisaStatusStep({
 
   // Handle form submission
   const handleSubmit = async (data: VisaStatusFormValues) => {
+    console.log("Visa status form submitted:", data);
     // If type is "Other", add the custom visa type to the data
     if (data.visaType === "Other" && otherVisaType) {
       data.otherVisaType = otherVisaType;
@@ -203,7 +204,7 @@ export function VisaStatusStep({
       )}
 
       <Form {...form}>
-        <form id="current-step-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <form id="step-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           {/* Hidden field for visa type */}
           <FormField
             control={form.control}

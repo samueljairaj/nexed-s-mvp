@@ -69,7 +69,12 @@ const Onboarding = () => {
     navigate("/", { replace: true });
   };
 
-  // Handle continue button click - Enhanced for debugging
+  // Get the current form ID based on the step
+  const getCurrentFormId = () => {
+    return "step-form";
+  };
+
+  // Handle continue button click with improved logging and error handling
   const handleContinue = async () => {
     console.log("Continue button clicked, current step:", currentStep);
     
@@ -87,29 +92,37 @@ const Onboarding = () => {
         }
       } else {
         console.warn("Academic step ref is null - cannot submit form");
+        // Try to submit the form using the form ID
+        document.getElementById(getCurrentFormId())?.dispatchEvent(
+          new Event("submit", { bubbles: true, cancelable: true })
+        );
       }
       return;
     }
     
-    // Get the ref for the current step
-    const activeStepRef = getActiveStepRef(currentStep, { academicStepRef });
-    
-    if (activeStepRef && activeStepRef.current) {
-      // If we have a ref, call submitForm method
-      try {
-        console.log("Using step ref to submit form");
-        await activeStepRef.current.submitForm();
-        // Form submission is handled within the step component
-      } catch (error) {
-        console.error("Form submission error:", error);
-        toast.error("There was an error submitting the form");
-      }
-    } else {
-      // For steps without a ref, just proceed to the next step
-      if (currentStep === 4) {
+    // For steps without a specific ref implementation, trigger form submission via form ID
+    try {
+      console.log("Submitting form with ID:", getCurrentFormId());
+      const form = document.getElementById(getCurrentFormId()) as HTMLFormElement;
+      
+      if (form) {
+        // If the form exists, submit it
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      } else if (currentStep === 4) {
         // If on last step, call handleFinish
+        console.log("Last step - calling handleFinish");
         await handleFinish();
+      } else {
+        // For other steps without a form, try to proceed
+        console.warn("No form found for step", currentStep);
+        if (currentStep === 0) await handleAccountCreation(accountData as any);
+        else if (currentStep === 1) await handlePersonalInfo(personalData as any);
+        else if (currentStep === 2) await handleVisaStatus(visaData as any);
+        else if (currentStep === 4) await handleEmploymentInfo(employmentData as any);
       }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("There was an error submitting the form. Please check your inputs.");
     }
   };
 
@@ -170,6 +183,7 @@ const Onboarding = () => {
           onNext={handleContinue}
           onPrevious={goToPreviousStep}
           isSubmitting={isSubmitting}
+          formId={getCurrentFormId()}
         />
       )}
     </OnboardingLayout>

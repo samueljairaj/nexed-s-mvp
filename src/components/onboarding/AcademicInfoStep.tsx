@@ -1,4 +1,3 @@
-
 import React, { useImperativeHandle, forwardRef, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -87,12 +86,19 @@ export const AcademicInfoStep = forwardRef<AcademicInfoStepRef, AcademicInfoStep
     // Expose submit method via ref
     useImperativeHandle(ref, () => ({
       async submitForm() {
+        console.log("Academic submitForm called via ref");
         return form.handleSubmit(async (data) => {
           console.log("Academic info submitted:", data);
           await onSubmit(data);
         })();
       }
     }));
+
+    // Handle form submission directly
+    const handleSubmit = async (data: AcademicInfoFormValues) => {
+      console.log("Academic form submit handler called directly");
+      return await onSubmit(data);
+    };
 
     // Calculate min date for program completion (must be after program start)
     const startDate = form.watch("programStartDate");
@@ -110,7 +116,7 @@ export const AcademicInfoStep = forwardRef<AcademicInfoStepRef, AcademicInfoStep
         </div>
 
         <Form {...form}>
-          <form id="academic-step-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form id="step-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             {/* University Name */}
             <FormField
               control={form.control}

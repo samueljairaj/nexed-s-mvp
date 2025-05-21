@@ -9,6 +9,7 @@ interface StepNavigationProps {
   isFirstStep: boolean;
   isLastStep: boolean;
   isSubmitting?: boolean;
+  formId?: string;
 }
 
 export function StepNavigation({
@@ -17,7 +18,8 @@ export function StepNavigation({
   currentStep,
   isFirstStep,
   isLastStep,
-  isSubmitting = false
+  isSubmitting = false,
+  formId = "step-form" // Default form ID if none provided
 }: StepNavigationProps) {
   return (
     <div className="flex justify-between mt-8 pt-4 border-t">
@@ -37,7 +39,7 @@ export function StepNavigation({
         onClick={isLastStep ? onNext : undefined}
         disabled={isSubmitting}
         className="flex items-center gap-2 transition-all bg-nexed-500 hover:bg-nexed-600 text-white"
-        form="academic-step-form" // This connects to the academic form specifically
+        form={formId}
       >
         {isSubmitting ? (
           <>

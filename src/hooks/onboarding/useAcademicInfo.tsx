@@ -61,8 +61,8 @@ export function useAcademicInfo() {
       
       return true;
     } catch (error) {
-      toast.error("Failed to save academic information");
       console.error("Academic info update error:", error);
+      toast.error("Failed to save academic information");
       return false;
     } finally {
       setIsSubmitting(false);

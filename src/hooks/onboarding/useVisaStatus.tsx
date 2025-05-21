@@ -21,6 +21,7 @@ export function useVisaStatus() {
 
   const handleVisaStatus = async (data: VisaStatusFormValues) => {
     try {
+      console.log("Processing visa status data:", data);
       // Store the full data in the component state
       setVisaData(data);
       setIsSubmitting(true);
@@ -65,14 +66,15 @@ export function useVisaStatus() {
       
       // Update the user profile with the visa status information
       await updateProfile(formattedData);
+      toast.success("Visa information saved successfully");
       
       // Log what was saved to help with debugging
       console.log("Saved visa data:", formattedData);
       
       return true;
     } catch (error) {
-      toast.error("Failed to save visa information");
       console.error("Visa update error:", error);
+      toast.error("Failed to save visa information");
       return false;
     } finally {
       setIsSubmitting(false);
@@ -80,6 +82,7 @@ export function useVisaStatus() {
   };
 
   const handleVisaTypeChange = (visaType: string) => {
+    console.log("Visa type changed to:", visaType);
     // Update the visa type in the local state immediately
     setVisaData(prev => ({ 
       ...prev, 
@@ -89,9 +92,11 @@ export function useVisaStatus() {
     }));
   };
 
-  // Check if visa type is F1 or J1
+  // Check if visa type is F1 or J1 - return a boolean, not a function
   const isF1OrJ1 = () => {
-    return visaData.visaType === "F1" || visaData.visaType === "J1";
+    const result = visaData.visaType === "F1" || visaData.visaType === "J1";
+    console.log("isF1OrJ1 check:", result, "current visaType:", visaData.visaType);
+    return result;
   };
 
   return {
