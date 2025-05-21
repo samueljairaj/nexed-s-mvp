@@ -24,7 +24,7 @@ export function useOnboardingCompletion() {
   };
 
   // Save personalized compliance tasks to database
-  const saveTasksToDatabase = async (userId: string, visaType: string) => {
+  const saveTasksToDatabase = async (userId: string, visaType: string): Promise<boolean> => {
     try {
       // Generate appropriate tasks based on visa type
       const tasks = generateMockTasks(visaType);
@@ -89,7 +89,7 @@ export function useOnboardingCompletion() {
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Generating tasks for user:", currentUser.id, "with visa type:", currentUser.visaType);
         try {
-          // Fix: Don't check the result of saveTasksToDatabase since it's void or boolean
+          // Fix: Don't check the result since we're not using it anyway
           await saveTasksToDatabase(currentUser.id, currentUser.visaType);
         } catch (taskError) {
           console.error("Error saving tasks, but continuing:", taskError);
