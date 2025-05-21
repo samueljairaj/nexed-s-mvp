@@ -25,11 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Create a schema for the academic info form
+// Create a schema for the academic info form, making dsoEmail optional
 const academicInfoSchema = z.object({
   university: z.string().min(1, "University is required"),
   degreeLevel: z.string().min(1, "Degree level is required"),
-  fieldOfStudy: z.string().min(1, "Field of study is required"),
+  fieldOfStudy: z.string().min(2, "Field of study is required"),
   isSTEM: z.boolean().default(false),
   programStartDate: z.date({
     required_error: "Program start date is required",
@@ -47,7 +47,7 @@ const academicInfoSchema = z.object({
     })
   ).default([{ universityName: '', startDate: new Date(), endDate: new Date(), reason: '' }]),
   dsoName: z.string().optional(),
-  dsoEmail: z.string().email("Please enter a valid email").optional(), // Made optional
+  dsoEmail: z.string().email("Please enter a valid email").optional(), // Keep as optional
   dsoPhone: z.string().optional(),
 });
 
@@ -343,7 +343,7 @@ export const AcademicInfoStep = forwardRef<AcademicInfoStepRef, AcademicInfoStep
               </div>
             )}
 
-            {/* DSO Contact Information */}
+            {/* DSO Contact Information - Note we've removed the required indicator */}
             {isF1OrJ1 && (
               <div className="space-y-4 border rounded-md p-4 bg-slate-50">
                 <h3 className="font-medium">Designated School Official (DSO) Contact Information</h3>

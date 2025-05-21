@@ -114,13 +114,13 @@ export const academicInfoSchema = z.object({
   }),
   isTransferStudent: z.boolean().optional(),
   transferHistory: z.array(z.object({
-    universityName: z.string(),
-    startDate: z.date(),
-    endDate: z.date(),
+    universityName: z.string().optional(),
+    startDate: z.date().optional(),
+    endDate: z.date().optional(),
     reason: z.string().optional(),
   })).optional(),
   dsoName: z.string().optional(),
-  dsoEmail: z.string().email().optional(),
+  dsoEmail: z.string().email("Please enter a valid email").optional(), // Make this optional
   dsoPhone: z.string().optional(),
 });
 

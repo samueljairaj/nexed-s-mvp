@@ -53,10 +53,13 @@ const Onboarding = () => {
 
   useEffect(() => {
     if (isAuthenticated && currentUser?.onboardingComplete) {
+      console.log("User has completed onboarding. Redirecting to dashboard...");
       // Redirect to the dashboard if onboarding is complete
-      navigate("/app/dashboard");
+      const targetDashboard = currentUser?.role === 'dso' ? '/app/dso-dashboard' : '/app/dashboard';
+      navigate(targetDashboard, { replace: true });
     } else if (isAuthenticated && currentStep === 0) {
       // If user is already authenticated, skip the account creation step
+      console.log("User is authenticated. Skipping to personal info step.");
       setCurrentStep(1);
     }
   }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep]);
@@ -78,24 +81,31 @@ const Onboarding = () => {
   const handleContinue = async () => {
     console.log("Continue button clicked, current step:", currentStep);
     
-    // For academic step (step 3), submit the form directly
-    if (currentStep === 3) {
-      console.log("Academic step - submitting form");
-      
-      if (academicStepRef.current) {
-        try {
-          console.log("Using academic step ref to submit form");
-          await academicStepRef.current.submitForm();
-        } catch (error) {
-          console.error("Error submitting academic form:", error);
-          toast.error("There was an error submitting the form. Please check your inputs.");
+    // Special handling for the final step to complete onboarding
+    if (currentStep === 4) {
+      console.log("Last step - calling handleFinish");
+      try {
+        const success = await handleFinish();
+        if (success) {
+          console.log("Onboarding completed successfully");
+          return;
         }
-      } else {
-        console.warn("Academic step ref is null - cannot submit form");
-        // Try to submit the form using the form ID
-        document.getElementById(getCurrentFormId())?.dispatchEvent(
-          new Event("submit", { bubbles: true, cancelable: true })
-        );
+      } catch (error) {
+        console.error("Error completing onboarding:", error);
+        toast.error("There was an error completing the onboarding process. Please try again.");
+      }
+      return;
+    }
+    
+    // For academic step (step 3), submit the form directly through ref
+    if (currentStep === 3 && academicStepRef.current) {
+      console.log("Academic step - submitting form");
+      try {
+        console.log("Using academic step ref to submit form");
+        await academicStepRef.current.submitForm();
+      } catch (error) {
+        console.error("Error submitting academic form:", error);
+        toast.error("There was an error submitting the form. Please check your inputs.");
       }
       return;
     }
@@ -108,13 +118,9 @@ const Onboarding = () => {
       if (form) {
         // If the form exists, submit it
         form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-      } else if (currentStep === 4) {
-        // If on last step, call handleFinish
-        console.log("Last step - calling handleFinish");
-        await handleFinish();
       } else {
-        // For other steps without a form, try to proceed
         console.warn("No form found for step", currentStep);
+        // Fallback handling based on current step
         if (currentStep === 0) await handleAccountCreation(accountData as any);
         else if (currentStep === 1) await handlePersonalInfo(personalData as any);
         else if (currentStep === 2) await handleVisaStatus(visaData as any);

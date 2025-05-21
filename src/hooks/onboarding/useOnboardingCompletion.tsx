@@ -48,10 +48,7 @@ export function useOnboardingCompletion() {
         // Insert the tasks into the database - wrap in try/catch to prevent errors from stopping the flow
         const { error } = await supabase
           .from('compliance_tasks')
-          .upsert(dbTasks, {
-            onConflict: 'user_id, title',
-            ignoreDuplicates: false
-          });
+          .upsert(dbTasks);
           
         if (error) {
           console.error('Error saving onboarding tasks to database:', error);
@@ -75,11 +72,14 @@ export function useOnboardingCompletion() {
   const handleFinish = async (): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      // Call completeOnboarding() without checking its return value
+      console.log("Completing onboarding process...");
+      
+      // Call completeOnboarding() which marks the user's onboarding as complete
       await completeOnboarding();
       
       // Generate and save tasks if user completed onboarding - but don't block on this
       if (currentUser?.id && currentUser?.visaType) {
+        console.log("Generating tasks for user:", currentUser.id, "with visa type:", currentUser.visaType);
         try {
           await saveTasksToDatabase(currentUser.id, currentUser.visaType);
         } catch (taskError) {
@@ -91,8 +91,11 @@ export function useOnboardingCompletion() {
       // Assume success if no error was thrown
       toast.success("Onboarding completed successfully!");
       
-      // Handle navigation directly in OnboardingComplete component now
-      // to avoid timing issues with state updates
+      // Navigate to the appropriate dashboard based on user role
+      const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
+      console.log("Redirecting to:", targetPath);
+      navigate(targetPath, { replace: true });
+      
       return true;
     } catch (error) {
       toast.error("Failed to complete onboarding");
