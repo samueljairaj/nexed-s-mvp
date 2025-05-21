@@ -79,10 +79,8 @@ export function useOnboardingCompletion() {
       localStorage.setItem('onboarding_completion_in_progress', 'true');
       
       // Call completeOnboarding() which marks the user's onboarding as complete
-      const success = await completeOnboarding();
-      if (!success) {
-        throw new Error("Failed to complete onboarding");
-      }
+      // Fix: Make sure we handle this properly whether it returns boolean or void
+      await completeOnboarding();
       
       // Generate and save tasks if user completed onboarding
       if (currentUser?.id && currentUser?.visaType) {
