@@ -24,7 +24,7 @@ export function useOnboardingCompletion() {
   };
 
   // Save personalized compliance tasks to database
-  const saveTasksToDatabase = async (userId: string, visaType: string): Promise<boolean> => {
+  const saveTasksToDatabase = async (userId: string, visaType: string): Promise<void> => {
     try {
       // Generate appropriate tasks based on visa type
       const tasks = generateMockTasks(visaType);
@@ -64,12 +64,9 @@ export function useOnboardingCompletion() {
         console.error('Failed to save tasks to database:', dbError);
         // Don't throw here, allow the onboarding to complete anyway
       }
-      
-      return true;
     } catch (error) {
       console.error('Failed to save onboarding tasks:', error);
       // Don't throw here, allow the onboarding to complete anyway
-      return false;
     }
   };
 
@@ -103,10 +100,8 @@ export function useOnboardingCompletion() {
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Redirecting to:", targetPath);
       
-      // Use a slight delay to ensure state updates are complete
-      setTimeout(() => {
-        navigate(targetPath, { replace: true });
-      }, 50);
+      // Navigate immediately without delay
+      navigate(targetPath, { replace: true });
       
       return true;
     } catch (error) {

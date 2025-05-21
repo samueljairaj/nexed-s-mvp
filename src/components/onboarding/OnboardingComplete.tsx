@@ -1,7 +1,6 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 interface OnboardingCompleteProps {
   handleFinish: () => void;
@@ -18,6 +17,7 @@ export function OnboardingComplete({
   const handleGoToDashboard = () => {
     console.log("Finish button clicked, calling handleFinish");
     handleFinish();
+    // Note: navigation is now handled directly in handleFinish
   };
 
   return (

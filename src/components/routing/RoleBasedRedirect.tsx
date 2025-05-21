@@ -31,13 +31,21 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     if (!isLoading && currentUser) {
       redirectedRef.current = true; // Set flag to prevent multiple redirects
       
+      console.log("RoleBasedRedirect - Checking user state:", {
+        onboardingComplete: currentUser.onboardingComplete,
+        isDSO,
+        path: location.pathname
+      });
+      
       // If user has completed onboarding, ensure they're directed to the correct dashboard
       if (currentUser.onboardingComplete) {
-        // Redirect based on user role
-        if (isDSO && location.pathname === '/app/dashboard') {
+        // Redirect based on user role, but only if they're on the onboarding page or wrong dashboard
+        if (isDSO && (location.pathname === '/app/dashboard' || location.pathname === '/onboarding')) {
+          console.log("RoleBasedRedirect - Redirecting DSO to DSO dashboard");
           navigate('/app/dso-dashboard', { replace: true });
           return;
-        } else if (!isDSO && location.pathname === '/app/dso-dashboard') {
+        } else if (!isDSO && (location.pathname === '/app/dso-dashboard' || location.pathname === '/onboarding')) {
+          console.log("RoleBasedRedirect - Redirecting student to student dashboard");
           navigate('/app/dashboard', { replace: true });
           return;
         }
