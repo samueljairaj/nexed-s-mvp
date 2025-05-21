@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateMockTasks } from "@/utils/mockTasks";
 
 // Type for database-accepted visa types
-type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
+type DatabaseVisaType = "F1" | "J1" | "H1B" | "Other";
 
 export function useOnboardingCompletion() {
   const { completeOnboarding, isDSO, currentUser } = useAuth();
@@ -17,7 +17,7 @@ export function useOnboardingCompletion() {
   // Helper function to normalize visa types for database compatibility
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
     if (visaType === "F1") return "F1";
-    if (visaType === "OPT") return "OPT";
+    if (visaType === "J1") return "J1";
     if (visaType === "H1B") return "H1B";
     return "Other";
   };
@@ -78,7 +78,10 @@ export function useOnboardingCompletion() {
       console.log("Completing onboarding process...");
       
       // Call completeOnboarding() which marks the user's onboarding as complete
-      await completeOnboarding();
+      const success = await completeOnboarding();
+      if (!success) {
+        throw new Error("Failed to complete onboarding");
+      }
       
       // Generate and save tasks if user completed onboarding
       if (currentUser?.id && currentUser?.visaType) {
@@ -98,10 +101,10 @@ export function useOnboardingCompletion() {
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Redirecting to:", targetPath);
       
-      // Force a hard navigation to ensure proper redirect
+      // Use a slight delay to ensure state updates are complete
       setTimeout(() => {
         navigate(targetPath, { replace: true });
-      }, 100);
+      }, 50);
       
       return true;
     } catch (error) {

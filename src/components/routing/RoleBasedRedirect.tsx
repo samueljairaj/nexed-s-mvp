@@ -17,30 +17,30 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
   useEffect(() => {
     // Reset the redirect flag on location change
     redirectedRef.current = false;
-    
-    // Return a cleanup function
-    return () => {
-      // This will run when the location changes or component unmounts
-    };
+    // Reset the run flag when location changes
+    hasRunRef.current = false;
   }, [location.pathname]);
 
   useEffect(() => {
     // Skip redirection if we're still loading or have already redirected
     if (isLoading || redirectedRef.current || hasRunRef.current) return;
     
-    // Set flag to prevent this effect from running multiple times
+    // Set flag to prevent this effect from running multiple times in the same location
     hasRunRef.current = true;
 
     if (!isLoading && currentUser) {
       redirectedRef.current = true; // Set flag to prevent multiple redirects
       
-      // Redirect based on user role
-      if (isDSO && location.pathname === '/app/dashboard') {
-        navigate('/app/dso-dashboard', { replace: true });
-        return;
-      } else if (!isDSO && location.pathname === '/app/dso-dashboard') {
-        navigate('/app/dashboard', { replace: true });
-        return;
+      // If user has completed onboarding, ensure they're directed to the correct dashboard
+      if (currentUser.onboardingComplete) {
+        // Redirect based on user role
+        if (isDSO && location.pathname === '/app/dashboard') {
+          navigate('/app/dso-dashboard', { replace: true });
+          return;
+        } else if (!isDSO && location.pathname === '/app/dso-dashboard') {
+          navigate('/app/dashboard', { replace: true });
+          return;
+        }
       }
       
       // Handle onboarding for DSOs

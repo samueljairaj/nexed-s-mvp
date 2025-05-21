@@ -44,14 +44,12 @@ export function useAcademicInfo() {
         }));
       }
 
-      // Add DSO contact info if provided - only include fields that have values
-      // Important: Make this optional, not required
+      // Only add DSO contact info if at least one field has a value
       const dsoContactData: Record<string, string> = {};
       if (data.dsoName) dsoContactData.name = data.dsoName;
       if (data.dsoEmail) dsoContactData.email = data.dsoEmail;
       if (data.dsoPhone) dsoContactData.phone = data.dsoPhone;
       
-      // Only add dsoContact if at least one field has a value
       if (Object.keys(dsoContactData).length > 0) {
         formattedData.dsoContact = dsoContactData;
       }

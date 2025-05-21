@@ -51,6 +51,7 @@ const Onboarding = () => {
   // Step names for the progress indicator
   const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
 
+  // Direct to dashboard if onboarding is already complete
   useEffect(() => {
     if (isAuthenticated && currentUser?.onboardingComplete) {
       console.log("User has completed onboarding. Redirecting to dashboard...");
@@ -82,12 +83,13 @@ const Onboarding = () => {
     console.log("Continue button clicked, current step:", currentStep);
     
     // Special handling for the final step to complete onboarding
-    if (currentStep === 4) {
+    if (currentStep === 4) { // Employment step
       console.log("Last step - calling handleFinish");
       try {
         const success = await handleFinish();
         if (success) {
           console.log("Onboarding completed successfully");
+          // Navigation will be handled in handleFinish()
           return;
         }
       } catch (error) {
@@ -181,7 +183,7 @@ const Onboarding = () => {
       </div>
       
       {/* Navigation buttons - only show if not on the final completion screen */}
-      {currentStep !== 5 && currentStep !== 0 && (
+      {currentStep <= 4 && currentStep !== 0 && (
         <StepNavigation
           currentStep={currentStep}
           isFirstStep={isFirstStep()}

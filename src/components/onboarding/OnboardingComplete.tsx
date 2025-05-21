@@ -14,6 +14,7 @@ export function OnboardingComplete({
   isSubmitting = false, 
   role = 'student' 
 }: OnboardingCompleteProps) {
+  
   const handleGoToDashboard = () => {
     console.log("Finish button clicked, calling handleFinish");
     handleFinish();

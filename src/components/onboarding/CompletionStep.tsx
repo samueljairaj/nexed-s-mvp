@@ -19,15 +19,19 @@ interface CompletionStepProps {
 }
 
 export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }: CompletionStepProps) {
-  // Always start with checklist visible
+  // Always start with checklist visible for non-DSO users
   const [showChecklist, setShowChecklist] = useState(true);
   const navigate = useNavigate();
   const { isDSO } = useAuth();
 
   const handleGoToDashboard = () => {
+    console.log("Go to dashboard button clicked");
     onFinish();
     // The parent component handles navigation through auth context
   };
+
+  // Ensure we have the user data before showing the checklist
+  const userDataComplete = userData && (userData.visaType || userData.university || userData.fieldOfStudy);
 
   return (
     <>
@@ -38,7 +42,7 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
         <h3 className="text-2xl font-bold mb-2">Profile Setup Complete!</h3>
         <p className="text-gray-600 mb-6">
           We've personalized your experience based on your {isDSO ? 'role' : 'visa type'} and details. 
-          {!isDSO && 'Your personalized compliance checklist has been created and you\'re now ready to start managing your documents.'}
+          {!isDSO && ' Your personalized compliance checklist has been created and you\'re now ready to start managing your documents.'}
         </p>
         <div className="bg-nexed-50 p-4 rounded-lg mb-6">
           <h4 className="font-medium text-nexed-700 mb-2">Your Next Steps:</h4>
@@ -75,7 +79,7 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
       </div>
 
       {/* Compliance Checklist Dialog - Only show for students */}
-      {!isDSO && (
+      {!isDSO && userDataComplete && (
         <ComplianceChecklist 
           open={showChecklist} 
           onOpenChange={setShowChecklist} 
