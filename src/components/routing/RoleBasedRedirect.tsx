@@ -28,6 +28,15 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     // Set flag to prevent this effect from running multiple times in the same location
     hasRunRef.current = true;
 
+    // Check if onboarding completion is in progress
+    const onboardingInProgress = localStorage.getItem('onboarding_completion_in_progress');
+    
+    // Skip redirection if onboarding is in progress (handled by useOnboardingCompletion)
+    if (onboardingInProgress === 'true') {
+      console.log("RoleBasedRedirect - Skipping redirect because onboarding completion is in progress");
+      return;
+    }
+
     if (!isLoading && currentUser) {
       redirectedRef.current = true; // Set flag to prevent multiple redirects
       

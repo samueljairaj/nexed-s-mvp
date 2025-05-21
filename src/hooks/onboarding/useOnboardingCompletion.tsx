@@ -75,6 +75,9 @@ export function useOnboardingCompletion() {
     try {
       console.log("Completing onboarding process...");
       
+      // Set a temporary flag in localStorage to prevent redirection loops
+      localStorage.setItem('onboarding_completion_in_progress', 'true');
+      
       // Call completeOnboarding() which marks the user's onboarding as complete
       const success = await completeOnboarding();
       if (!success) {
@@ -100,11 +103,17 @@ export function useOnboardingCompletion() {
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Redirecting to:", targetPath);
       
+      // Clear the temporary flag
+      localStorage.removeItem('onboarding_completion_in_progress');
+      
       // Navigate immediately without delay
       navigate(targetPath, { replace: true });
       
       return true;
     } catch (error) {
+      // Clear the temporary flag if there's an error
+      localStorage.removeItem('onboarding_completion_in_progress');
+      
       toast.error("Failed to complete onboarding");
       console.error("Error completing onboarding:", error);
       return false;
