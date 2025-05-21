@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 interface OnboardingCompleteProps {
-  handleFinish: () => void;
+  handleFinish: () => Promise<boolean>;
   isSubmitting: boolean;
   role?: 'student' | 'dso';
 }
@@ -26,7 +26,11 @@ export function OnboardingComplete({
       localStorage.setItem('onboarding_completion_in_progress', 'true');
       
       // Call the parent's onFinish handler
-      handleFinish();
+      handleFinish().catch(error => {
+        console.error("Error in handleFinish:", error);
+        localStorage.removeItem('onboarding_completion_in_progress');
+        setHasStartedOnboarding(false);
+      });
       
       // Note: navigation is handled in handleFinish
     }

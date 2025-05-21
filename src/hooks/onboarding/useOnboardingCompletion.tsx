@@ -87,13 +87,11 @@ export function useOnboardingCompletion() {
       // Generate and save tasks if user completed onboarding
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Generating tasks for user:", currentUser.id, "with visa type:", currentUser.visaType);
-        try {
-          // Call saveTasksToDatabase without trying to check its return value
-          await saveTasksToDatabase(currentUser.id, currentUser.visaType);
-        } catch (taskError) {
-          console.error("Error saving tasks, but continuing:", taskError);
-          // Don't block the flow
-        }
+        // Don't await or check result - we don't want this to block completion
+        saveTasksToDatabase(currentUser.id, currentUser.visaType).catch(err => {
+          console.error("Error saving tasks:", err);
+          // Silently continue - task creation should not block onboarding completion
+        });
       }
       
       // Assume success if no error was thrown
