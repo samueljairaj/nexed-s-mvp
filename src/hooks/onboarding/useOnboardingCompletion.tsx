@@ -5,9 +5,10 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { generateMockTasks } from "@/utils/mockTasks";
+import { DocumentCategory } from "@/types/document";
 
 // Type for database-accepted visa types
-type DatabaseVisaType = "F1" | "J1" | "H1B" | "Other";
+type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
 
 export function useOnboardingCompletion() {
   const { completeOnboarding, isDSO, currentUser } = useAuth();
@@ -17,7 +18,7 @@ export function useOnboardingCompletion() {
   // Helper function to normalize visa types for database compatibility
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
     if (visaType === "F1") return "F1";
-    if (visaType === "J1") return "J1";
+    if (visaType === "J1") return "Other"; // Map J1 to Other as it's not in DatabaseVisaType
     if (visaType === "H1B") return "H1B";
     return "Other";
   };
@@ -38,7 +39,7 @@ export function useOnboardingCompletion() {
         description: task.description,
         due_date: task.dueDate,
         is_completed: task.completed,
-        category: task.category,
+        category: task.category as string, // Cast to string to match database type
         phase: task.phase || 'general',
         priority: task.priority,
         visa_type: normalizedVisaType
@@ -46,6 +47,7 @@ export function useOnboardingCompletion() {
       
       try {
         // Insert the tasks with ON CONFLICT DO NOTHING to avoid errors
+        // Fix: Use .upsert() with an array of objects directly
         const { error } = await supabase
           .from('compliance_tasks')
           .upsert(dbTasks, {
@@ -87,6 +89,7 @@ export function useOnboardingCompletion() {
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Generating tasks for user:", currentUser.id, "with visa type:", currentUser.visaType);
         try {
+          // Fix: Don't check the result of saveTasksToDatabase since it's void or boolean
           await saveTasksToDatabase(currentUser.id, currentUser.visaType);
         } catch (taskError) {
           console.error("Error saving tasks, but continuing:", taskError);
