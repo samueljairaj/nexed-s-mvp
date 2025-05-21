@@ -88,7 +88,7 @@ export function useOnboardingCompletion() {
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Generating tasks for user:", currentUser.id, "with visa type:", currentUser.visaType);
         try {
-          // Call saveTasksToDatabase without checking its return value
+          // Call saveTasksToDatabase without checking its return value, as it returns void
           await saveTasksToDatabase(currentUser.id, currentUser.visaType);
         } catch (taskError) {
           console.error("Error saving tasks, but continuing:", taskError);
