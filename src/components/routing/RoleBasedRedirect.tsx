@@ -13,12 +13,15 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
   const location = useLocation();
   const redirectedRef = useRef(false);
   const hasRunRef = useRef(false);
+  const redirectAttempts = useRef(0);
 
   useEffect(() => {
     // Reset the redirect flag on location change
     redirectedRef.current = false;
     // Reset the run flag when location changes
     hasRunRef.current = false;
+    // Reset redirect attempts counter
+    redirectAttempts.current = 0;
   }, [location.pathname]);
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     // Set flag to prevent this effect from running multiple times in the same location
     hasRunRef.current = true;
 
-    // Check if onboarding completion is in progress
+    // Check if onboarding completion is in progress - VERY IMPORTANT for preventing redirect loops
     const onboardingInProgress = localStorage.getItem('onboarding_completion_in_progress');
     
     // Skip redirection if onboarding is in progress (handled by useOnboardingCompletion)
@@ -37,7 +40,15 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       return;
     }
 
+    // Safety check - if we've already tried to redirect more than 3 times without changing location,
+    // we might be in a redirect loop
+    if (redirectAttempts.current > 2) {
+      console.warn("RoleBasedRedirect - Too many redirect attempts, possible redirect loop detected");
+      return;
+    }
+
     if (!isLoading && currentUser) {
+      redirectAttempts.current += 1;
       redirectedRef.current = true; // Set flag to prevent multiple redirects
       
       console.log("RoleBasedRedirect - Checking user state:", {

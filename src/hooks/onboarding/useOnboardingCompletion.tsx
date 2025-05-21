@@ -88,7 +88,7 @@ export function useOnboardingCompletion() {
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Generating tasks for user:", currentUser.id, "with visa type:", currentUser.visaType);
         try {
-          // Call saveTasksToDatabase without checking its return value, as it returns void
+          // Call saveTasksToDatabase without trying to check its return value
           await saveTasksToDatabase(currentUser.id, currentUser.visaType);
         } catch (taskError) {
           console.error("Error saving tasks, but continuing:", taskError);
@@ -106,8 +106,10 @@ export function useOnboardingCompletion() {
       // Clear the temporary flag
       localStorage.removeItem('onboarding_completion_in_progress');
       
-      // Navigate immediately without delay
-      navigate(targetPath, { replace: true });
+      // Add a slight delay before navigation to ensure state updates are processed
+      setTimeout(() => {
+        navigate(targetPath, { replace: true });
+      }, 100);
       
       return true;
     } catch (error) {

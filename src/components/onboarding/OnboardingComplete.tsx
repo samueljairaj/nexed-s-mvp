@@ -1,6 +1,7 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface OnboardingCompleteProps {
   handleFinish: () => void;
@@ -13,11 +14,22 @@ export function OnboardingComplete({
   isSubmitting = false, 
   role = 'student' 
 }: OnboardingCompleteProps) {
+  const [hasStartedOnboarding, setHasStartedOnboarding] = useState(false);
   
   const handleGoToDashboard = () => {
     console.log("Finish button clicked, calling handleFinish");
-    handleFinish();
-    // Note: navigation is now handled directly in handleFinish
+    // Prevent multiple clicks
+    if (!hasStartedOnboarding) {
+      setHasStartedOnboarding(true);
+      
+      // Prevent redirection loop by setting the flag immediately
+      localStorage.setItem('onboarding_completion_in_progress', 'true');
+      
+      // Call the parent's onFinish handler
+      handleFinish();
+      
+      // Note: navigation is handled in handleFinish
+    }
   };
 
   return (
@@ -53,7 +65,7 @@ export function OnboardingComplete({
       <Button 
         onClick={handleGoToDashboard} 
         className="nexed-gradient-button" 
-        disabled={isSubmitting}
+        disabled={isSubmitting || hasStartedOnboarding}
       >
         {isSubmitting ? (
           <span className="flex items-center">

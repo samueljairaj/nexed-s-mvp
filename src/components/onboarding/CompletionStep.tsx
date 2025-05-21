@@ -23,11 +23,25 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
   const [showChecklist, setShowChecklist] = useState(true);
   const navigate = useNavigate();
   const { isDSO } = useAuth();
+  const [hasStartedOnboarding, setHasStartedOnboarding] = useState(false);
 
+  // Handle go to dashboard button click
   const handleGoToDashboard = () => {
     console.log("Go to dashboard button clicked");
-    onFinish();
-    // The parent component handles navigation through auth context
+    
+    // Set a flag to avoid duplicate processing
+    if (!hasStartedOnboarding) {
+      setHasStartedOnboarding(true);
+      
+      // Prevent redirection loop by setting the flag immediately
+      localStorage.setItem('onboarding_completion_in_progress', 'true');
+      
+      // Call the parent's onFinish handler which completes onboarding
+      onFinish();
+      
+      // The onFinish handler (handleFinish in useOnboardingCompletion) will
+      // handle navigation and clearing the onboarding_completion_in_progress flag
+    }
   };
 
   // Ensure we have the user data before showing the checklist
@@ -67,7 +81,7 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
         <Button 
           onClick={handleGoToDashboard} 
           className="nexed-gradient-button" 
-          disabled={isSubmitting}
+          disabled={isSubmitting || hasStartedOnboarding}
         >
           {isSubmitting ? (
             <span className="flex items-center">
