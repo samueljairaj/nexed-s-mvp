@@ -31,7 +31,7 @@ export function EmploymentProfileSection() {
         jobTitle: currentUser.jobTitle || "",
         employmentStartDate: currentUser.employmentStartDate ? new Date(currentUser.employmentStartDate) : undefined,
         employmentEndDate: undefined,
-        jobLocation: "", // Keeping this in the form but not in the database
+        // Removing jobLocation from here since it doesn't exist in database
         isFieldRelated: "No",
         authorizationType: (currentUser.authType as "None" | "CPT" | "OPT" | "STEM OPT") || "None",
         authStartDate: currentUser.authStartDate ? new Date(currentUser.authStartDate) : undefined,

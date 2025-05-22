@@ -14,7 +14,7 @@ export function useEmploymentInfo() {
     jobTitle: "",
     employmentStartDate: undefined,
     employmentEndDate: undefined,
-    jobLocation: "",
+    // Removing jobLocation field since it doesn't exist in database
     isFieldRelated: "No",
     authorizationType: "None",
     authStartDate: undefined,
@@ -41,8 +41,7 @@ export function useEmploymentInfo() {
         updateData.employer_name = data.employerName;
         updateData.job_title = data.jobTitle;
         
-        // The jobLocation field doesn't exist in the database schema
-        // So we'll omit it or store it in a different column if needed
+        // Remove all references to jobLocation field - it doesn't exist in database
         
         // Add field relation info if available
         if (data.isFieldRelated) {

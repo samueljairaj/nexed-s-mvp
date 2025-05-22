@@ -193,14 +193,14 @@ export function useOnboardingFlow() {
       if (data.employmentStatus === "Employed") {
         updateData.employer_name = data.employerName;
         updateData.job_title = data.jobTitle;
-        updateData.jobLocation = data.jobLocation;
+        // Removing jobLocation reference - it doesn't exist in database
         
         if (data.employmentStartDate) {
           updateData.employment_start_date = dateUtils.formatToYYYYMMDD(data.employmentStartDate);
         }
         
         if (data.employmentEndDate) {
-          updateData.employmentEndDate = dateUtils.formatToYYYYMMDD(data.employmentEndDate);
+          updateData.employment_end_date = dateUtils.formatToYYYYMMDD(data.employmentEndDate);
         }
 
         // Add authorization data if provided
@@ -237,7 +237,10 @@ export function useOnboardingFlow() {
       await updateProfile(updateData);
       
       // Update local state and proceed to completion
-      setFormData(prev => ({ ...prev, employment: data }));
+      setFormData(prev => ({
+        ...prev,
+        employment: data
+      }));
       goToNextStep();
       return true;
     } catch (error) {
