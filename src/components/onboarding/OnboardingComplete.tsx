@@ -1,7 +1,7 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface OnboardingCompleteProps {
   handleFinish: () => Promise<boolean>;
@@ -15,6 +15,14 @@ export function OnboardingComplete({
   role = 'student' 
 }: OnboardingCompleteProps) {
   const [hasStartedOnboarding, setHasStartedOnboarding] = useState(false);
+  
+  // Check for existing flag when component mounts
+  useEffect(() => {
+    const inProgress = localStorage.getItem('onboarding_completion_in_progress');
+    if (inProgress) {
+      setHasStartedOnboarding(true);
+    }
+  }, []);
   
   const handleGoToDashboard = () => {
     console.log("Finish button clicked, calling handleFinish");

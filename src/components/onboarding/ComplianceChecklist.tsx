@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -308,6 +307,27 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
 
   const insights = generateInsights();
 
+  // Handle continue to dashboard button click
+  const handleContinueToDashboard = () => {
+    console.log("Continue to dashboard button clicked from checklist dialog");
+    
+    // First close the dialog
+    onOpenChange(false);
+    
+    // IMPORTANT: Don't navigate directly from here - let the parent handle navigation
+    // This prevents conflicts between the two navigation processes
+    
+    // Check if there's an onboarding completion in progress
+    if (localStorage.getItem('onboarding_completion_in_progress')) {
+      console.log("Onboarding completion already in progress from checklist dialog");
+      // Don't do anything - the parent component will handle navigation
+    } else {
+      // We should never get here, but just in case, add a safety check
+      console.log("No onboarding completion in progress, setting flag from checklist dialog");
+      localStorage.setItem('onboarding_completion_in_progress', 'true');
+    }
+  };
+
   // Render document list based on category
   const renderDocumentList = (category: keyof GroupedDocuments) => {
     if (loadingState === "loading") {
@@ -455,7 +475,14 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpenState) => {
+      // If closing and we're in the middle of onboarding, don't allow closing
+      if (!newOpenState && localStorage.getItem('onboarding_completion_in_progress')) {
+        console.log("Preventing checklist close because onboarding completion is in progress");
+        return;
+      }
+      onOpenChange(newOpenState);
+    }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Your Personalized Document Checklist</DialogTitle>
@@ -643,13 +670,10 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
             </ul>
           </div>
           
-          {/* Call to Action for Dashboard */}
+          {/* Call to Action for Dashboard - Modified to use our handleContinueToDashboard */}
           <div className="mt-8 flex justify-center">
             <Button 
-              onClick={() => {
-                onOpenChange(false);
-                navigate("/app/dashboard");
-              }}
+              onClick={handleContinueToDashboard}
               className="px-6"
             >
               Continue to Dashboard

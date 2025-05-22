@@ -31,12 +31,16 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
     // Set a flag to avoid duplicate processing
     if (!hasStartedOnboarding) {
       setHasStartedOnboarding(true);
+      console.log("Setting hasStartedOnboarding to true");
+      
+      // Set the localStorage flag immediately to prevent redirection loops
+      localStorage.setItem('onboarding_completion_in_progress', 'true');
       
       // Call the parent's onFinish handler which completes onboarding
+      console.log("Calling onFinish handler");
       onFinish();
-      
-      // The onFinish handler (handleFinish in useOnboardingCompletion) will
-      // handle navigation and clearing the onboarding_completion_in_progress flag
+    } else {
+      console.log("Onboarding already in progress, ignoring duplicate click");
     }
   };
 
@@ -45,6 +49,12 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
     // Force the checklist to be visible for non-DSO users when component mounts
     if (!isDSO) {
       setShowChecklist(true);
+    }
+    
+    // Check for existing onboarding flag when mounting component
+    const inProgress = localStorage.getItem('onboarding_completion_in_progress');
+    if (inProgress) {
+      setHasStartedOnboarding(true);
     }
   }, [isDSO]);
 

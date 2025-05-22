@@ -68,36 +68,52 @@ export function useOnboardingCompletion() {
   };
 
   const handleFinish = async (): Promise<boolean> => {
+    if (isSubmitting) {
+      console.log("Already submitting, ignoring duplicate request");
+      return false;
+    }
+    
     setIsSubmitting(true);
+    console.log("Starting onboarding completion process...");
+    
     try {
-      console.log("Completing onboarding process...");
+      // First check if we're already in the middle of completing onboarding
+      if (localStorage.getItem('onboarding_completion_in_progress')) {
+        console.log("Onboarding completion already in progress, continuing...");
+        return true;
+      }
       
       // Set a temporary flag in localStorage to prevent redirection loops
       localStorage.setItem('onboarding_completion_in_progress', 'true');
       
       // Complete the onboarding process in the database first
+      console.log("Calling completeOnboarding to update user profile in database");
       await completeOnboarding();
       
-      // Generate and save tasks if user completed onboarding - do this in the background
+      // Generate and save tasks if user has data - do this asynchronously so it doesn't block completion
       if (currentUser?.id && currentUser?.visaType) {
-        console.log("Generating tasks for user:", currentUser.id, "with visa type:", currentUser.visaType);
-        // Start the task creation process but don't await it
-        saveTasksToDatabase(currentUser.id, currentUser.visaType)
-          .catch(err => console.error("Error saving tasks:", err));
+        console.log("Starting task creation for user:", currentUser.id);
+        // Don't await this - let it run in the background
+        setTimeout(() => {
+          saveTasksToDatabase(currentUser.id, currentUser.visaType)
+            .catch(err => console.error("Error saving tasks:", err));
+        }, 0); 
       }
       
-      // Mark onboarding as fully completed successfully
+      // Success message
       toast.success("Onboarding completed successfully!");
       
-      // Determine the target path based on user role
+      // Determine dashboard path based on user role
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
-      console.log("Redirecting to:", targetPath);
+      console.log("Onboarding complete, navigating to:", targetPath);
       
-      // Clear the temporary flag
-      localStorage.removeItem('onboarding_completion_in_progress');
-      
-      // Navigate immediately to prevent any redirection loops
+      // IMPORTANT: Navigate immediately, before clearing the flag
+      // This ensures the navigation happens first
       navigate(targetPath, { replace: true });
+      
+      // Clear the temporary flag AFTER navigation is initiated
+      console.log("Clearing onboarding_completion_in_progress flag");
+      localStorage.removeItem('onboarding_completion_in_progress');
       
       return true;
     } catch (error) {
@@ -106,6 +122,7 @@ export function useOnboardingCompletion() {
       
       toast.error("Failed to complete onboarding");
       console.error("Error completing onboarding:", error);
+      setIsSubmitting(false);
       return false;
     } finally {
       setIsSubmitting(false);
