@@ -1,4 +1,3 @@
-
 import { useRef } from "react";
 import { AccountCreationStep } from "./AccountCreationStep";
 import { PersonalInfoStep } from "./PersonalInfoStep";
@@ -142,12 +141,13 @@ export const OnboardingStepContent = ({
   return (
     <>
       {renderStep()}
-      {/* Pass user data directly to ComplianceChecklist when on the final step */}
-      {currentStep === 5 && (
+      {/* Only show ComplianceChecklist separately from the completion step when we're in development/testing */}
+      {currentStep === 5 && process.env.NODE_ENV === 'development' && (
         <ComplianceChecklist
           open={true}
           onOpenChange={() => {}}
           userData={userData}
+          onContinue={handleFinish}
         />
       )}
     </>

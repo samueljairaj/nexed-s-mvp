@@ -28,20 +28,26 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
   const handleGoToDashboard = () => {
     console.log("Go to dashboard button clicked");
     
-    // Set a flag to avoid duplicate processing
-    if (!hasStartedOnboarding) {
-      setHasStartedOnboarding(true);
-      console.log("Setting hasStartedOnboarding to true");
-      
-      // Set the localStorage flag immediately to prevent redirection loops
-      localStorage.setItem('onboarding_completion_in_progress', 'true');
-      
-      // Call the parent's onFinish handler which completes onboarding
-      console.log("Calling onFinish handler");
-      onFinish();
-    } else {
+    // If onboarding has already started, don't do anything
+    if (hasStartedOnboarding) {
       console.log("Onboarding already in progress, ignoring duplicate click");
+      return;
     }
+    
+    // Set flag to prevent duplicate processing
+    setHasStartedOnboarding(true);
+    console.log("Setting hasStartedOnboarding to true");
+    
+    // Clear any existing flag first to ensure a clean state
+    localStorage.removeItem('onboarding_completion_in_progress');
+    
+    // Set the localStorage flag to prevent redirection loops
+    localStorage.setItem('onboarding_completion_in_progress', 'true');
+    
+    // Call the parent's onFinish handler which completes onboarding
+    // This will trigger the navigation to the dashboard
+    console.log("Calling onFinish handler");
+    onFinish();
   };
 
   // Track checklist display and completion
@@ -56,10 +62,15 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
     if (inProgress) {
       setHasStartedOnboarding(true);
     }
-  }, [isDSO]);
-
-  // Ensure we have the user data before showing the checklist
-  const userDataComplete = userData && (userData.visaType || userData.university || userData.fieldOfStudy);
+    
+    // Cleanup function to clear flag if component is unmounted before completion
+    return () => {
+      // Only clear the flag if we set it ourselves and onboarding hasn't completed
+      if (hasStartedOnboarding && localStorage.getItem('onboarding_completion_in_progress')) {
+        localStorage.removeItem('onboarding_completion_in_progress');
+      }
+    };
+  }, [isDSO, hasStartedOnboarding]);
 
   return (
     <>
@@ -107,11 +118,17 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
       </div>
 
       {/* Compliance Checklist Dialog - Only show for students */}
-      {!isDSO && userDataComplete && (
+      {!isDSO && (
         <ComplianceChecklist 
           open={showChecklist} 
-          onOpenChange={setShowChecklist} 
+          onOpenChange={(isOpen) => {
+            // Only allow closing if we're not in the middle of onboarding
+            if (!isOpen && !hasStartedOnboarding) {
+              setShowChecklist(isOpen);
+            }
+          }}
           userData={userData}
+          onContinue={handleGoToDashboard}
         />
       )}
     </>

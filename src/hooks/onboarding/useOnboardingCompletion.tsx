@@ -46,13 +46,10 @@ export function useOnboardingCompletion() {
       }));
       
       try {
-        // Insert the tasks with ON CONFLICT DO NOTHING to avoid errors
+        // Try with simple insert first instead of upsert
         const { error } = await supabase
           .from('compliance_tasks')
-          .upsert(dbTasks, {
-            onConflict: 'user_id,title,phase', 
-            ignoreDuplicates: true
-          });
+          .insert(dbTasks);
           
         if (error) {
           console.error('Error saving onboarding tasks to database:', error);
@@ -77,20 +74,17 @@ export function useOnboardingCompletion() {
     console.log("Starting onboarding completion process...");
     
     try {
-      // First check if we're already in the middle of completing onboarding
-      if (localStorage.getItem('onboarding_completion_in_progress')) {
-        console.log("Onboarding completion already in progress, continuing...");
-        return true;
-      }
+      // Start with a clean state - remove any previous flags
+      localStorage.removeItem('onboarding_completion_in_progress');
       
-      // Set a temporary flag in localStorage to prevent redirection loops
+      // Set a new flag to prevent redirection loops
       localStorage.setItem('onboarding_completion_in_progress', 'true');
       
       // Complete the onboarding process in the database first
       console.log("Calling completeOnboarding to update user profile in database");
       await completeOnboarding();
       
-      // Generate and save tasks if user has data - do this asynchronously so it doesn't block completion
+      // Generate and save tasks if user has data - do this asynchronously
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Starting task creation for user:", currentUser.id);
         // Don't await this - let it run in the background
@@ -107,13 +101,15 @@ export function useOnboardingCompletion() {
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Onboarding complete, navigating to:", targetPath);
       
-      // IMPORTANT: Navigate immediately, before clearing the flag
-      // This ensures the navigation happens first
+      // Use replace to prevent back button from returning to onboarding
       navigate(targetPath, { replace: true });
       
-      // Clear the temporary flag AFTER navigation is initiated
-      console.log("Clearing onboarding_completion_in_progress flag");
-      localStorage.removeItem('onboarding_completion_in_progress');
+      // Clear the temporary flag after successful navigation
+      // Set timeout to ensure navigation completes first
+      setTimeout(() => {
+        console.log("Clearing onboarding_completion_in_progress flag");
+        localStorage.removeItem('onboarding_completion_in_progress');
+      }, 500);
       
       return true;
     } catch (error) {

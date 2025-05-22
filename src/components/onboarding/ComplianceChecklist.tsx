@@ -21,6 +21,7 @@ interface ComplianceChecklistProps {
     fieldOfStudy?: string;
     employer?: string;
   };
+  onContinue?: () => void; // New prop for completing onboarding
 }
 
 interface GroupedDocuments {
@@ -33,7 +34,7 @@ interface GroupedDocuments {
 // Define type for database-accepted visa types
 type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
 
-export function ComplianceChecklist({ open, onOpenChange, userData }: ComplianceChecklistProps) {
+export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }: ComplianceChecklistProps) {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [tab, setTab] = useState("all-documents");
@@ -309,26 +310,17 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
 
   // Handle continue to dashboard button click - FIXED VERSION
   const handleContinueToDashboard = () => {
-    console.log("Continue to dashboard button clicked from checklist dialog");
+    console.log("Continue to dashboard button clicked - calling onContinue callback");
     
-    // First signal parent component that dialog should close
-    if (onOpenChange) {
-      onOpenChange(false);
-    }
-    
-    // Check if there's an onboarding completion in progress flag
-    const inProgress = localStorage.getItem('onboarding_completion_in_progress');
-    
-    if (!inProgress) {
-      // If no flag exists, set it to prevent navigation loops
-      localStorage.setItem('onboarding_completion_in_progress', 'true');
-      console.log("Setting onboarding_completion_in_progress flag");
+    // If we have an onContinue callback, use that for navigation
+    if (typeof onContinue === 'function') {
+      onContinue();
     } else {
-      console.log("Onboarding completion already in progress");
+      // Otherwise just close the dialog - no navigation
+      if (onOpenChange) {
+        onOpenChange(false);
+      }
     }
-    
-    // Intentionally not navigating here - the parent component will handle navigation
-    // This prevents conflicts with the onboarding completion process
   };
 
   // Render document list based on category
@@ -674,7 +666,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
             </ul>
           </div>
           
-          {/* Call to Action for Dashboard - Using the fixed version of handleContinueToDashboard */}
+          {/* Call to Action for Dashboard - Using the callback to navigate */}
           <div className="mt-8 flex justify-center">
             <Button 
               onClick={handleContinueToDashboard}
