@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -188,7 +187,7 @@ export function useOnboardingFlow() {
     setIsSubmitting(true);
     try {
       const updateData: Record<string, any> = {
-        employmentStatus: data.employmentStatus,
+        employment_status: data.employmentStatus, // Corrected column name
       };
       
       if (data.employmentStatus === "Employed") {

@@ -33,7 +33,7 @@ export function useEmploymentInfo() {
       // Create a plain object with string values only - no Date objects
       const updateData: Record<string, any> = {
         // Basic employment data
-        employmentStatus: data.employmentStatus,
+        employment_status: data.employmentStatus, // Use correct column name with underscore
       };
       
       // Only add employment related fields if employed

@@ -267,6 +267,7 @@ export type Database = {
           email: string | null
           employer_name: string | null
           employment_start_date: string | null
+          employment_status: string | null
           field_of_study: string | null
           id: string
           is_stem: boolean | null
@@ -302,6 +303,7 @@ export type Database = {
           email?: string | null
           employer_name?: string | null
           employment_start_date?: string | null
+          employment_status?: string | null
           field_of_study?: string | null
           id: string
           is_stem?: boolean | null
@@ -337,6 +339,7 @@ export type Database = {
           email?: string | null
           employer_name?: string | null
           employment_start_date?: string | null
+          employment_status?: string | null
           field_of_study?: string | null
           id?: string
           is_stem?: boolean | null
