@@ -266,7 +266,7 @@ export function useOnboardingFlow() {
         user_id: userId,
         title: task.title,
         description: task.description,
-        due_date: task.dueDate,
+        due_date: task.dueDate ? dateUtils.formatToYYYYMMDD(new Date(task.dueDate)) : dateUtils.formatToYYYYMMDD(new Date()),
         is_completed: task.completed,
         category: task.category as string,
         phase: task.phase || 'general',

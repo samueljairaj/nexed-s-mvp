@@ -259,21 +259,24 @@ export function getBaselineChecklist(visaType: string | null | undefined, phase?
 
 // Function to convert baseline items to Task format
 export function baselineItemsToAITasks(items: BaselineChecklistItem[]): Task[] {
-  return items.map(item => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    dueDate: calculateDueDate(item.priority, item.isRecurring),
-    deadline: new Date(calculateDueDate(item.priority, item.isRecurring)),
-    category: item.category,
-    completed: false,
-    priority: item.priority,
-    phase: item.phase,
-    isRecurring: item.isRecurring || false,
-    recurringInterval: item.recurringInterval,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }));
+  return items.map(item => {
+    const dueDate = calculateDueDate(item.priority, item.isRecurring);
+    return {
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      dueDate: dueDate,
+      deadline: new Date(dueDate),
+      category: item.category,
+      completed: false,
+      priority: item.priority,
+      phase: item.phase,
+      isRecurring: item.isRecurring || false,
+      recurringInterval: item.recurringInterval,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  });
 }
 
 // Helper function to calculate a due date based on priority and recurring status
@@ -301,5 +304,6 @@ function calculateDueDate(priority: "low" | "medium" | "high", isRecurring?: boo
   const dueDate = new Date(today);
   dueDate.setDate(today.getDate() + daysToAdd);
   
+  // Format date as YYYY-MM-DD
   return dueDate.toISOString().split('T')[0];
 }
