@@ -22,8 +22,6 @@ export const AppLayout = () => {
   const { currentUser, logout, isAuthenticated, isDSO, isAdmin } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-
-  // Remove the redirection logic from here since it's handled in RoleBasedRedirect
   
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -66,14 +64,14 @@ export const AppLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col font-sans">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm">
+      <header className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center">
             <NavLink to={isDSO ? "/app/dso-dashboard" : "/app/dashboard"} className="flex items-center space-x-2">
               <div className="h-8 w-8 rounded-md nexed-gradient" />
-              <span className="text-xl font-bold text-nexed-900">neXed</span>
+              <span className="text-xl font-bold text-nexed-900 font-display">neXed</span>
               {isDSO && (
                 <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">
                   DSO Portal
@@ -99,7 +97,7 @@ export const AppLayout = () => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) => cn(
-                  "flex items-center space-x-1 text-sm py-2",
+                  "flex items-center space-x-1 text-sm py-2 transition-all duration-200",
                   isActive 
                     ? "text-nexed-700 font-medium border-b-2 border-nexed-500" 
                     : "text-gray-600 hover:text-nexed-600"
@@ -109,7 +107,7 @@ export const AppLayout = () => {
                 <span>{item.label}</span>
               </NavLink>
             ))}
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center">
               <LogOut size={18} className="mr-2" />
               <span>Log out</span>
             </Button>
@@ -119,7 +117,7 @@ export const AppLayout = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-white pt-16">
+        <div className="md:hidden fixed inset-0 z-50 bg-white pt-16 animate-fade-in">
           <nav className="container mx-auto px-4 py-6 flex flex-col space-y-4">
             {navItems.map((item) => (
               <NavLink
@@ -127,7 +125,7 @@ export const AppLayout = () => {
                 to={item.to}
                 onClick={closeMobileMenu}
                 className={({ isActive }) => cn(
-                  "flex items-center space-x-3 p-3 rounded-md",
+                  "flex items-center space-x-3 p-3 rounded-md transition-all duration-200",
                   isActive 
                     ? "bg-nexed-50 text-nexed-700 font-medium" 
                     : "text-gray-700 hover:bg-gray-50"
@@ -146,7 +144,7 @@ export const AppLayout = () => {
       )}
 
       {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 py-6">
+      <main className="flex-1 container mx-auto px-4 py-6 animate-fade-in">
         <Outlet />
       </main>
     </div>

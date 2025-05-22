@@ -6,6 +6,7 @@ export function useDocumentFilters(documents: Document[]) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<DocumentCategory | null>(null);
   const [sortOption, setSortOption] = useState<"name" | "date" | "status">("date");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Filter documents based on search and category
   const filteredDocuments = useMemo(() => {
@@ -51,6 +52,8 @@ export function useDocumentFilters(documents: Document[]) {
     setActiveCategory,
     sortOption,
     setSortOption,
+    viewMode,
+    setViewMode,
     filteredDocuments,
     sortedDocuments,
     clearFilters

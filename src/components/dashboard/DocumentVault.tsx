@@ -14,28 +14,29 @@ interface DocumentVaultProps {
 }
 
 const DocumentVault: React.FC<DocumentVaultProps> = ({ documentsCount }) => {
+  const uploadPercentage = Math.round((documentsCount.uploaded / documentsCount.total) * 100);
+  
   return (
-    <Card className="nexed-card">
+    <Card className="hover:shadow-card-hover transition-shadow duration-300">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium">Document Vault</CardTitle>
         <CardDescription>Essential documents stored</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-2 flex justify-between text-sm">
-          <span>{Math.round((documentsCount.uploaded / documentsCount.total) * 100)}% uploaded</span>
+          <span>{uploadPercentage}% uploaded</span>
           <span className="text-nexed-600 font-medium">{documentsCount.uploaded} of {documentsCount.total} documents</span>
         </div>
         <Progress 
-          value={(documentsCount.uploaded / documentsCount.total) * 100} 
-          className="h-2" 
+          value={uploadPercentage} 
+          className="h-2 mb-4"
         />
-        <div className="mt-4">
-          <Button asChild variant="outline" size="sm">
-            <Link to="/app/documents" className="flex gap-2">
-              <Upload size={16} /> Upload Documents
-            </Link>
-          </Button>
-        </div>
+        <Button asChild variant="outline" size="sm" className="w-full group">
+          <Link to="/app/documents" className="flex items-center justify-center gap-2">
+            <Upload size={16} className="group-hover:scale-110 transition-transform" /> 
+            Upload Documents
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   );

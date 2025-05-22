@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -114,16 +115,16 @@ const Dashboard = () => {
   }
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Onboarding Checklist Dialog */}
       <OnboardingChecklist 
         open={showChecklist} 
         onOpenChange={setShowChecklist} 
       />
 
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold">Welcome back, {currentUser?.name || "Student"}</h1>
-        <p className="text-gray-600 mt-2">
+      <header className="page-header">
+        <h1 className="page-title">Welcome back, {currentUser?.name || "Student"}</h1>
+        <p className="page-subtitle">
           Here's an overview of your visa status and compliance
         </p>
       </header>

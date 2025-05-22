@@ -40,10 +40,9 @@ export function DocumentCard({ document, onSelect, onDelete, onRename, onToggleR
 
   return (
     <Card 
-      className="relative group transition-all duration-300" 
-      hover={true}
+      className="relative group transition-all duration-300 hover:shadow-card-hover hover:-translate-y-0.5" 
     >
-      <div className="absolute top-2 right-2 z-10">
+      <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
         <DocumentActions
           doc={document}
           onDelete={() => onDelete(document.id)}
