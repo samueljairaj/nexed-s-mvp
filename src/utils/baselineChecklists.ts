@@ -1,4 +1,3 @@
-
 import { Task } from "@/hooks/useComplianceTasks";
 import { DocumentCategory } from "@/types/document";
 
@@ -10,6 +9,8 @@ export interface BaselineChecklistItem {
   category: DocumentCategory;
   priority: "low" | "medium" | "high";
   phase: string;
+  isRecurring?: boolean;
+  recurringInterval?: string;
 }
 
 // Baseline checklists organized by visa type and phase
@@ -45,7 +46,9 @@ export const baselineChecklists: Record<string, BaselineChecklistItem[]> = {
       description: "Form I-20 with valid travel signature (signed within last 12 months)",
       category: "immigration",
       priority: "high",
-      phase: "F1"
+      phase: "F1",
+      isRecurring: true,
+      recurringInterval: "yearly"
     },
     {
       id: "f1-sevis-receipt",
@@ -137,7 +140,9 @@ export const baselineChecklists: Record<string, BaselineChecklistItem[]> = {
       description: "Mandatory 12-month self-evaluation for STEM OPT",
       category: "employment",
       priority: "medium",
-      phase: "STEM OPT"
+      phase: "STEM OPT",
+      isRecurring: true,
+      recurringInterval: "yearly"
     },
     {
       id: "stem-eval-24",
@@ -179,7 +184,9 @@ export const baselineChecklists: Record<string, BaselineChecklistItem[]> = {
       description: "Proof of health insurance meeting J-1 requirements",
       category: "personal",
       priority: "high",
-      phase: "J1"
+      phase: "J1",
+      isRecurring: true,
+      recurringInterval: "yearly"
     }
   ],
   "H1B": [
@@ -256,32 +263,39 @@ export function baselineItemsToAITasks(items: BaselineChecklistItem[]): Task[] {
     id: item.id,
     title: item.title,
     description: item.description,
-    dueDate: calculateDueDate(item.priority),
-    deadline: new Date(calculateDueDate(item.priority)),
+    dueDate: calculateDueDate(item.priority, item.isRecurring),
+    deadline: new Date(calculateDueDate(item.priority, item.isRecurring)),
     category: item.category,
     completed: false,
     priority: item.priority,
     phase: item.phase,
+    isRecurring: item.isRecurring || false,
+    recurringInterval: item.recurringInterval,
     createdAt: new Date(),
     updatedAt: new Date()
   }));
 }
 
-// Helper function to calculate a due date based on priority
-function calculateDueDate(priority: "low" | "medium" | "high"): string {
+// Helper function to calculate a due date based on priority and recurring status
+function calculateDueDate(priority: "low" | "medium" | "high", isRecurring?: boolean): string {
   const today = new Date();
   let daysToAdd = 0;
   
-  switch (priority) {
-    case "high":
-      daysToAdd = 7;
-      break;
-    case "medium":
-      daysToAdd = 30;
-      break;
-    case "low":
-      daysToAdd = 90;
-      break;
+  if (isRecurring) {
+    // For recurring tasks, set due date to 30 days from now
+    daysToAdd = 30;
+  } else {
+    switch (priority) {
+      case "high":
+        daysToAdd = 7;
+        break;
+      case "medium":
+        daysToAdd = 30;
+        break;
+      case "low":
+        daysToAdd = 90;
+        break;
+    }
   }
   
   const dueDate = new Date(today);
