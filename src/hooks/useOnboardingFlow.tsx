@@ -82,9 +82,11 @@ export function useOnboardingFlow() {
   }, [formData.visa.visaType]);
 
   // Form submission handlers
-  const handleAccountFormSubmit = useCallback((data: AccountCreationFormValues) => {
+  const handleAccountCreation = useCallback(async (data: AccountCreationFormValues) => {
+    console.log("Handling account creation", data);
     setFormData(prev => ({ ...prev, account: data }));
     goToNextStep();
+    return true;
   }, [goToNextStep]);
 
   const handlePersonalFormSubmit = useCallback(async (data: PersonalInfoFormValues) => {
@@ -111,9 +113,11 @@ export function useOnboardingFlow() {
       // Update local state and proceed
       setFormData(prev => ({ ...prev, personal: data }));
       goToNextStep();
+      return true;
     } catch (error) {
       console.error("Error saving personal info:", error);
       toast.error("Failed to save personal information");
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -140,9 +144,11 @@ export function useOnboardingFlow() {
       // Update local state and proceed
       setFormData(prev => ({ ...prev, visa: data }));
       goToNextStep();
+      return true;
     } catch (error) {
       console.error("Error saving visa info:", error);
       toast.error("Failed to save visa information");
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -168,9 +174,11 @@ export function useOnboardingFlow() {
       // Update local state and proceed
       setFormData(prev => ({ ...prev, academic: data }));
       goToNextStep();
+      return true;
     } catch (error) {
       console.error("Error saving academic info:", error);
       toast.error("Failed to save academic information");
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -194,9 +202,11 @@ export function useOnboardingFlow() {
       // Update local state and proceed to completion
       setFormData(prev => ({ ...prev, employment: data }));
       goToNextStep();
+      return true;
     } catch (error) {
       console.error("Error saving employment info:", error);
       toast.error("Failed to save employment information");
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -309,6 +319,34 @@ export function useOnboardingFlow() {
   const isEmployed = useCallback(() => {
     return formData.employment.employmentStatus === "Employed";
   }, [formData.employment.employmentStatus]);
+  
+  // Helper to determine if OPT/CPT status
+  const isOptOrCpt = false; // Add your logic here
+  
+  // Helper to determine if STEM OPT
+  const isStemOpt = false; // Add your logic here
+
+  // Add VisaTypeChange handler that was missing
+  const handleVisaTypeChange = useCallback((type: any) => {
+    setFormData(prev => ({
+      ...prev,
+      visa: {
+        ...prev.visa,
+        visaType: type
+      }
+    }));
+  }, []);
+  
+  // Add EmploymentStatusChange handler that was missing
+  const handleEmploymentStatusChange = useCallback((status: string) => {
+    setFormData(prev => ({
+      ...prev,
+      employment: {
+        ...prev.employment,
+        employmentStatus: status as "Employed" | "Not Employed"
+      }
+    }));
+  }, []);
 
   return {
     currentStep,
@@ -316,13 +354,17 @@ export function useOnboardingFlow() {
     formData,
     isF1OrJ1,
     isEmployed,
+    isOptOrCpt,
+    isStemOpt,
     goToNextStep,
     goToPreviousStep,
-    handleAccountFormSubmit,
+    handleAccountCreation,
     handlePersonalFormSubmit,
     handleVisaFormSubmit,
     handleAcademicFormSubmit,
     handleEmploymentFormSubmit,
+    handleVisaTypeChange,
+    handleEmploymentStatusChange,
     finishOnboarding,
     calculateProgress,
     setCurrentStep, // Expose for manual step control if needed

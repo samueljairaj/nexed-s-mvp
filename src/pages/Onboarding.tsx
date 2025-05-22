@@ -5,13 +5,16 @@ import { useOnboardingFlow } from "@/hooks/useOnboardingFlow";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { OnboardingNavigation } from "@/components/onboarding/OnboardingNavigation";
-import { OnboardingCompletion } from "@/components/onboarding/OnboardingCompletion";
-import { AccountCreationStep } from "@/components/onboarding/AccountCreationStep";
-import { PersonalInfoStep } from "@/components/onboarding/PersonalInfoStep";
-import { VisaStatusStep } from "@/components/onboarding/VisaStatusStep";
-import { AcademicInfoStep } from "@/components/onboarding/AcademicInfoStep";
-import { EmploymentStep } from "@/components/onboarding/EmploymentStep";
+import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepContent";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { 
+  AccountCreationFormValues, 
+  PersonalInfoFormValues, 
+  VisaStatusFormValues, 
+  AcademicInfoFormValues, 
+  EmploymentInfoFormValues 
+} from "@/types/onboarding";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -24,15 +27,15 @@ const Onboarding = () => {
     formData,
     isF1OrJ1,
     isEmployed,
-    handleAccountFormSubmit,
-    handlePersonalFormSubmit,
-    handleVisaFormSubmit,
-    handleAcademicFormSubmit,
-    handleEmploymentFormSubmit,
-    finishOnboarding,
+    isOptOrCpt,
+    isStemOpt,
+    handleAccountCreation,
+    handleVisaTypeChange,
+    handleEmploymentStatusChange,
     calculateProgress,
     goToPreviousStep,
-    setCurrentStep
+    setCurrentStep,
+    finishOnboarding
   } = onboardingFlow;
 
   // Step names for the progress indicator
@@ -62,6 +65,62 @@ const Onboarding = () => {
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === 4; // Employment is the last form step
 
+  // Form submission handlers that return boolean promises
+  const handleAccountFormSubmit = async (data: AccountCreationFormValues) => {
+    try {
+      await handleAccountCreation(data);
+      return true;
+    } catch (error) {
+      console.error("Account form submission error:", error);
+      toast.error("Failed to create account");
+      return false;
+    }
+  };
+
+  const handlePersonalFormSubmit = async (data: PersonalInfoFormValues) => {
+    try {
+      await onboardingFlow.handlePersonalFormSubmit(data);
+      return true;
+    } catch (error) {
+      console.error("Personal info submission error:", error);
+      toast.error("Failed to save personal information");
+      return false;
+    }
+  };
+
+  const handleVisaFormSubmit = async (data: VisaStatusFormValues) => {
+    try {
+      await onboardingFlow.handleVisaFormSubmit(data);
+      return true;
+    } catch (error) {
+      console.error("Visa information submission error:", error);
+      toast.error("Failed to save visa information");
+      return false;
+    }
+  };
+
+  const handleAcademicFormSubmit = async (data: AcademicInfoFormValues) => {
+    try {
+      await onboardingFlow.handleAcademicFormSubmit(data);
+      return true;
+    } catch (error) {
+      console.error("Academic information submission error:", error);
+      toast.error("Failed to save academic information");
+      return false;
+    }
+  };
+
+  const handleEmploymentFormSubmit = async (data: EmploymentInfoFormValues) => {
+    try {
+      await onboardingFlow.handleEmploymentFormSubmit(data);
+      return true;
+    } catch (error) {
+      console.error("Employment information submission error:", error);
+      toast.error("Failed to save employment information");
+      return false;
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -80,55 +139,30 @@ const Onboarding = () => {
         stepNames={stepNames}
       />
       
-      {/* Step content based on currentStep */}
-      <div className="mt-8">
-        {currentStep === 0 && (
-          <AccountCreationStep 
-            defaultValues={formData.account}
-            onSubmit={handleAccountFormSubmit}
-            isSubmitting={isSubmitting}
-          />
-        )}
-        
-        {currentStep === 1 && (
-          <PersonalInfoStep 
-            defaultValues={formData.personal}
-            onSubmit={handlePersonalFormSubmit}
-            isSubmitting={isSubmitting}
-          />
-        )}
-        
-        {currentStep === 2 && (
-          <VisaStatusStep 
-            defaultValues={formData.visa}
-            onSubmit={handleVisaFormSubmit}
-            isSubmitting={isSubmitting}
-          />
-        )}
-        
-        {currentStep === 3 && (
-          <AcademicInfoStep 
-            defaultValues={formData.academic}
-            onSubmit={handleAcademicFormSubmit}
-            isSubmitting={isSubmitting}
-          />
-        )}
-        
-        {currentStep === 4 && (
-          <EmploymentStep
-            defaultValues={formData.employment}
-            onSubmit={handleEmploymentFormSubmit}
-            isSubmitting={isSubmitting}
-          />
-        )}
-        
-        {currentStep === 5 && (
-          <OnboardingCompletion 
-            onComplete={finishOnboarding}
-            isSubmitting={isSubmitting}
-          />
-        )}
-      </div>
+      {/* Step content */}
+      <OnboardingStepContent
+        currentStep={currentStep}
+        accountData={formData.account}
+        personalData={formData.personal}
+        visaData={formData.visa}
+        academicData={formData.academic}
+        employmentData={formData.employment}
+        isSubmitting={isSubmitting}
+        currentUser={currentUser}
+        handleAccountCreation={handleAccountFormSubmit}
+        handlePersonalInfo={handlePersonalFormSubmit}
+        handleVisaStatus={handleVisaFormSubmit}
+        handleVisaTypeChange={handleVisaTypeChange}
+        handleAcademicInfo={handleAcademicFormSubmit}
+        handleEmploymentInfo={handleEmploymentFormSubmit}
+        handleEmploymentStatusChange={handleEmploymentStatusChange}
+        isF1OrJ1={isF1OrJ1()}
+        isEmployed={isEmployed}
+        isOptOrCpt={isOptOrCpt}
+        isStemOpt={isStemOpt}
+        handleFinish={finishOnboarding}
+        handleBackToLogin={handleBackToLogin}
+      />
       
       {/* Navigation buttons - only show if not on the completion screen */}
       {currentStep < 5 && (
