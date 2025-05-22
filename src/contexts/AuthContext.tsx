@@ -33,7 +33,11 @@ export interface UserProfile {
   employmentStatus?: string;
   jobTitle?: string;
   authType?: string;
+  authStartDate?: Date | string;
+  authEndDate?: Date | string;
   eadNumber?: string;
+  unemploymentDays?: string;
+  eVerifyNumber?: string;
   employer?: string;
 }
 
@@ -159,12 +163,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           passportNumber: data.passport_number || undefined,
           address: data.address || undefined,
           visa_expiry_date: data.visa_expiry_date || undefined,
-          // Handle employer fields - use a type assertion to tell TypeScript these fields could exist
+          // Employment fields
           employerName: (data as any).employer_name || undefined,
           employmentStatus: (data as any).employment_status || undefined,
           jobTitle: (data as any).job_title || undefined,
           authType: (data as any).auth_type || undefined,
+          authStartDate: (data as any).auth_start_date || undefined,
+          authEndDate: (data as any).auth_end_date || undefined,
           eadNumber: (data as any).ead_number || undefined,
+          unemploymentDays: (data as any).unemployment_days || undefined,
+          eVerifyNumber: (data as any).e_verify_number || undefined,
           employer: (data as any).employer || undefined
         };
         
