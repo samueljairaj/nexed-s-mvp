@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageCircle, Send, Clock, FileText, AlertTriangle, Info, Loader2, BellPlus } from "lucide-react";
 import { useAIAssistant, Message } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 const Assistant = () => {
   const { currentUser } = useAuth();
@@ -76,131 +76,122 @@ const Assistant = () => {
   ];
 
   return (
-    <div className="animate-fade-in">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold">AI Immigration Assistant</h1>
-        <p className="text-gray-600 mt-2">
+    <div className="h-[calc(100vh-120px)] flex flex-col animate-fade-in">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold">AI Immigration Assistant</h1>
+        <p className="text-gray-600 text-sm">
           Get answers to your visa and immigration questions
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chat Section */}
-        <Card className="lg:col-span-2 shadow-md hover:shadow-lg transition-shadow duration-300">
-          <CardHeader className="bg-gradient-to-r from-nexed-50 to-white pb-3 border-b">
-            <CardTitle className="flex items-center text-xl">
-              <MessageCircle className="h-5 w-5 mr-2 text-nexed-600" />
-              Chat with your Assistant
-            </CardTitle>
-            <CardDescription>
-              Ask me anything about your visa status, compliance requirements, or deadlines
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="flex flex-col h-[550px]">
-              {/* Message History */}
-              <div className="flex-1 overflow-y-auto p-5">
-                <div className="space-y-5">
-                  {messages.map(message => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.role === "user" ? "justify-end" : "justify-start"
-                      }`}
-                    >
+      <div className="flex flex-1 gap-6 overflow-hidden">
+        {/* Main Chat Area */}
+        <div className="flex flex-col flex-1 h-full overflow-hidden">
+          <Card className="flex flex-col flex-1 shadow-sm overflow-hidden">
+            {/* Message History */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-5">
+              {messages.map(message => (
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`flex max-w-[85%] ${
+                      message.role === "user" ? "flex-row-reverse" : ""
+                    }`}
+                  >
+                    <Avatar className={`h-8 w-8 ${
+                      message.role === "user" 
+                        ? "ml-3 bg-nexed-100 text-nexed-600 ring-2 ring-nexed-200" 
+                        : "mr-3 bg-nexed-600 text-white ring-2 ring-nexed-300"
+                    }`}>
+                      <span className="text-xs font-medium">
+                        {message.role === "user" ? currentUser?.name?.charAt(0) || "U" : "A"}
+                      </span>
+                    </Avatar>
+                    <div>
                       <div
-                        className={`flex max-w-[85%] ${
-                          message.role === "user" ? "flex-row-reverse" : ""
+                        className={`rounded-xl p-4 ${
+                          message.role === "user"
+                            ? "bg-nexed-500 text-white"
+                            : "bg-white border shadow-sm"
                         }`}
                       >
-                        <Avatar className={`h-8 w-8 ${
-                          message.role === "user" 
-                            ? "ml-3 bg-nexed-100 text-nexed-600 ring-2 ring-nexed-200" 
-                            : "mr-3 bg-nexed-600 text-white ring-2 ring-nexed-300"
-                        }`}>
-                          <span className="text-xs font-medium">
-                            {message.role === "user" ? currentUser?.name?.charAt(0) || "U" : "A"}
-                          </span>
-                        </Avatar>
-                        <div>
-                          <div
-                            className={`rounded-xl p-4 ${
-                              message.role === "user"
-                                ? "bg-nexed-500 text-white"
-                                : "bg-white border shadow-sm"
-                            }`}
-                          >
-                            <p className="whitespace-pre-line">{message.content}</p>
-                          </div>
-                          <div className={`text-xs text-gray-500 mt-1.5 ${
-                            message.role === "user" ? "text-right mr-1" : "ml-1"
-                          }`}>
-                            {message.timestamp}
-                          </div>
-                        </div>
+                        <p className="whitespace-pre-line">{message.content}</p>
+                      </div>
+                      <div className={`text-xs text-gray-500 mt-1.5 ${
+                        message.role === "user" ? "text-right mr-1" : "ml-1"
+                      }`}>
+                        {message.timestamp}
                       </div>
                     </div>
-                  ))}
-                  {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="flex">
-                        <Avatar className="h-8 w-8 mr-3 bg-nexed-600 text-white ring-2 ring-nexed-300">
-                          <span className="text-xs font-medium">A</span>
-                        </Avatar>
-                        <div className="rounded-xl p-4 bg-white border shadow-sm">
-                          <div className="flex space-x-2">
-                            <div className="h-2.5 w-2.5 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                            <div className="h-2.5 w-2.5 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                            <div className="h-2.5 w-2.5 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
+                  </div>
                 </div>
-              </div>
-              
-              {/* Input Area */}
-              <div className="border-t p-4">
-                <form onSubmit={handleSubmit} className="flex space-x-2">
-                  <Input
-                    placeholder="Type your question..."
-                    value={inputValue}
-                    onChange={e => setInputValue(e.target.value)}
-                    className="flex-1 shadow-sm focus-visible:ring-nexed-500"
-                    disabled={isLoading}
-                  />
-                  <Button 
-                    type="submit" 
-                    disabled={!inputValue.trim() || isLoading}
-                    className="bg-gradient-to-br from-nexed-500 to-nexed-700 hover:shadow-md transition-all duration-200"
-                  >
-                    {isLoading ? 
-                      <Loader2 className="h-4 w-4 animate-spin" /> : 
-                      <Send className="h-4 w-4" />
-                    }
-                  </Button>
-                </form>
-              </div>
+              ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="flex">
+                    <Avatar className="h-8 w-8 mr-3 bg-nexed-600 text-white ring-2 ring-nexed-300">
+                      <span className="text-xs font-medium">A</span>
+                    </Avatar>
+                    <div className="rounded-xl p-4 bg-white border shadow-sm">
+                      <div className="flex space-x-2">
+                        <div className="h-2.5 w-2.5 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                        <div className="h-2.5 w-2.5 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                        <div className="h-2.5 w-2.5 bg-nexed-400 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
-          </CardContent>
-        </Card>
+            
+            {/* Input Area */}
+            <div className="border-t p-4 bg-white">
+              <form onSubmit={handleSubmit} className="flex space-x-2">
+                <Input
+                  placeholder="Type your question..."
+                  value={inputValue}
+                  onChange={e => setInputValue(e.target.value)}
+                  className="flex-1 shadow-sm focus-visible:ring-nexed-500"
+                  disabled={isLoading}
+                />
+                <Button 
+                  type="submit" 
+                  disabled={!inputValue.trim() || isLoading}
+                  className="bg-gradient-to-br from-nexed-500 to-nexed-700 hover:shadow-md transition-all duration-200"
+                >
+                  {isLoading ? 
+                    <Loader2 className="h-4 w-4 animate-spin" /> : 
+                    <Send className="h-4 w-4" />
+                  }
+                </Button>
+              </form>
+            </div>
+          </Card>
 
-        {/* Sidebar Section */}
-        <div className="space-y-6">
+          <div className="mt-4">
+            <Card className="bg-blue-50 border-blue-200 p-3 flex items-center shadow-sm">
+              <AlertTriangle className="h-4 w-4 text-amber-500 mr-3 flex-shrink-0" />
+              <p className="text-xs text-gray-700">
+                This AI assistant provides general guidance only. For official immigration advice, please consult with your university's international student office or a qualified immigration attorney.
+              </p>
+            </Card>
+          </div>
+        </div>
+
+        {/* Side Panel */}
+        <div className="w-64 lg:w-80 shrink-0 hidden lg:flex flex-col gap-4 overflow-auto">
           {/* Reminder Examples Card */}
-          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-            <CardHeader className="bg-nexed-50 pb-3 border-b">
-              <CardTitle className="flex items-center text-lg">
-                <BellPlus className="h-5 w-5 mr-2 text-nexed-600" />
-                Create Reminders
-              </CardTitle>
-              <CardDescription>
-                Ask me to create reminders for important tasks
-              </CardDescription>
-            </CardHeader>
+          <Card className="shadow-sm hover:shadow-card-hover transition-shadow duration-300 overflow-hidden">
             <CardContent className="p-4">
+              <h3 className="font-medium text-sm mb-3 flex items-center">
+                <BellPlus className="h-4 w-4 mr-2 text-nexed-600" />
+                Create Reminders
+              </h3>
               <div className="space-y-2">
                 {reminderExamples.map((example, index) => (
                   <Button 
@@ -210,7 +201,7 @@ const Assistant = () => {
                     onClick={() => suggestQuestion(example)}
                   >
                     <Clock className="h-4 w-4 mr-2 flex-shrink-0 text-nexed-600" />
-                    <span className="truncate text-sm">{example}</span>
+                    <span className="truncate text-xs">{example}</span>
                   </Button>
                 ))}
               </div>
@@ -218,17 +209,12 @@ const Assistant = () => {
           </Card>
 
           {/* Common Questions Card */}
-          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-            <CardHeader className="bg-nexed-50 pb-3 border-b">
-              <CardTitle className="flex items-center text-lg">
-                <MessageCircle className="h-5 w-5 mr-2 text-nexed-600" />
-                Common Questions
-              </CardTitle>
-              <CardDescription>
-                Quick access to frequently asked questions
-              </CardDescription>
-            </CardHeader>
+          <Card className="shadow-sm hover:shadow-card-hover transition-shadow duration-300 overflow-hidden">
             <CardContent className="p-4">
+              <h3 className="font-medium text-sm mb-3 flex items-center">
+                <MessageCircle className="h-4 w-4 mr-2 text-nexed-600" />
+                Common Questions
+              </h3>
               <div className="flex overflow-x-auto pb-2 mb-2 scrollbar-thin gap-2">
                 <Badge 
                   variant={selectedCategory === null ? "default" : "outline"} 
@@ -276,7 +262,7 @@ const Assistant = () => {
                     onClick={() => suggestQuestion(faq.question)}
                   >
                     <MessageCircle className="h-4 w-4 mr-2 flex-shrink-0 text-nexed-600" />
-                    <span className="truncate text-sm">{faq.question}</span>
+                    <span className="truncate text-xs">{faq.question}</span>
                   </Button>
                 ))}
               </div>
@@ -284,71 +270,51 @@ const Assistant = () => {
           </Card>
           
           {/* Resources & Tips Card */}
-          <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-            <CardHeader className="bg-nexed-50 pb-3 border-b">
-              <CardTitle className="flex items-center text-lg">
-                <Info className="h-5 w-5 mr-2 text-nexed-600" />
-                Resources & Tips
-              </CardTitle>
-              <CardDescription>
-                Helpful information for international students
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Tabs defaultValue="resources" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 rounded-none">
-                  <TabsTrigger value="resources">Resources</TabsTrigger>
-                  <TabsTrigger value="tips">Tips</TabsTrigger>
-                </TabsList>
-                <TabsContent value="resources" className="space-y-4 p-4">
-                  <h3 className="font-medium text-lg text-nexed-800">Official Links</h3>
-                  <div className="space-y-2">
-                    <a href="https://www.uscis.gov/" target="_blank" rel="noopener noreferrer" 
-                       className="flex items-center p-2.5 hover:bg-nexed-50 rounded-md border border-transparent hover:border-nexed-200 transition-colors">
-                      <FileText className="h-4 w-4 mr-2 text-nexed-600" />
-                      <span className="text-nexed-700 text-sm">USCIS Official Website</span>
-                    </a>
-                    <a href="https://studyinthestates.dhs.gov/" target="_blank" rel="noopener noreferrer" 
-                       className="flex items-center p-2.5 hover:bg-nexed-50 rounded-md border border-transparent hover:border-nexed-200 transition-colors">
-                      <FileText className="h-4 w-4 mr-2 text-nexed-600" />
-                      <span className="text-nexed-700 text-sm">Study in the States (DHS)</span>
-                    </a>
-                    <a href="https://www.ice.gov/sevis" target="_blank" rel="noopener noreferrer" 
-                       className="flex items-center p-2.5 hover:bg-nexed-50 rounded-md border border-transparent hover:border-nexed-200 transition-colors">
-                      <FileText className="h-4 w-4 mr-2 text-nexed-600" />
-                      <span className="text-nexed-700 text-sm">SEVIS Information</span>
-                    </a>
+          <Card className="shadow-sm hover:shadow-card-hover transition-shadow duration-300 flex-1 overflow-hidden">
+            <Tabs defaultValue="resources" className="w-full h-full">
+              <TabsList className="grid w-full grid-cols-2 rounded-none">
+                <TabsTrigger value="resources">Resources</TabsTrigger>
+                <TabsTrigger value="tips">Tips</TabsTrigger>
+              </TabsList>
+              <TabsContent value="resources" className="space-y-4 p-4 overflow-auto">
+                <h3 className="font-medium text-sm text-nexed-800">Official Links</h3>
+                <div className="space-y-2">
+                  <a href="https://www.uscis.gov/" target="_blank" rel="noopener noreferrer" 
+                     className="flex items-center p-2.5 hover:bg-nexed-50 rounded-md border border-transparent hover:border-nexed-200 transition-colors">
+                    <FileText className="h-4 w-4 mr-2 text-nexed-600" />
+                    <span className="text-nexed-700 text-xs">USCIS Official Website</span>
+                  </a>
+                  <a href="https://studyinthestates.dhs.gov/" target="_blank" rel="noopener noreferrer" 
+                     className="flex items-center p-2.5 hover:bg-nexed-50 rounded-md border border-transparent hover:border-nexed-200 transition-colors">
+                    <FileText className="h-4 w-4 mr-2 text-nexed-600" />
+                    <span className="text-nexed-700 text-xs">Study in the States (DHS)</span>
+                  </a>
+                  <a href="https://www.ice.gov/sevis" target="_blank" rel="noopener noreferrer" 
+                     className="flex items-center p-2.5 hover:bg-nexed-50 rounded-md border border-transparent hover:border-nexed-200 transition-colors">
+                    <FileText className="h-4 w-4 mr-2 text-nexed-600" />
+                    <span className="text-nexed-700 text-xs">SEVIS Information</span>
+                  </a>
+                </div>
+              </TabsContent>
+              <TabsContent value="tips" className="p-4 overflow-auto">
+                <div className="space-y-4">
+                  <div className="flex items-start bg-nexed-50 p-3 rounded-lg">
+                    <Clock className="h-4 w-4 mt-1 mr-2 text-nexed-600" />
+                    <p className="text-xs">Always file applications well before deadlines to avoid status issues</p>
                   </div>
-                </TabsContent>
-                <TabsContent value="tips" className="p-4">
-                  <div className="space-y-4">
-                    <div className="flex items-start bg-nexed-50 p-3 rounded-lg">
-                      <Clock className="h-4 w-4 mt-1 mr-2 text-nexed-600" />
-                      <p className="text-sm">Always file applications well before deadlines to avoid status issues</p>
-                    </div>
-                    <div className="flex items-start bg-amber-50 p-3 rounded-lg">
-                      <AlertTriangle className="h-4 w-4 mt-1 mr-2 text-amber-500" />
-                      <p className="text-sm">Keep digital and physical copies of all your immigration documents</p>
-                    </div>
-                    <div className="flex items-start bg-nexed-50 p-3 rounded-lg">
-                      <Info className="h-4 w-4 mt-1 mr-2 text-nexed-600" />
-                      <p className="text-sm">Always consult with your DSO before making decisions that might affect your visa status</p>
-                    </div>
+                  <div className="flex items-start bg-amber-50 p-3 rounded-lg">
+                    <AlertTriangle className="h-4 w-4 mt-1 mr-2 text-amber-500" />
+                    <p className="text-xs">Keep digital and physical copies of all your immigration documents</p>
                   </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
+                  <div className="flex items-start bg-nexed-50 p-3 rounded-lg">
+                    <Info className="h-4 w-4 mt-1 mr-2 text-nexed-600" />
+                    <p className="text-xs">Always consult with your DSO before making decisions that might affect your visa status</p>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </Card>
         </div>
-      </div>
-
-      <div className="mt-6">
-        <Card className="bg-blue-50 border-blue-200 p-4 flex items-center shadow-sm">
-          <AlertTriangle className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" />
-          <p className="text-sm text-gray-700">
-            This AI assistant provides general guidance only. For official immigration advice, please consult with your university's international student office or a qualified immigration attorney.
-          </p>
-        </Card>
       </div>
     </div>
   );
