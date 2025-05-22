@@ -1,4 +1,3 @@
-
 import { useRef } from "react";
 import { AccountCreationStep } from "./AccountCreationStep";
 import { PersonalInfoStep } from "./PersonalInfoStep";

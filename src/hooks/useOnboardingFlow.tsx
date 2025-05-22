@@ -52,18 +52,8 @@ export function useOnboardingFlow() {
   // Step management helpers
   const goToNextStep = useCallback(() => {
     console.log("Moving to next step");
-    setCurrentStep(prev => {
-      // If on visa step and not F1/J1, skip academic
-      if (prev === 2) {
-        const visaType = formData.visa.visaType;
-        if (visaType !== "F1" && visaType !== "J1") {
-          console.log("Skipping academic step");
-          return 4; // Skip to employment
-        }
-      }
-      return prev + 1;
-    });
-  }, [formData.visa.visaType]);
+    setCurrentStep(prev => prev + 1);
+  }, []);
 
   const goToPreviousStep = useCallback(() => {
     console.log("Moving to previous step");
@@ -259,18 +249,6 @@ export function useOnboardingFlow() {
     try {
       const tasks = generateMockTasks(visaType);
       const normalizedVisaType = normalizeVisaType(visaType);
-      
-      const dbTasks = tasks.map(task => ({
-        user_id: userId,
-        title: task.title,
-        description: task.description,
-        due_date: task.dueDate,
-        is_completed: task.completed,
-        category: task.category as string,
-        phase: task.phase || 'general',
-        priority: task.priority,
-        visa_type: normalizedVisaType
-      }));
 
       // First, delete any existing tasks for this user
       const { error: deleteError } = await supabase
@@ -284,6 +262,18 @@ export function useOnboardingFlow() {
       }
 
       // Then insert the new tasks
+      const dbTasks = tasks.map(task => ({
+        user_id: userId,
+        title: task.title,
+        description: task.description,
+        due_date: task.dueDate,
+        is_completed: task.completed,
+        category: task.category as string,
+        phase: task.phase || 'general',
+        priority: task.priority,
+        visa_type: normalizedVisaType
+      }));
+
       const { error: insertError } = await supabase
         .from('compliance_tasks')
         .insert(dbTasks);
