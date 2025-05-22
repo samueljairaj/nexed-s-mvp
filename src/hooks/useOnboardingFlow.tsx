@@ -316,9 +316,7 @@ export function useOnboardingFlow() {
   }, [formData.visa.visaType]);
 
   // Helper to determine if user is employed
-  const isEmployed = useCallback(() => {
-    return formData.employment.employmentStatus === "Employed";
-  }, [formData.employment.employmentStatus]);
+  const isEmployed = formData.employment.employmentStatus === "Employed";
   
   // Helper to determine if OPT/CPT status
   const isOptOrCpt = false; // Add your logic here
