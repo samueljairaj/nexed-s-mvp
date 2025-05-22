@@ -49,6 +49,14 @@ export function useAICompliance() {
     }
   };
 
+  // Helper to ensure we always pass a string to formatDateOrDefault
+  const ensureString = (value: string | Date | null | undefined): string | null | undefined => {
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+    return value;
+  };
+
   const generateCompliance = async (userData?: EnhancedUserData) => {
     setIsGenerating(true);
     
@@ -86,15 +94,15 @@ export function useAICompliance() {
         country: userProfile.country,
         visaType: userProfile.visaType,
         university: userProfile.university || "",
-        courseStartDate: userProfile.courseStartDate ? formatDateOrDefault(userProfile.courseStartDate) : null,
-        usEntryDate: userProfile.usEntryDate ? formatDateOrDefault(userProfile.usEntryDate) : null,
-        employmentStartDate: userProfile.employmentStartDate ? formatDateOrDefault(userProfile.employmentStartDate) : null,
+        courseStartDate: userProfile.courseStartDate ? formatDateOrDefault(ensureString(userProfile.courseStartDate)) : null,
+        usEntryDate: userProfile.usEntryDate ? formatDateOrDefault(ensureString(userProfile.usEntryDate)) : null,
+        employmentStartDate: userProfile.employmentStartDate ? formatDateOrDefault(ensureString(userProfile.employmentStartDate)) : null,
         employmentStatus: employmentStatus,
         hasTransferred: Boolean(userProfile.previousUniversity || userProfile.transferDate),
         fieldOfStudy: userProfile.fieldOfStudy || "",
         employer: userProfile.employer || userProfile.employerName || "",
         optType: userProfile.optType || "",
-        graduationDate: userProfile.graduationDate ? formatDateOrDefault(userProfile.graduationDate) : null
+        graduationDate: userProfile.graduationDate ? formatDateOrDefault(ensureString(userProfile.graduationDate)) : null
       };
 
       const { data, error } = await supabase.functions.invoke('generate-compliance', {
@@ -115,7 +123,7 @@ export function useAICompliance() {
       // Transform tasks to match database schema and ensure valid dates
       const transformedTasks = data.tasks.map((task: AITask) => {
         // Ensure we have a valid due date
-        const dueDate = task.dueDate ? formatDateOrDefault(task.dueDate) : '2025-06-30';
+        const dueDate = task.dueDate ? formatDateOrDefault(ensureString(task.dueDate)) : '2025-06-30';
         
         return {
           user_id: currentUser.id,
