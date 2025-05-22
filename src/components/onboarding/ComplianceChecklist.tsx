@@ -307,25 +307,28 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
 
   const insights = generateInsights();
 
-  // Handle continue to dashboard button click
+  // Handle continue to dashboard button click - FIXED VERSION
   const handleContinueToDashboard = () => {
     console.log("Continue to dashboard button clicked from checklist dialog");
     
-    // First close the dialog
-    onOpenChange(false);
-    
-    // IMPORTANT: Don't navigate directly from here - let the parent handle navigation
-    // This prevents conflicts between the two navigation processes
-    
-    // Check if there's an onboarding completion in progress
-    if (localStorage.getItem('onboarding_completion_in_progress')) {
-      console.log("Onboarding completion already in progress from checklist dialog");
-      // Don't do anything - the parent component will handle navigation
-    } else {
-      // We should never get here, but just in case, add a safety check
-      console.log("No onboarding completion in progress, setting flag from checklist dialog");
-      localStorage.setItem('onboarding_completion_in_progress', 'true');
+    // First signal parent component that dialog should close
+    if (onOpenChange) {
+      onOpenChange(false);
     }
+    
+    // Check if there's an onboarding completion in progress flag
+    const inProgress = localStorage.getItem('onboarding_completion_in_progress');
+    
+    if (!inProgress) {
+      // If no flag exists, set it to prevent navigation loops
+      localStorage.setItem('onboarding_completion_in_progress', 'true');
+      console.log("Setting onboarding_completion_in_progress flag");
+    } else {
+      console.log("Onboarding completion already in progress");
+    }
+    
+    // Intentionally not navigating here - the parent component will handle navigation
+    // This prevents conflicts with the onboarding completion process
   };
 
   // Render document list based on category
@@ -477,6 +480,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
   return (
     <Dialog open={open} onOpenChange={(newOpenState) => {
       // If closing and we're in the middle of onboarding, don't allow closing
+      // unless it's being closed by our handleContinueToDashboard function
       if (!newOpenState && localStorage.getItem('onboarding_completion_in_progress')) {
         console.log("Preventing checklist close because onboarding completion is in progress");
         return;
@@ -670,11 +674,11 @@ export function ComplianceChecklist({ open, onOpenChange, userData }: Compliance
             </ul>
           </div>
           
-          {/* Call to Action for Dashboard - Modified to use our handleContinueToDashboard */}
+          {/* Call to Action for Dashboard - Using the fixed version of handleContinueToDashboard */}
           <div className="mt-8 flex justify-center">
             <Button 
               onClick={handleContinueToDashboard}
-              className="px-6"
+              className="px-6 nexed-gradient-button"
             >
               Continue to Dashboard
             </Button>
