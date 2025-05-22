@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -7,10 +6,8 @@ import { DocumentCategory } from "@/types/document";
 import { getBaselineChecklist, baselineItemsToAITasks } from "@/utils/baselineChecklists";
 import { Task } from "@/hooks/useComplianceTasks";
 
-// Use the same Task type as imported from useComplianceTasks
 export type AITask = Task;
 
-// Define a comprehensive interface for user profile data
 interface EnhancedUserData {
   name?: string;
   email?: string;
@@ -39,17 +36,14 @@ export function useAICompliance() {
     setIsGenerating(true);
     
     try {
-      // Combine current user data with any additional data provided
       const userProfile = {
         ...currentUser,
         ...userData
       };
       
-      // Step 1: Generate baseline checklist based on visa type
       const visaType = userProfile.visaType || "F1";
       const employmentStatus = mapEmploymentStatus(userProfile);
       
-      // Determine the appropriate phase
       let phase = "F1";
       if (employmentStatus === "OPT") {
         phase = "OPT";
@@ -61,19 +55,14 @@ export function useAICompliance() {
         phase = "H1B";
       }
       
-      // Get baseline checklist items
       const baselineItems = getBaselineChecklist(visaType, phase);
-      
-      // Convert baseline items to AITask format
       const baselineTasks = baselineItemsToAITasks(baselineItems);
       
-      // If there are no items in the baseline, return an empty array early
       if (baselineItems.length === 0) {
         setIsGenerating(false);
         return [];
       }
       
-      // Include additional fields needed for rules evaluation
       const enhancedUserData = {
         name: userProfile.name,
         email: userProfile.email,
@@ -83,7 +72,6 @@ export function useAICompliance() {
         courseStartDate: userProfile.courseStartDate ? new Date(userProfile.courseStartDate).toISOString() : null,
         usEntryDate: userProfile.usEntryDate ? new Date(userProfile.usEntryDate).toISOString() : null,
         employmentStartDate: userProfile.employmentStartDate ? new Date(userProfile.employmentStartDate).toISOString() : null,
-        // Additional fields for rules engine
         employmentStatus: employmentStatus,
         hasTransferred: Boolean(userProfile.previousUniversity || userProfile.transferDate),
         fieldOfStudy: userProfile.fieldOfStudy || "",
@@ -92,12 +80,10 @@ export function useAICompliance() {
         graduationDate: userProfile.graduationDate ? new Date(userProfile.graduationDate).toISOString() : null
       };
 
-      // Step 2: Use AI to enhance the baseline checklist
-      // Call the Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('generate-compliance', {
         body: { 
           userData: enhancedUserData,
-          baselineTasks: baselineTasks  // Pass the baseline checklist to the AI
+          baselineTasks: baselineTasks
         }
       });
 
@@ -107,6 +93,29 @@ export function useAICompliance() {
 
       if (!data || !data.tasks || !Array.isArray(data.tasks)) {
         throw new Error('Invalid response from compliance service');
+      }
+
+      // Delete existing tasks for this user
+      const { error: deleteError } = await supabase
+        .from('compliance_tasks')
+        .delete()
+        .eq('user_id', currentUser.id);
+
+      if (deleteError) {
+        console.error('Error deleting existing tasks:', deleteError);
+        throw new Error('Failed to update compliance tasks');
+      }
+
+      // Insert new tasks
+      const { error: insertError } = await supabase
+        .from('compliance_tasks')
+        .insert(data.tasks.map((task: AITask) => ({
+          ...task,
+          user_id: currentUser.id
+        })));
+
+      if (insertError) {
+        throw new Error('Failed to save generated tasks');
       }
 
       toast.success("Personalized compliance checklist generated");
@@ -120,7 +129,6 @@ export function useAICompliance() {
     }
   };
 
-  // Helper function to map user's employment status to standardized values
   function mapEmploymentStatus(userProfile: any): string {
     if (!userProfile) return "Unknown";
     
@@ -128,7 +136,6 @@ export function useAICompliance() {
     const employmentStatus = userProfile.employmentStatus?.toLowerCase();
     const optType = userProfile.optType?.toLowerCase();
     
-    // STEM OPT cases
     if (
       (visaType === 'f1' && optType === 'stem') || 
       (employmentStatus?.includes('stem')) ||
@@ -137,7 +144,6 @@ export function useAICompliance() {
       return "STEM OPT Extension";
     }
     
-    // Regular OPT cases
     if (
       (visaType === 'f1' && employmentStatus?.includes('opt')) ||
       (optType === 'regular') ||
@@ -146,7 +152,6 @@ export function useAICompliance() {
       return "OPT";
     }
     
-    // CPT cases
     if (
       (visaType === 'f1' && employmentStatus?.includes('cpt')) ||
       (userProfile.hasOwnProperty('isCpt') && userProfile.isCpt === true)
@@ -154,12 +159,10 @@ export function useAICompliance() {
       return "CPT";
     }
     
-    // H1B cases
     if (visaType === 'h1b') {
       return "H1B Employment";
     }
     
-    // Unemployed students
     if (
       (visaType === 'f1' || visaType === 'j1') && 
       (!userProfile.employer && !userProfile.employerName)
@@ -167,7 +170,6 @@ export function useAICompliance() {
       return "Unemployed Student";
     }
     
-    // Default employed cases
     if (userProfile.employer || userProfile.employerName) {
       return "Employed";
     }

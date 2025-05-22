@@ -187,13 +187,12 @@ export function useOnboardingFlow() {
     setIsSubmitting(true);
     try {
       const updateData: Record<string, any> = {
-        employment_status: data.employmentStatus, // Corrected column name
+        employment_status: data.employmentStatus,
       };
       
       if (data.employmentStatus === "Employed") {
         updateData.employer_name = data.employerName;
         updateData.job_title = data.jobTitle;
-        // Removing jobLocation reference - it doesn't exist in database
         
         if (data.employmentStartDate) {
           updateData.employment_start_date = dateUtils.formatToYYYYMMDD(data.employmentStartDate);
@@ -207,7 +206,6 @@ export function useOnboardingFlow() {
         if (data.authorizationType && data.authorizationType !== "None") {
           updateData.auth_type = data.authorizationType;
           
-          // Add authorization dates if provided
           if (data.authStartDate) {
             updateData.auth_start_date = dateUtils.formatToYYYYMMDD(data.authStartDate);
           }
@@ -216,17 +214,14 @@ export function useOnboardingFlow() {
             updateData.auth_end_date = dateUtils.formatToYYYYMMDD(data.authEndDate);
           }
           
-          // Add EAD number if provided
           if (data.eadNumber) {
             updateData.ead_number = data.eadNumber;
           }
           
-          // Add unemployment days if provided
           if (data.unemploymentDaysUsed) {
             updateData.unemployment_days = data.unemploymentDaysUsed;
           }
           
-          // Add E-Verify number for STEM OPT
           if (data.authorizationType === "STEM OPT" && data.eVerifyNumber) {
             updateData.e_verify_number = data.eVerifyNumber;
           }
@@ -236,7 +231,6 @@ export function useOnboardingFlow() {
       console.log("Updating profile with employment data:", updateData);
       await updateProfile(updateData);
       
-      // Update local state and proceed to completion
       setFormData(prev => ({
         ...prev,
         employment: data
@@ -277,16 +271,25 @@ export function useOnboardingFlow() {
         priority: task.priority,
         visa_type: normalizedVisaType
       }));
-      
-      const { error } = await supabase
+
+      // First, delete any existing tasks for this user
+      const { error: deleteError } = await supabase
         .from('compliance_tasks')
-        .upsert(dbTasks, {
-          onConflict: 'user_id,title',
-          ignoreDuplicates: false
-        });
-        
-      if (error) {
-        console.error('Error saving tasks to database:', error);
+        .delete()
+        .eq('user_id', userId);
+
+      if (deleteError) {
+        console.error('Error deleting existing tasks:', deleteError);
+        return false;
+      }
+
+      // Then insert the new tasks
+      const { error: insertError } = await supabase
+        .from('compliance_tasks')
+        .insert(dbTasks);
+
+      if (insertError) {
+        console.error('Error saving tasks to database:', insertError);
         return false;
       }
       
@@ -301,31 +304,24 @@ export function useOnboardingFlow() {
   const finishOnboarding = useCallback(async () => {
     console.log("Starting onboarding completion process");
     
-    // Set flag to prevent redirect loops during the process
     localStorage.setItem('onboarding_completion_in_progress', 'true');
     setIsSubmitting(true);
     
     try {
-      // Mark onboarding as complete in the database
       await completeOnboarding();
       
-      // Generate tasks if this is a student (not DSO)
       if (!isDSO && currentUser?.id && currentUser.visaType) {
         console.log("Creating tasks for student");
         await createPersonalizedTasks(currentUser.id, currentUser.visaType);
       }
 
-      // Toast success
       toast.success("Onboarding completed successfully!");
       
-      // Remove flag after completion
       localStorage.removeItem('onboarding_completion_in_progress');
       
-      // Navigate to appropriate dashboard with replace to prevent back button issues
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Navigating to:", targetPath);
       
-      // Add a small delay to ensure database updates are reflected
       setTimeout(() => {
         console.log("Performing delayed navigation");
         navigate(targetPath, { replace: true });
@@ -336,7 +332,6 @@ export function useOnboardingFlow() {
       console.error("Error completing onboarding:", error);
       toast.error("Failed to complete onboarding");
       
-      // Clear flag on error
       localStorage.removeItem('onboarding_completion_in_progress');
       return false;
     } finally {
@@ -344,27 +339,19 @@ export function useOnboardingFlow() {
     }
   }, [completeOnboarding, currentUser, isDSO, navigate]);
 
-  // Calculate progress for progress bar
   const calculateProgress = useCallback(() => {
     const totalSteps = 5;
     return Math.round(((currentStep >= totalSteps ? totalSteps : currentStep) / totalSteps) * 100);
   }, [currentStep]);
 
-  // Helper to determine if visa type is F1 or J1 - defined as a function
   const isF1OrJ1 = useCallback(() => {
     return formData.visa.visaType === "F1" || formData.visa.visaType === "J1";
   }, [formData.visa.visaType]);
 
-  // Helper to determine if user is employed
   const isEmployed = formData.employment.employmentStatus === "Employed";
-  
-  // Helper to determine if OPT/CPT status
-  const isOptOrCpt = false; // Add your logic here
-  
-  // Helper to determine if STEM OPT
-  const isStemOpt = false; // Add your logic here
+  const isOptOrCpt = false;
+  const isStemOpt = false;
 
-  // Add VisaTypeChange handler that was missing
   const handleVisaTypeChange = useCallback((type: any) => {
     setFormData(prev => ({
       ...prev,
@@ -375,7 +362,6 @@ export function useOnboardingFlow() {
     }));
   }, []);
   
-  // Add EmploymentStatusChange handler that was missing
   const handleEmploymentStatusChange = useCallback((status: string) => {
     setFormData(prev => ({
       ...prev,
@@ -390,7 +376,7 @@ export function useOnboardingFlow() {
     currentStep,
     isSubmitting,
     formData,
-    isF1OrJ1, // This returns the function itself
+    isF1OrJ1,
     isEmployed,
     isOptOrCpt,
     isStemOpt,
@@ -405,6 +391,6 @@ export function useOnboardingFlow() {
     handleEmploymentStatusChange,
     finishOnboarding,
     calculateProgress,
-    setCurrentStep, // Expose for manual step control if needed
+    setCurrentStep,
   };
 }
