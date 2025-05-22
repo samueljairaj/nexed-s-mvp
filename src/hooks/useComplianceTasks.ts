@@ -19,6 +19,8 @@ export interface Task {
   priority: 'low' | 'medium' | 'high';
   createdAt?: Date;
   updatedAt?: Date;
+  isRecurring?: boolean;
+  recurringInterval?: string;
 }
 
 // Type for database visa types
@@ -94,7 +96,9 @@ export const useComplianceTasks = () => {
               phase: payload.new.phase || 'general',
               priority: payload.new.priority || 'medium',
               createdAt: payload.new.created_at ? new Date(payload.new.created_at) : new Date(),
-              updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : new Date()
+              updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : new Date(),
+              isRecurring: payload.new.is_recurring || false,
+              recurringInterval: payload.new.recurring_interval
             };
             
             return [...prev, newTask];
@@ -112,7 +116,9 @@ export const useComplianceTasks = () => {
                 category: payload.new.category as DocumentCategory || task.category,
                 phase: payload.new.phase || task.phase,
                 priority: payload.new.priority || task.priority,
-                updatedAt: new Date()
+                updatedAt: new Date(),
+                isRecurring: payload.new.is_recurring || task.isRecurring,
+                recurringInterval: payload.new.recurring_interval || task.recurringInterval
               };
             }
             return task;
@@ -153,16 +159,27 @@ export const useComplianceTasks = () => {
         category: task.category,
         phase: task.phase || 'general',
         priority: task.priority,
-        visa_type: normalizeVisaType(currentUser.visaType)
+        visa_type: normalizeVisaType(currentUser.visaType),
+        is_recurring: task.isRecurring || false,
+        recurring_interval: task.recurringInterval
       }));
       
-      // Insert tasks to the database
+      // First delete existing tasks
+      const { error: deleteError } = await supabase
+        .from('compliance_tasks')
+        .delete()
+        .eq('user_id', currentUser.id);
+        
+      if (deleteError) {
+        console.error('Error deleting existing tasks:', deleteError);
+        throw deleteError;
+      }
+      
+      // Then insert new tasks
       const { data, error } = await supabase
         .from('compliance_tasks')
-        .upsert(supabaseTasks, {
-          onConflict: 'user_id, title, phase',
-          ignoreDuplicates: false
-        });
+        .insert(supabaseTasks)
+        .select();
         
       if (error) {
         console.error('Error saving tasks to database:', error);
@@ -205,7 +222,9 @@ export const useComplianceTasks = () => {
           phase: dbTask.phase || 'general',
           priority: dbTask.priority || 'medium',
           createdAt: dbTask.created_at ? new Date(dbTask.created_at) : new Date(),
-          updatedAt: dbTask.updated_at ? new Date(dbTask.updated_at) : new Date()
+          updatedAt: dbTask.updated_at ? new Date(dbTask.updated_at) : new Date(),
+          isRecurring: dbTask.is_recurring || false,
+          recurringInterval: dbTask.recurring_interval
         }));
       }
       
@@ -351,6 +370,8 @@ export const useComplianceTasks = () => {
             category: task.category || 'immigration',
             phase: task.phase || 'general',
             priority: task.priority || 'medium',
+            isRecurring: task.isRecurring || false,
+            recurringInterval: task.recurringInterval,
             createdAt: new Date(),
             updatedAt: new Date()
           }));
@@ -451,7 +472,9 @@ export const useComplianceTasks = () => {
           category: task.category,
           phase: task.phase || 'general',
           priority: task.priority,
-          visa_type: normalizeVisaType(currentUser.visaType)
+          visa_type: normalizeVisaType(currentUser.visaType),
+          is_recurring: task.isRecurring || false,
+          recurring_interval: task.recurringInterval
         })
         .select();
         

@@ -22,7 +22,9 @@ export const baselineChecklists: Record<string, BaselineChecklistItem[]> = {
       description: "Passport must be valid for at least 6 months beyond your intended period of stay",
       category: "immigration",
       priority: "high",
-      phase: "F1"
+      phase: "F1",
+      isRecurring: true,
+      recurringInterval: "yearly"
     },
     {
       id: "f1-visa",
@@ -46,9 +48,7 @@ export const baselineChecklists: Record<string, BaselineChecklistItem[]> = {
       description: "Form I-20 with valid travel signature (signed within last 12 months)",
       category: "immigration",
       priority: "high",
-      phase: "F1",
-      isRecurring: true,
-      recurringInterval: "yearly"
+      phase: "F1"
     },
     {
       id: "f1-sevis-receipt",

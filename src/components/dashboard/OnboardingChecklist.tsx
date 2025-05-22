@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ComplianceChecklist } from "@/components/onboarding/ComplianceChecklist";
+import { useNavigate } from "react-router-dom";
 
 interface OnboardingChecklistProps {
   open: boolean;
@@ -9,6 +10,7 @@ interface OnboardingChecklistProps {
 
 export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistProps) {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   
   // Prepare user data for the checklist
   const userData = {
@@ -21,6 +23,8 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
 
   // Handle continue to dashboard
   const handleContinue = () => {
+    // Clear the flag so it doesn't show again
+    localStorage.removeItem('show_onboarding_checklist');
     onOpenChange(false);
   };
 

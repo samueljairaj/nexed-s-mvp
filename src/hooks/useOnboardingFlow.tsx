@@ -271,7 +271,9 @@ export function useOnboardingFlow() {
         category: task.category as string,
         phase: task.phase || 'general',
         priority: task.priority,
-        visa_type: normalizedVisaType
+        visa_type: normalizedVisaType,
+        is_recurring: task.isRecurring || false,
+        recurring_interval: task.recurringInterval
       }));
 
       const { error: insertError } = await supabase
