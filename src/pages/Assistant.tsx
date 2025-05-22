@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,26 +12,11 @@ import { toast } from "sonner";
 
 const Assistant = () => {
   const { currentUser } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
-  const { sendMessage, isLoading, lastCreatedReminder } = useAIAssistant();
+  const { sendMessage, isLoading, lastCreatedReminder, messages, setMessages } = useAIAssistant();
   
-  // Pre-defined welcome message
-  useEffect(() => {
-    if (messages.length === 0) {
-      setMessages([
-        {
-          id: `msg-${Date.now()}`,
-          role: "assistant",
-          content: `👋 Hello${currentUser?.name ? ` ${currentUser.name}` : ''}! I'm your immigration assistant. How can I help you with your ${currentUser?.visaType || "visa"}-related questions today?\n\nYou can also ask me to create reminders for important tasks by saying something like "remind me to renew my I-20 in 30 days" or "create a task to submit my OPT progress report by April 15".`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ]);
-    }
-  }, [currentUser]);
-
   // Auto scroll to bottom on new messages
   useEffect(() => {
     scrollToBottom();
@@ -67,10 +51,7 @@ const Assistant = () => {
       );
       
       // Add AI response to messages
-      setMessages(prev => [...prev, {
-        ...responseMessage,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
+      setMessages(prev => [...prev, responseMessage]);
     } catch (error) {
       console.error("Error sending message to AI:", error);
     }

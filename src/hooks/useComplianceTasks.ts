@@ -43,6 +43,7 @@ export const useComplianceTasks = () => {
   const [selectedFilters, setSelectedFilters] = useState<DocumentCategory[]>([]);
   const [selectedPhase, setSelectedPhase] = useState<string>('all_phases');
   const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
+  const [realtimeSubscription, setRealtimeSubscription] = useState<any>(null);
 
   // Helper function to normalize visa types for database compatibility
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
@@ -52,6 +53,83 @@ export const useComplianceTasks = () => {
     if (visaType === "H1B") return "H1B";
     return "Other";
   };
+
+  // Set up Supabase realtime subscription
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    // Clean up any existing subscription
+    if (realtimeSubscription) {
+      realtimeSubscription.unsubscribe();
+    }
+
+    // Set up a new subscription
+    const subscription = supabase
+      .channel('compliance-tasks-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'compliance_tasks',
+        filter: `user_id=eq.${currentUser.id}`
+      }, (payload) => {
+        console.log('Realtime update received:', payload);
+        
+        // Handle different types of changes
+        if (payload.eventType === 'INSERT') {
+          setTasks(prev => {
+            // Check if task already exists to avoid duplicates
+            if (prev.some(task => task.id === payload.new.id)) {
+              return prev;
+            }
+            
+            // Convert database task to our Task format
+            const newTask: Task = {
+              id: payload.new.id,
+              title: payload.new.title,
+              description: payload.new.description || '',
+              deadline: payload.new.due_date ? new Date(payload.new.due_date) : null,
+              dueDate: payload.new.due_date || '2025-06-30',
+              completed: payload.new.is_completed || false,
+              category: payload.new.category as DocumentCategory,
+              phase: payload.new.phase || 'general',
+              priority: payload.new.priority || 'medium',
+              createdAt: payload.new.created_at ? new Date(payload.new.created_at) : new Date(),
+              updatedAt: payload.new.updated_at ? new Date(payload.new.updated_at) : new Date()
+            };
+            
+            return [...prev, newTask];
+          });
+        } else if (payload.eventType === 'UPDATE') {
+          setTasks(prev => prev.map(task => {
+            if (task.id === payload.new.id) {
+              return {
+                ...task,
+                title: payload.new.title,
+                description: payload.new.description || task.description,
+                deadline: payload.new.due_date ? new Date(payload.new.due_date) : task.deadline,
+                dueDate: payload.new.due_date || task.dueDate,
+                completed: payload.new.is_completed,
+                category: payload.new.category as DocumentCategory || task.category,
+                phase: payload.new.phase || task.phase,
+                priority: payload.new.priority || task.priority,
+                updatedAt: new Date()
+              };
+            }
+            return task;
+          }));
+        } else if (payload.eventType === 'DELETE') {
+          setTasks(prev => prev.filter(task => task.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    setRealtimeSubscription(subscription);
+
+    // Clean up subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [currentUser?.id]);
 
   // Load tasks on component mount
   useEffect(() => {
@@ -240,22 +318,20 @@ export const useComplianceTasks = () => {
       );
       setTasks(baselineTasks);
       
-      // For quick development and testing, use mock tasks instead of real API call
-      // In production, this would be replaced with the actual API call
-      const mockTasks = generateMockTasks(currentUser.visaType || 'F1');
-      
-      // Then enhance with AI tasks - using mock tasks for now
+      // Then enhance with AI tasks
       try {
         const { data, error } = await supabase.functions.invoke('generate-compliance', {
           body: { 
             userId: currentUser.id,
-            visaType: currentUser.visaType,
-            profile: {
+            userData: {
+              visaType: currentUser.visaType,
               country: currentUser.country,
               university: currentUser.university,
-              // Remove employmentStatus as it doesn't exist in UserProfile
-              // employmentStatus: currentUser.employmentStatus
-            }
+              fieldOfStudy: currentUser.fieldOfStudy,
+              employmentStatus: currentUser.employmentStatus,
+              employer: currentUser.employerName || currentUser.employer
+            },
+            baselineTasks: baselineTasks
           }
         });
         
@@ -266,7 +342,7 @@ export const useComplianceTasks = () => {
         if (data && data.tasks) {
           // Transform API response to our task format
           const aiTasks: Task[] = data.tasks.map((task: any, index: number) => ({
-            id: `ai-task-${Date.now()}-${index}`,
+            id: task.id || `ai-task-${Date.now()}-${index}`,
             title: task.title,
             description: task.description,
             deadline: task.deadline ? new Date(task.deadline) : null,
@@ -289,17 +365,18 @@ export const useComplianceTasks = () => {
           
           toast.success('Successfully generated personalized tasks!');
         } else {
-          // If no tasks returned, fall back to mock tasks
-          setTasks(mockTasks);
+          // If no tasks returned, fall back to baseline tasks
+          setTasks(baselineTasks);
           setLastGeneratedAt(new Date());
           
           // Save to database and local storage
-          await saveTasksToDatabase(mockTasks);
-          cacheTasksToLocalStorage(mockTasks);
+          await saveTasksToDatabase(baselineTasks);
+          cacheTasksToLocalStorage(baselineTasks);
           toast.success('Generated tasks based on your profile');
         }
       } catch (apiError) {
         console.error('Error calling AI function, using mock tasks instead:', apiError);
+        const mockTasks = generateMockTasks(currentUser.visaType || 'F1');
         setTasks(mockTasks);
         setLastGeneratedAt(new Date());
         
