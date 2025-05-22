@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -94,7 +93,7 @@ export const useOnboardingState = () => {
         updatedState.employmentInfo = {
           employmentStatus: "Employed",
           employerName: currentUser.employerName || currentUser.employer || "", 
-          jobTitle: currentUser.jobTitle || "", 
+          jobTitle: "", // Removed reference to currentUser.jobTitle 
           employmentStartDate: currentUser.employmentStartDate ? new Date(currentUser.employmentStartDate) : undefined,
           jobLocation: "", // No direct mapping in current schema
         };
