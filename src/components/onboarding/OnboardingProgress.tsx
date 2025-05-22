@@ -16,30 +16,27 @@ export function OnboardingProgress({
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center">
-        {stepNames.map((label, index) => {
-          const stepNum = index + 1;
-          return (
+        {stepNames.map((label, index) => (
+          <div
+            key={index}
+            className={`flex flex-col items-center ${
+              index !== stepNames.length - 1 ? "w-1/5" : ""
+            }`}
+          >
             <div
-              key={stepNum}
-              className={`flex flex-col items-center ${
-                stepNum !== stepNames.length ? "w-1/5" : ""
+              className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                currentStep >= index
+                  ? "bg-nexed-500 text-white"
+                  : "bg-gray-200 text-gray-500"
               }`}
             >
-              <div
-                className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                  currentStep >= stepNum
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                {currentStep > stepNum ? <CheckCircle2 size={20} /> : stepNum}
-              </div>
-              <div className="text-xs mt-2 text-center">
-                {label}
-              </div>
+              {currentStep > index ? <CheckCircle2 size={20} /> : index + 1}
             </div>
-          );
-        })}
+            <div className="text-xs mt-2 text-center">
+              {label}
+            </div>
+          </div>
+        ))}
       </div>
       <div className="relative flex items-center w-full mt-4">
         <Progress value={progress} className="h-2 w-full" />

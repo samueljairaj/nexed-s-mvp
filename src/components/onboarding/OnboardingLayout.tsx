@@ -7,7 +7,7 @@ interface OnboardingLayoutProps {
 
 export function OnboardingLayout({ children }: OnboardingLayoutProps) {
   return (
-    <div className="min-h-screen bg-light-gray flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center">
@@ -20,7 +20,7 @@ export function OnboardingLayout({ children }: OnboardingLayoutProps) {
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto animate-fade-in">
+        <div className="max-w-3xl mx-auto">
           <div className="bg-white rounded-xl shadow-md border p-8">
             <h1 className="text-2xl md:text-3xl font-bold mb-6 text-nexed-800">Welcome to neXed</h1>
             {children}

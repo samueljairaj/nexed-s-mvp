@@ -1,59 +1,46 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useOnboardingState } from "../hooks/useOnboardingState";
+import { useOnboardingFlow } from "@/hooks/useOnboardingFlow";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
-import { OnboardingStepContent, getActiveStepRef } from "@/components/onboarding/OnboardingStepContent";
-import { StepNavigation } from "@/components/onboarding/StepNavigation";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import { OnboardingNavigation } from "@/components/onboarding/OnboardingNavigation";
+import { OnboardingCompletion } from "@/components/onboarding/OnboardingCompletion";
+import { AccountCreationStep } from "@/components/onboarding/AccountCreationStep";
+import { PersonalInfoStep } from "@/components/onboarding/PersonalInfoStep";
+import { VisaStatusStep } from "@/components/onboarding/VisaStatusStep";
+import { AcademicInfoStep } from "@/components/onboarding/AcademicInfoStep";
+import { EmploymentStep } from "@/components/onboarding/EmploymentStep";
 import { useAuth } from "@/contexts/AuthContext";
-import { AcademicInfoStepRef } from "@/components/onboarding/AcademicInfoStep";
-import { toast } from "sonner";
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
-  const onboardingState = useOnboardingState();
-  
-  // Create refs for form steps
-  const academicStepRef = useRef<AcademicInfoStepRef>(null);
+  const { currentUser, isAuthenticated, isLoading, logout } = useAuth();
+  const onboardingFlow = useOnboardingFlow();
   
   const {
     currentStep,
     isSubmitting,
-    isAuthenticated,
-    currentUser,
-    isLoading,
-    accountData,
-    personalData,
-    visaData,
-    academicData,
-    employmentData,
-    handleAccountCreation,
-    handlePersonalInfo,
-    handleVisaStatus,
-    handleVisaTypeChange,
-    handleAcademicInfo,
-    handleEmploymentInfo,
-    handleEmploymentStatusChange,
+    formData,
     isF1OrJ1,
     isEmployed,
-    isOptOrCpt,
-    isStemOpt,
-    handleFinish,
-    goToPreviousStep,
-    isFirstStep,
-    isLastStep,
+    handleAccountFormSubmit,
+    handlePersonalFormSubmit,
+    handleVisaFormSubmit,
+    handleAcademicFormSubmit,
+    handleEmploymentFormSubmit,
+    finishOnboarding,
     calculateProgress,
+    goToPreviousStep,
     setCurrentStep
-  } = onboardingState;
+  } = onboardingFlow;
 
   // Step names for the progress indicator
   const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment", "Complete"];
-
+  
   // Direct to dashboard if onboarding is already complete
   useEffect(() => {
-    if (isAuthenticated && currentUser?.onboardingComplete) {
+    if (!isLoading && isAuthenticated && currentUser?.onboardingComplete) {
       console.log("User has completed onboarding. Redirecting to dashboard...");
       // Redirect to the dashboard if onboarding is complete
       const targetDashboard = currentUser?.role === 'dso' ? '/app/dso-dashboard' : '/app/dashboard';
@@ -63,63 +50,19 @@ const Onboarding = () => {
       console.log("User is authenticated. Skipping to personal info step.");
       setCurrentStep(1);
     }
-  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep]);
+  }, [isAuthenticated, currentUser, navigate, currentStep, setCurrentStep, isLoading]);
 
   // Handle back to login
   const handleBackToLogin = () => {
-    // Logout the user if they are authenticated
     logout();
-    // Navigate back to login page
     navigate("/", { replace: true });
   };
 
-  // Get the current form ID based on the step
-  const getCurrentFormId = () => {
-    return "step-form";
-  };
+  // Calculate if this is the first or last step
+  const isFirstStep = currentStep === 0;
+  const isLastStep = currentStep === 4; // Employment is the last form step
 
-  // Handle continue button click with improved logging and error handling
-  const handleContinue = async () => {
-    console.log("Continue button clicked, current step:", currentStep);
-    
-    // For academic step (step 3), submit the form directly through ref
-    if (currentStep === 3 && academicStepRef.current) {
-      console.log("Academic step - submitting form through ref");
-      try {
-        await academicStepRef.current.submitForm();
-      } catch (error) {
-        console.error("Error submitting academic form:", error);
-        toast.error("There was an error submitting the form. Please check your inputs.");
-      }
-      return;
-    }
-    
-    // For steps without a specific ref implementation, trigger form submission via form ID
-    try {
-      console.log("Submitting form with ID:", getCurrentFormId());
-      const form = document.getElementById(getCurrentFormId()) as HTMLFormElement;
-      
-      if (form) {
-        // If the form exists, submit it
-        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-      } else {
-        console.warn("No form found for step", currentStep);
-        // Fallback handling based on current step
-        if (currentStep === 0) await handleAccountCreation(accountData as any);
-        else if (currentStep === 1) await handlePersonalInfo(personalData as any);
-        else if (currentStep === 2) await handleVisaStatus(visaData as any);
-        else if (currentStep === 4) await handleEmploymentInfo(employmentData as any);
-      }
-    } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error("There was an error submitting the form. Please check your inputs.");
-    }
-  };
-
-  console.log("Onboarding Page - Current step:", currentStep);
-  console.log("Onboarding Page - isF1OrJ1:", typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1);
-
-  // If loading, show a loading indicator
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -137,43 +80,65 @@ const Onboarding = () => {
         stepNames={stepNames}
       />
       
-      {/* Step content */}
+      {/* Step content based on currentStep */}
       <div className="mt-8">
-        <OnboardingStepContent
-          currentStep={currentStep}
-          accountData={accountData}
-          personalData={personalData}
-          visaData={visaData}
-          academicData={academicData}
-          employmentData={employmentData}
-          isSubmitting={isSubmitting}
-          currentUser={currentUser}
-          handleAccountCreation={handleAccountCreation}
-          handlePersonalInfo={handlePersonalInfo}
-          handleVisaStatus={handleVisaStatus}
-          handleVisaTypeChange={handleVisaTypeChange}
-          handleAcademicInfo={handleAcademicInfo}
-          handleEmploymentInfo={handleEmploymentInfo}
-          handleEmploymentStatusChange={handleEmploymentStatusChange}
-          isF1OrJ1={typeof isF1OrJ1 === 'function' ? isF1OrJ1() : isF1OrJ1}
-          isEmployed={typeof isEmployed === 'function' ? isEmployed() : isEmployed}
-          isOptOrCpt={typeof isOptOrCpt === 'function' ? isOptOrCpt() : isOptOrCpt}
-          isStemOpt={typeof isStemOpt === 'function' ? isStemOpt() : isStemOpt}
-          handleFinish={handleFinish}
-          handleBackToLogin={handleBackToLogin}
-        />
+        {currentStep === 0 && (
+          <AccountCreationStep 
+            defaultValues={formData.account}
+            onSubmit={handleAccountFormSubmit}
+            isSubmitting={isSubmitting}
+          />
+        )}
+        
+        {currentStep === 1 && (
+          <PersonalInfoStep 
+            defaultValues={formData.personal}
+            onSubmit={handlePersonalFormSubmit}
+            isSubmitting={isSubmitting}
+          />
+        )}
+        
+        {currentStep === 2 && (
+          <VisaStatusStep 
+            defaultValues={formData.visa}
+            onSubmit={handleVisaFormSubmit}
+            isSubmitting={isSubmitting}
+          />
+        )}
+        
+        {currentStep === 3 && (
+          <AcademicInfoStep 
+            defaultValues={formData.academic}
+            onSubmit={handleAcademicFormSubmit}
+            isSubmitting={isSubmitting}
+          />
+        )}
+        
+        {currentStep === 4 && (
+          <EmploymentStep
+            defaultValues={formData.employment}
+            onSubmit={handleEmploymentFormSubmit}
+            isSubmitting={isSubmitting}
+          />
+        )}
+        
+        {currentStep === 5 && (
+          <OnboardingCompletion 
+            onComplete={finishOnboarding}
+            isSubmitting={isSubmitting}
+          />
+        )}
       </div>
       
       {/* Navigation buttons - only show if not on the completion screen */}
-      {currentStep <= 4 && (
-        <StepNavigation
-          currentStep={currentStep}
-          isFirstStep={isFirstStep()}
-          isLastStep={isLastStep()}
-          onNext={handleContinue}
+      {currentStep < 5 && (
+        <OnboardingNavigation
+          onNext={finishOnboarding}
           onPrevious={goToPreviousStep}
+          isFirstStep={isFirstStep}
+          isLastStep={isLastStep}
           isSubmitting={isSubmitting}
-          formId={getCurrentFormId()}
+          formId="step-form"
         />
       )}
     </OnboardingLayout>

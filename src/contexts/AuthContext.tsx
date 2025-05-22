@@ -540,6 +540,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const completeOnboarding = async () => {
     if (currentUser && currentUser.id) {
       try {
+        console.log("Marking onboarding as complete in database");
         const { error } = await supabase
           .from('profiles')
           .update({ onboarding_complete: true })
@@ -553,8 +554,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           onboardingComplete: true,
         }));
         
-        // The navigation is now handled in OnboardingComplete.tsx
-        // This ensures that the state is updated before navigation
+        console.log("Onboarding marked complete successfully");
         return true;
       } catch (error: any) {
         console.error("Error completing onboarding:", error);

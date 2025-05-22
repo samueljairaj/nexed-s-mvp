@@ -1,26 +1,31 @@
-
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
-interface StepNavigationProps {
+interface OnboardingNavigationProps {
   onNext: () => void;
   onPrevious: () => void;
-  currentStep: number;
   isFirstStep: boolean;
   isLastStep: boolean;
-  isSubmitting?: boolean;
+  isSubmitting: boolean;
   formId?: string;
 }
 
-export function StepNavigation({
+export function OnboardingNavigation({
   onNext,
   onPrevious,
-  currentStep,
   isFirstStep,
   isLastStep,
-  isSubmitting = false,
-  formId = "step-form" // Default form ID if none provided
-}: StepNavigationProps) {
+  isSubmitting,
+  formId
+}: OnboardingNavigationProps) {
+  const handleNextClick = () => {
+    if (isLastStep) {
+      // If it's the last step, call onNext directly
+      onNext();
+    } 
+    // Otherwise, submit is handled through form submission on the form with formId
+  };
+
   return (
     <div className="flex justify-between mt-8 pt-4 border-t">
       <Button
@@ -28,7 +33,7 @@ export function StepNavigation({
         variant="outline"
         onClick={onPrevious}
         disabled={isFirstStep || isSubmitting}
-        className="flex items-center gap-2 transition-all"
+        className="flex items-center gap-2"
       >
         <ArrowLeft size={16} />
         Back
@@ -36,10 +41,10 @@ export function StepNavigation({
       
       <Button
         type={isLastStep ? "button" : "submit"}
-        onClick={isLastStep ? onNext : undefined}  // For last step, use onClick directly
+        onClick={isLastStep ? handleNextClick : undefined}
         disabled={isSubmitting}
-        className="flex items-center gap-2 transition-all bg-nexed-500 hover:bg-nexed-600 text-white"
-        form={!isLastStep ? formId : undefined}  // Only associate with form if not last step
+        className="flex items-center gap-2 bg-nexed-500 hover:bg-nexed-600 text-white"
+        form={!isLastStep ? formId : undefined}
       >
         {isSubmitting ? (
           <>
