@@ -317,8 +317,11 @@ export function useOnboardingFlow() {
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Navigating to:", targetPath);
       
-      // Navigate immediately without setTimeout
-      navigate(targetPath, { replace: true });
+      // Navigate with state to indicate we're coming from onboarding
+      navigate(targetPath, { 
+        replace: true, 
+        state: { fromOnboarding: true }
+      });
       
       return true;
     } catch (error) {

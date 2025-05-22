@@ -9,9 +9,11 @@ import QuickLinksCard from "@/components/dashboard/QuickLinksCard";
 import RecentActivities from "@/components/dashboard/RecentActivities";
 import TipsAndReminders from "@/components/dashboard/TipsAndReminders";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
+import { useLocation } from "react-router-dom";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const location = useLocation();
   const [complianceProgress, setComplianceProgress] = useState(0);
   const [documentsCount, setDocumentsCount] = useState({ total: 0, uploaded: 0 });
   const [isLoading, setIsLoading] = useState(true);
@@ -21,13 +23,20 @@ const Dashboard = () => {
 
   // Check if we should show the onboarding checklist
   useEffect(() => {
+    // Check for flag in localStorage
     const shouldShowChecklist = localStorage.getItem('show_onboarding_checklist') === 'true';
-    if (shouldShowChecklist) {
+    
+    // Also check if we're redirected from onboarding with state
+    const fromOnboarding = location.state?.fromOnboarding === true;
+    
+    if (shouldShowChecklist || fromOnboarding) {
+      console.log("Showing onboarding checklist");
       setShowChecklist(true);
+      
       // Remove the flag so it doesn't show again on refresh
       localStorage.removeItem('show_onboarding_checklist');
     }
-  }, []);
+  }, [location]);
 
   useEffect(() => {
     const fetchData = async () => {

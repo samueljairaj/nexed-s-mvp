@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assistant_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -116,8 +148,10 @@ export type Database = {
           due_date: string | null
           id: string
           is_completed: boolean | null
+          is_recurring: boolean | null
           phase: string | null
           priority: string | null
+          recurring_interval: string | null
           title: string
           updated_at: string | null
           user_id: string
@@ -130,8 +164,10 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_completed?: boolean | null
+          is_recurring?: boolean | null
           phase?: string | null
           priority?: string | null
+          recurring_interval?: string | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -144,8 +180,10 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_completed?: boolean | null
+          is_recurring?: boolean | null
           phase?: string | null
           priority?: string | null
+          recurring_interval?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
