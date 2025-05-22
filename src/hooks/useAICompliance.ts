@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,6 +32,22 @@ interface EnhancedUserData {
 export function useAICompliance() {
   const [isGenerating, setIsGenerating] = useState(false);
   const { currentUser } = useAuth();
+
+  // Helper function to ensure valid date format or provide a default
+  const formatDateOrDefault = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return '2025-06-30'; // Default date if none provided
+    
+    try {
+      // Try to convert to a valid date string
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '2025-06-30'; // Invalid date
+      
+      return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return '2025-06-30'; // Default fallback
+    }
+  };
 
   const generateCompliance = async (userData?: EnhancedUserData) => {
     setIsGenerating(true);
@@ -69,15 +86,15 @@ export function useAICompliance() {
         country: userProfile.country,
         visaType: userProfile.visaType,
         university: userProfile.university || "",
-        courseStartDate: userProfile.courseStartDate ? new Date(userProfile.courseStartDate).toISOString() : null,
-        usEntryDate: userProfile.usEntryDate ? new Date(userProfile.usEntryDate).toISOString() : null,
-        employmentStartDate: userProfile.employmentStartDate ? new Date(userProfile.employmentStartDate).toISOString() : null,
+        courseStartDate: userProfile.courseStartDate ? formatDateOrDefault(userProfile.courseStartDate) : null,
+        usEntryDate: userProfile.usEntryDate ? formatDateOrDefault(userProfile.usEntryDate) : null,
+        employmentStartDate: userProfile.employmentStartDate ? formatDateOrDefault(userProfile.employmentStartDate) : null,
         employmentStatus: employmentStatus,
         hasTransferred: Boolean(userProfile.previousUniversity || userProfile.transferDate),
         fieldOfStudy: userProfile.fieldOfStudy || "",
         employer: userProfile.employer || userProfile.employerName || "",
         optType: userProfile.optType || "",
-        graduationDate: userProfile.graduationDate ? new Date(userProfile.graduationDate).toISOString() : null
+        graduationDate: userProfile.graduationDate ? formatDateOrDefault(userProfile.graduationDate) : null
       };
 
       const { data, error } = await supabase.functions.invoke('generate-compliance', {
@@ -95,18 +112,23 @@ export function useAICompliance() {
         throw new Error('Invalid response from compliance service');
       }
 
-      // Transform tasks to match database schema
-      const transformedTasks = data.tasks.map((task: AITask) => ({
-        user_id: currentUser.id,
-        title: task.title,
-        description: task.description,
-        due_date: task.dueDate,
-        is_completed: task.completed || false, // Use is_completed instead of completed
-        category: task.category,
-        phase: task.phase || 'general',
-        priority: task.priority || 'medium',
-        visa_type: visaType
-      }));
+      // Transform tasks to match database schema and ensure valid dates
+      const transformedTasks = data.tasks.map((task: AITask) => {
+        // Ensure we have a valid due date
+        const dueDate = task.dueDate ? formatDateOrDefault(task.dueDate) : '2025-06-30';
+        
+        return {
+          user_id: currentUser.id,
+          title: task.title,
+          description: task.description,
+          due_date: dueDate,
+          is_completed: task.completed || false,
+          category: task.category,
+          phase: task.phase || 'general',
+          priority: task.priority || 'medium',
+          visa_type: visaType
+        };
+      });
 
       // Insert new tasks with UPSERT
       const { error: insertError } = await supabase
@@ -116,6 +138,7 @@ export function useAICompliance() {
         });
 
       if (insertError) {
+        console.error('Insert error:', insertError);
         throw new Error('Failed to save generated tasks');
       }
 

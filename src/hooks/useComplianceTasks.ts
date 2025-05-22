@@ -47,6 +47,21 @@ export const useComplianceTasks = () => {
   const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
   const [realtimeSubscription, setRealtimeSubscription] = useState<any>(null);
 
+  // Helper function to format dates or provide defaults
+  const formatDateOrDefault = (dateStr: string | Date | null | undefined): string => {
+    if (!dateStr) return '2025-06-30'; // Default date
+    
+    try {
+      const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
+      if (isNaN(date.getTime())) return '2025-06-30'; // Invalid date
+      
+      return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return '2025-06-30'; // Default fallback
+    }
+  };
+
   // Helper function to normalize visa types for database compatibility
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
     if (visaType === "F1") return "F1";
@@ -144,17 +159,17 @@ export const useComplianceTasks = () => {
     }
   }, [currentUser?.id]);
 
-  // New function to save tasks to the database
+  // New function to save tasks to the database with proper date handling
   const saveTasksToDatabase = async (tasksToSave: Task[]) => {
     if (!currentUser?.id) return;
     
     try {
-      // Transform tasks to Supabase format
+      // Transform tasks to Supabase format with proper date handling
       const supabaseTasks = tasksToSave.map(task => ({
         user_id: currentUser.id,
         title: task.title,
         description: task.description,
-        due_date: task.dueDate,
+        due_date: formatDateOrDefault(task.dueDate),
         is_completed: task.completed,
         category: task.category,
         phase: task.phase || 'general',
@@ -324,7 +339,7 @@ export const useComplianceTasks = () => {
     }
   };
 
-  // Generate AI tasks
+  // Generate AI tasks with proper date handling
   const generateTasksWithAI = async () => {
     if (!currentUser) return;
     
@@ -359,22 +374,26 @@ export const useComplianceTasks = () => {
         }
         
         if (data && data.tasks) {
-          // Transform API response to our task format
-          const aiTasks: Task[] = data.tasks.map((task: any, index: number) => ({
-            id: task.id || `ai-task-${Date.now()}-${index}`,
-            title: task.title,
-            description: task.description,
-            deadline: task.deadline ? new Date(task.deadline) : null,
-            dueDate: task.dueDate || (task.deadline ? new Date(task.deadline).toISOString().split('T')[0] : '2025-06-30'),
-            completed: false,
-            category: task.category || 'immigration',
-            phase: task.phase || 'general',
-            priority: task.priority || 'medium',
-            isRecurring: task.isRecurring || false,
-            recurringInterval: task.recurringInterval,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }));
+          // Transform API response to our task format with proper date handling
+          const aiTasks: Task[] = data.tasks.map((task: any, index: number) => {
+            const dueDate = formatDateOrDefault(task.dueDate || task.deadline);
+            
+            return {
+              id: task.id || `ai-task-${Date.now()}-${index}`,
+              title: task.title,
+              description: task.description,
+              deadline: task.deadline ? new Date(task.deadline) : null,
+              dueDate: dueDate,
+              completed: false,
+              category: task.category || 'immigration',
+              phase: task.phase || 'general',
+              priority: task.priority || 'medium',
+              isRecurring: task.isRecurring || false,
+              recurringInterval: task.recurringInterval,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+          });
           
           // Update the tasks and cache them
           setTasks(aiTasks);
@@ -390,7 +409,7 @@ export const useComplianceTasks = () => {
           setTasks(baselineTasks);
           setLastGeneratedAt(new Date());
           
-          // Save to database and local storage
+          // Save to database and local storage with proper date handling
           await saveTasksToDatabase(baselineTasks);
           cacheTasksToLocalStorage(baselineTasks);
           toast.success('Generated tasks based on your profile');
@@ -401,7 +420,7 @@ export const useComplianceTasks = () => {
         setTasks(mockTasks);
         setLastGeneratedAt(new Date());
         
-        // Save mock tasks to database and local storage
+        // Save mock tasks to database and local storage with proper date handling
         await saveTasksToDatabase(mockTasks);
         cacheTasksToLocalStorage(mockTasks);
         toast.success('Generated sample tasks based on your profile');
@@ -467,7 +486,7 @@ export const useComplianceTasks = () => {
           user_id: currentUser.id,
           title: task.title,
           description: task.description,
-          due_date: task.dueDate,
+          due_date: formatDateOrDefault(task.dueDate),
           is_completed: task.completed,
           category: task.category,
           phase: task.phase || 'general',
