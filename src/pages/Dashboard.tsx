@@ -8,6 +8,7 @@ import UpcomingDeadlines from "@/components/dashboard/UpcomingDeadlines";
 import QuickLinksCard from "@/components/dashboard/QuickLinksCard";
 import RecentActivities from "@/components/dashboard/RecentActivities";
 import TipsAndReminders from "@/components/dashboard/TipsAndReminders";
+import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -16,6 +17,17 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [tasksCount, setTasksCount] = useState({ total: 0, completed: 0 });
   const [deadlines, setDeadlines] = useState([]);
+  const [showChecklist, setShowChecklist] = useState(false);
+
+  // Check if we should show the onboarding checklist
+  useEffect(() => {
+    const shouldShowChecklist = localStorage.getItem('show_onboarding_checklist') === 'true';
+    if (shouldShowChecklist) {
+      setShowChecklist(true);
+      // Remove the flag so it doesn't show again on refresh
+      localStorage.removeItem('show_onboarding_checklist');
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -94,6 +106,12 @@ const Dashboard = () => {
 
   return (
     <div>
+      {/* Onboarding Checklist Dialog */}
+      <OnboardingChecklist 
+        open={showChecklist} 
+        onOpenChange={setShowChecklist} 
+      />
+
       <header className="mb-8">
         <h1 className="text-3xl font-bold">Welcome back, {currentUser?.name || "Student"}</h1>
         <p className="text-gray-600 mt-2">

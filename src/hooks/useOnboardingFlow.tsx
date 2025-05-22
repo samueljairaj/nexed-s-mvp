@@ -319,13 +319,14 @@ export function useOnboardingFlow() {
       
       localStorage.removeItem('onboarding_completion_in_progress');
       
+      // Set flag to show checklist on dashboard
+      localStorage.setItem('show_onboarding_checklist', 'true');
+      
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Navigating to:", targetPath);
       
-      setTimeout(() => {
-        console.log("Performing delayed navigation");
-        navigate(targetPath, { replace: true });
-      }, 300);
+      // Navigate immediately without setTimeout
+      navigate(targetPath, { replace: true });
       
       return true;
     } catch (error) {

@@ -1,0 +1,37 @@
+import React from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ComplianceChecklist } from "@/components/onboarding/ComplianceChecklist";
+
+interface OnboardingChecklistProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistProps) {
+  const { currentUser } = useAuth();
+  
+  // Prepare user data for the checklist
+  const userData = {
+    name: currentUser?.name || "",
+    visaType: currentUser?.visaType || "F1",
+    university: currentUser?.university || "",
+    fieldOfStudy: currentUser?.fieldOfStudy || "",
+    employer: currentUser?.employerName || currentUser?.employer || "",
+  };
+
+  // Handle continue to dashboard
+  const handleContinue = () => {
+    onOpenChange(false);
+  };
+
+  return (
+    <ComplianceChecklist 
+      open={open} 
+      onOpenChange={onOpenChange} 
+      userData={userData}
+      onContinue={handleContinue}
+    />
+  );
+}
+
+export default OnboardingChecklist;

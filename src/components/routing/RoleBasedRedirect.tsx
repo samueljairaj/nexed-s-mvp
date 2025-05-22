@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +18,13 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     const onboardingCompletionInProgress = localStorage.getItem('onboarding_completion_in_progress') === 'true';
     if (onboardingCompletionInProgress) {
       console.log("Onboarding completion in progress, skipping redirect check");
+      return;
+    }
+
+    // Skip redirects if we're showing the onboarding checklist
+    const showingOnboardingChecklist = localStorage.getItem('show_onboarding_checklist') === 'true';
+    if (showingOnboardingChecklist && location.pathname === '/app/dashboard') {
+      console.log("Showing onboarding checklist, skipping redirect check");
       return;
     }
 
