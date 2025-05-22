@@ -54,9 +54,9 @@ export function useEmploymentInfo() {
           updateData.employment_start_date = dateUtils.formatToYYYYMMDD(data.employmentStartDate);
         }
         
-        // Format employment end date if provided
+        // Format employment end date if provided - Fix: use snake_case column name
         if (data.employmentEndDate) {
-          updateData.employmentEndDate = dateUtils.formatToYYYYMMDD(data.employmentEndDate);
+          updateData.employment_end_date = dateUtils.formatToYYYYMMDD(data.employmentEndDate);
         }
         
         // Add authorization data if provided

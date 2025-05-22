@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useEmploymentInfo } from "@/hooks/onboarding/useEmploymentInfo";
@@ -23,7 +23,7 @@ export function EmploymentProfileSection() {
   } = useEmploymentInfo();
   
   // Initialize employment data from user profile when component mounts
-  useState(() => {
+  useEffect(() => {
     if (currentUser) {
       setEmploymentData({
         employmentStatus: currentUser.employmentStatus as "Employed" | "Not Employed" || "Not Employed",
@@ -33,20 +33,20 @@ export function EmploymentProfileSection() {
         employmentEndDate: undefined,
         jobLocation: "",
         isFieldRelated: "No",
-        authorizationType: "None",
-        authStartDate: undefined,
-        authEndDate: undefined,
-        eadNumber: "",
-        unemploymentDaysUsed: "",
-        eVerifyNumber: "",
+        authorizationType: (currentUser.authType as "None" | "CPT" | "OPT" | "STEM OPT") || "None",
+        authStartDate: currentUser.authStartDate ? new Date(currentUser.authStartDate) : undefined,
+        authEndDate: currentUser.authEndDate ? new Date(currentUser.authEndDate) : undefined,
+        eadNumber: currentUser.eadNumber || "",
+        unemploymentDaysUsed: currentUser.unemploymentDays || "",
+        eVerifyNumber: currentUser.eVerifyNumber || "",
         previousEmployers: []
       });
     }
-  });
+  }, [currentUser, setEmploymentData]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await handleEmploymentInfo(employmentData);
+    const success = await handleEmploymentInfo(employmentData as any);
     if (success) {
       setIsEditing(false);
       toast.success("Employment information updated successfully");
@@ -128,7 +128,7 @@ export function EmploymentProfileSection() {
                 <div className="space-y-2">
                   <Label htmlFor="authorizationType">Authorization Type</Label>
                   <Select 
-                    value={employmentData.authorizationType} 
+                    value={employmentData.authorizationType || "None"} 
                     onValueChange={(value) => setEmploymentData(prev => ({ 
                       ...prev, 
                       authorizationType: value as "None" | "CPT" | "OPT" | "STEM OPT" 
