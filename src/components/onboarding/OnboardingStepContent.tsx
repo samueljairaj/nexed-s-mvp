@@ -70,7 +70,7 @@ export const OnboardingStepContent = ({
     employer: employmentData?.employerName || currentUser?.employerName || currentUser?.employer || "", 
   };
   
-  console.log("User data prepared for compliance checklist:", userData);
+  console.log("User data prepared for completion checklist:", userData);
 
   // Student onboarding flow
   const renderStep = () => {

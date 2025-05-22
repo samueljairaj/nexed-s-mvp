@@ -156,7 +156,7 @@ const Onboarding = () => {
         handleAcademicInfo={handleAcademicFormSubmit}
         handleEmploymentInfo={handleEmploymentFormSubmit}
         handleEmploymentStatusChange={handleEmploymentStatusChange}
-        isF1OrJ1={isF1OrJ1}
+        isF1OrJ1={isF1OrJ1()}  // Call the function here instead of passing it directly
         isEmployed={isEmployed}
         isOptOrCpt={isOptOrCpt}
         isStemOpt={isStemOpt}

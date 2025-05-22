@@ -6,9 +6,16 @@ import { CheckCircle2, ArrowRight } from "lucide-react";
 interface CompletionStepProps {
   onFinish: () => Promise<boolean>;
   isSubmitting: boolean;
+  userData?: {
+    name?: string;
+    visaType?: string;
+    university?: string;
+    fieldOfStudy?: string;
+    employer?: string;
+  };
 }
 
-export function CompletionStep({ onFinish, isSubmitting }: CompletionStepProps) {
+export function CompletionStep({ onFinish, isSubmitting, userData }: CompletionStepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -28,6 +35,39 @@ export function CompletionStep({ onFinish, isSubmitting }: CompletionStepProps) 
           <p className="text-green-700">
             Your profile has been set up successfully. You can now access all the features of the platform.
           </p>
+          
+          {userData && (
+            <div className="mt-4 text-left w-full">
+              <h4 className="font-medium text-nexed-800 mb-2">Profile Summary:</h4>
+              <ul className="space-y-1">
+                {userData.name && (
+                  <li className="text-sm text-green-700">
+                    <span className="font-medium">Name:</span> {userData.name}
+                  </li>
+                )}
+                {userData.visaType && (
+                  <li className="text-sm text-green-700">
+                    <span className="font-medium">Visa Type:</span> {userData.visaType}
+                  </li>
+                )}
+                {userData.university && (
+                  <li className="text-sm text-green-700">
+                    <span className="font-medium">University:</span> {userData.university}
+                  </li>
+                )}
+                {userData.fieldOfStudy && (
+                  <li className="text-sm text-green-700">
+                    <span className="font-medium">Field of Study:</span> {userData.fieldOfStudy}
+                  </li>
+                )}
+                {userData.employer && (
+                  <li className="text-sm text-green-700">
+                    <span className="font-medium">Employer:</span> {userData.employer}
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </CardContent>
       </Card>
 

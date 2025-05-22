@@ -348,7 +348,7 @@ export function useOnboardingFlow() {
     return Math.round(((currentStep >= totalSteps ? totalSteps : currentStep) / totalSteps) * 100);
   }, [currentStep]);
 
-  // Helper to determine if visa type is F1 or J1
+  // Helper to determine if visa type is F1 or J1 - defined as a function
   const isF1OrJ1 = useCallback(() => {
     return formData.visa.visaType === "F1" || formData.visa.visaType === "J1";
   }, [formData.visa.visaType]);
@@ -388,7 +388,7 @@ export function useOnboardingFlow() {
     currentStep,
     isSubmitting,
     formData,
-    isF1OrJ1,
+    isF1OrJ1, // This returns the function itself
     isEmployed,
     isOptOrCpt,
     isStemOpt,
