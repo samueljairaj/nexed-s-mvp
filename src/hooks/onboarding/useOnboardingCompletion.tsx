@@ -46,7 +46,7 @@ export function useOnboardingCompletion() {
       }));
       
       try {
-        // Try with simple insert first instead of upsert
+        // Insert the tasks into the database
         const { error } = await supabase
           .from('compliance_tasks')
           .insert(dbTasks);
@@ -74,24 +74,15 @@ export function useOnboardingCompletion() {
     console.log("Starting onboarding completion process...");
     
     try {
-      // Start with a clean state - remove any previous flags
-      localStorage.removeItem('onboarding_completion_in_progress');
-      
-      // Set a new flag to prevent redirection loops
-      localStorage.setItem('onboarding_completion_in_progress', 'true');
-      
-      // Complete the onboarding process in the database first
+      // Mark onboarding as complete in the database
       console.log("Calling completeOnboarding to update user profile in database");
       await completeOnboarding();
       
       // Generate and save tasks if user has data - do this asynchronously
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Starting task creation for user:", currentUser.id);
-        // Don't await this - let it run in the background
-        setTimeout(() => {
-          saveTasksToDatabase(currentUser.id, currentUser.visaType)
-            .catch(err => console.error("Error saving tasks:", err));
-        }, 0); 
+        saveTasksToDatabase(currentUser.id, currentUser.visaType)
+          .catch(err => console.error("Error saving tasks:", err));
       }
       
       // Success message
@@ -104,18 +95,8 @@ export function useOnboardingCompletion() {
       // Use replace to prevent back button from returning to onboarding
       navigate(targetPath, { replace: true });
       
-      // Clear the temporary flag after successful navigation
-      // Set timeout to ensure navigation completes first
-      setTimeout(() => {
-        console.log("Clearing onboarding_completion_in_progress flag");
-        localStorage.removeItem('onboarding_completion_in_progress');
-      }, 500);
-      
       return true;
     } catch (error) {
-      // Clear the temporary flag if there's an error
-      localStorage.removeItem('onboarding_completion_in_progress');
-      
       toast.error("Failed to complete onboarding");
       console.error("Error completing onboarding:", error);
       setIsSubmitting(false);

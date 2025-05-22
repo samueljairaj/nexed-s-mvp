@@ -49,7 +49,7 @@ const Onboarding = () => {
   } = onboardingState;
 
   // Step names for the progress indicator
-  const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment"];
+  const stepNames = ["Account", "Personal", "Visa", "Academic", "Employment", "Complete"];
 
   // Direct to dashboard if onboarding is already complete
   useEffect(() => {
@@ -82,28 +82,10 @@ const Onboarding = () => {
   const handleContinue = async () => {
     console.log("Continue button clicked, current step:", currentStep);
     
-    // Special handling for the final step to complete onboarding
-    if (currentStep === 4) { // Employment step
-      console.log("Last step - calling handleFinish");
-      try {
-        const success = await handleFinish();
-        if (success) {
-          console.log("Onboarding completed successfully");
-          // Navigation will be handled in handleFinish()
-          return;
-        }
-      } catch (error) {
-        console.error("Error completing onboarding:", error);
-        toast.error("There was an error completing the onboarding process. Please try again.");
-      }
-      return;
-    }
-    
     // For academic step (step 3), submit the form directly through ref
     if (currentStep === 3 && academicStepRef.current) {
       console.log("Academic step - submitting form through ref");
       try {
-        console.log("Using academic step ref to submit form");
         await academicStepRef.current.submitForm();
       } catch (error) {
         console.error("Error submitting academic form:", error);
@@ -182,8 +164,8 @@ const Onboarding = () => {
         />
       </div>
       
-      {/* Navigation buttons - only show if not on the final completion screen */}
-      {currentStep <= 4 && currentStep !== 0 && (
+      {/* Navigation buttons - only show if not on the completion screen */}
+      {currentStep <= 4 && (
         <StepNavigation
           currentStep={currentStep}
           isFirstStep={isFirstStep()}

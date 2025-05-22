@@ -1,13 +1,12 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ComplianceChecklist } from "./ComplianceChecklist";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface CompletionStepProps {
-  onFinish: () => void;
+  onFinish: () => Promise<boolean>;
   isSubmitting: boolean;
   userData?: {
     name?: string;
@@ -20,57 +19,13 @@ interface CompletionStepProps {
 
 export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }: CompletionStepProps) {
   const [showChecklist, setShowChecklist] = useState(true);
-  const navigate = useNavigate();
   const { isDSO } = useAuth();
-  const [hasStartedOnboarding, setHasStartedOnboarding] = useState(false);
 
   // Handle go to dashboard button click
   const handleGoToDashboard = () => {
-    console.log("Go to dashboard button clicked");
-    
-    // If onboarding has already started, don't do anything
-    if (hasStartedOnboarding) {
-      console.log("Onboarding already in progress, ignoring duplicate click");
-      return;
-    }
-    
-    // Set flag to prevent duplicate processing
-    setHasStartedOnboarding(true);
-    console.log("Setting hasStartedOnboarding to true");
-    
-    // Clear any existing flag first to ensure a clean state
-    localStorage.removeItem('onboarding_completion_in_progress');
-    
-    // Set the localStorage flag to prevent redirection loops
-    localStorage.setItem('onboarding_completion_in_progress', 'true');
-    
     // Call the parent's onFinish handler which completes onboarding
-    // This will trigger the navigation to the dashboard
-    console.log("Calling onFinish handler");
     onFinish();
   };
-
-  // Track checklist display and completion
-  useEffect(() => {
-    // Force the checklist to be visible for non-DSO users when component mounts
-    if (!isDSO) {
-      setShowChecklist(true);
-    }
-    
-    // Check for existing onboarding flag when mounting component
-    const inProgress = localStorage.getItem('onboarding_completion_in_progress');
-    if (inProgress) {
-      setHasStartedOnboarding(true);
-    }
-    
-    // Cleanup function to clear flag if component is unmounted before completion
-    return () => {
-      // Only clear the flag if we set it ourselves and onboarding hasn't completed
-      if (hasStartedOnboarding && localStorage.getItem('onboarding_completion_in_progress')) {
-        localStorage.removeItem('onboarding_completion_in_progress');
-      }
-    };
-  }, [isDSO, hasStartedOnboarding]);
 
   return (
     <>
@@ -106,7 +61,7 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
         <Button 
           onClick={handleGoToDashboard} 
           className="nexed-gradient-button" 
-          disabled={isSubmitting || hasStartedOnboarding}
+          disabled={isSubmitting}
         >
           {isSubmitting ? (
             <span className="flex items-center">
@@ -121,12 +76,7 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
       {!isDSO && (
         <ComplianceChecklist 
           open={showChecklist} 
-          onOpenChange={(isOpen) => {
-            // Only allow closing if we're not in the middle of onboarding
-            if (!isOpen && !hasStartedOnboarding) {
-              setShowChecklist(isOpen);
-            }
-          }}
+          onOpenChange={setShowChecklist}
           userData={userData}
           onContinue={handleGoToDashboard}
         />

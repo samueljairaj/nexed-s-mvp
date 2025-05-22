@@ -1,11 +1,11 @@
+
 import { useRef } from "react";
 import { AccountCreationStep } from "./AccountCreationStep";
 import { PersonalInfoStep } from "./PersonalInfoStep";
 import { VisaStatusStep } from "./VisaStatusStep"; 
 import { AcademicInfoStep, AcademicInfoStepRef } from "./AcademicInfoStep";
 import { EmploymentStep } from "./EmploymentStep";
-import { OnboardingComplete } from "./OnboardingComplete";
-import { ComplianceChecklist } from "./ComplianceChecklist";
+import { CompletionStep } from "./CompletionStep";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface OnboardingStepContentProps {
@@ -61,7 +61,7 @@ export const OnboardingStepContent = ({
   // Create refs for form components
   const academicStepRef = useRef<AcademicInfoStepRef>(null);
 
-  // Prepare user data for compliance checklist
+  // Prepare user data for completion step
   const userData = {
     name: currentUser?.name || accountData?.firstName + " " + accountData?.lastName,
     visaType: visaData?.visaType || currentUser?.visaType || "F1",
@@ -127,10 +127,10 @@ export const OnboardingStepContent = ({
         );
       case 5:
         return (
-          <OnboardingComplete
-            handleFinish={handleFinish}
+          <CompletionStep
+            onFinish={handleFinish}
             isSubmitting={isSubmitting}
-            role="student"
+            userData={userData}
           />
         );
       default:
@@ -138,20 +138,7 @@ export const OnboardingStepContent = ({
     }
   };
 
-  return (
-    <>
-      {renderStep()}
-      {/* Only show ComplianceChecklist separately from the completion step when we're in development/testing */}
-      {currentStep === 5 && process.env.NODE_ENV === 'development' && (
-        <ComplianceChecklist
-          open={true}
-          onOpenChange={() => {}}
-          userData={userData}
-          onContinue={handleFinish}
-        />
-      )}
-    </>
-  );
+  return renderStep();
 }
 
 // Add a method to get the ref for the current step

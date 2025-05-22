@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +22,7 @@ interface ComplianceChecklistProps {
     fieldOfStudy?: string;
     employer?: string;
   };
-  onContinue?: () => void; // New prop for completing onboarding
+  onContinue: () => void; // Callback to continue to dashboard
 }
 
 interface GroupedDocuments {
@@ -35,7 +36,6 @@ interface GroupedDocuments {
 type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
 
 export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }: ComplianceChecklistProps) {
-  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [tab, setTab] = useState("all-documents");
   const { generateCompliance, isGenerating } = useAICompliance();
@@ -45,7 +45,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
     educational: [],
     personal: []
   });
-  // New state for phase-based grouping
+  // State for phase-based grouping
   const [phaseGroups, setPhaseGroups] = useState<{[key: string]: AITask[]}>({});
   const [loadingState, setLoadingState] = useState<"idle" | "loading" | "success" | "error">("idle");
   
@@ -58,14 +58,14 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
     employer: userData.employer || currentUser?.employerName || currentUser?.employer || ""
   };
   
-  // Use actual user data from props rather than hardcoded values
+  // Initial student info from user data
   const [studentInfo, setStudentInfo] = useState({
     university: mergedUserData.university || "Not provided",
     program: mergedUserData.fieldOfStudy || "Not provided",
     optStartDate: currentUser?.courseStartDate ? formatDateDisplay(currentUser.courseStartDate) : "Not provided",
-    optEndDate: "Not provided", // This might need to be calculated or fetched
+    optEndDate: "Not provided",
     recentUSEntry: currentUser?.usEntryDate ? formatDateDisplay(currentUser.usEntryDate) : "Not provided",
-    i20EndDate: "Not provided", // This might need to be fetched
+    i20EndDate: "Not provided",
     visaExpiration: currentUser?.visa_expiry_date ? formatDateDisplay(currentUser.visa_expiry_date) : "Not provided",
     employer: mergedUserData.employer || "Not provided",
   });
@@ -75,9 +75,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
     if (!dateString) return "Not provided";
     
     try {
-      // If it's already a Date object, use it directly
       const date = dateString instanceof Date ? dateString : new Date(dateString);
-      
       return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'long',
@@ -92,7 +90,7 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
   // Helper function to normalize visa types for database compatibility
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
     if (visaType === "F1") return "F1";
-    if (visaType === "J1" || visaType === "J-1") return "Other"; // Map J1 to Other as it's not in the allowed types
+    if (visaType === "J1" || visaType === "J-1") return "Other";
     if (visaType === "OPT") return "OPT";
     if (visaType === "H1B") return "H1B";
     return "Other";
@@ -214,25 +212,6 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
       setDocuments(categorizedTasks);
       setPhaseGroups(groupedByPhase);
       setLoadingState("success");
-      
-      // Update some student info based on generated tasks
-      if (tasks.length > 0) {
-        // Look for visa expiration in tasks
-        const visaTask = tasks.find(t => 
-          t.title.toLowerCase().includes("visa") && 
-          t.description.toLowerCase().includes("expir"));
-          
-        if (visaTask && visaTask.dueDate && !currentUser?.visa_expiry_date) {
-          setStudentInfo(prev => ({
-            ...prev,
-            visaExpiration: new Date(visaTask.dueDate).toLocaleDateString('en-US', {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric'
-            })
-          }));
-        }
-      }
     } catch (error) {
       console.error("Error generating checklist:", error);
       setLoadingState("error");
@@ -307,21 +286,6 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
   };
 
   const insights = generateInsights();
-
-  // Handle continue to dashboard button click - FIXED VERSION
-  const handleContinueToDashboard = () => {
-    console.log("Continue to dashboard button clicked - calling onContinue callback");
-    
-    // If we have an onContinue callback, use that for navigation
-    if (typeof onContinue === 'function') {
-      onContinue();
-    } else {
-      // Otherwise just close the dialog - no navigation
-      if (onOpenChange) {
-        onOpenChange(false);
-      }
-    }
-  };
 
   // Render document list based on category
   const renderDocumentList = (category: keyof GroupedDocuments) => {
@@ -470,15 +434,10 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(newOpenState) => {
-      // If closing and we're in the middle of onboarding, don't allow closing
-      // unless it's being closed by our handleContinueToDashboard function
-      if (!newOpenState && localStorage.getItem('onboarding_completion_in_progress')) {
-        console.log("Preventing checklist close because onboarding completion is in progress");
-        return;
-      }
-      onOpenChange(newOpenState);
-    }}>
+    <Dialog 
+      open={open} 
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Your Personalized Document Checklist</DialogTitle>
@@ -666,10 +625,10 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
             </ul>
           </div>
           
-          {/* Call to Action for Dashboard - Using the callback to navigate */}
+          {/* Call to Action for Dashboard */}
           <div className="mt-8 flex justify-center">
             <Button 
-              onClick={handleContinueToDashboard}
+              onClick={onContinue}
               className="px-6 nexed-gradient-button"
             >
               Continue to Dashboard

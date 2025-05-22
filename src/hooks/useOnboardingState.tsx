@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -89,13 +90,12 @@ export const useOnboardingState = () => {
       }
 
       // Pre-fill employment info if available
-      // Don't try to access non-existent properties
       if (currentUser?.employmentStartDate) {
         updatedState.employmentInfo = {
           employmentStatus: "Employed",
-          employerName: "", 
-          jobTitle: "", 
-          employmentStartDate: currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate) : undefined,
+          employerName: currentUser.employerName || currentUser.employer || "", 
+          jobTitle: currentUser.jobTitle || "", 
+          employmentStartDate: currentUser.employmentStartDate ? new Date(currentUser.employmentStartDate) : undefined,
           jobLocation: "", // No direct mapping in current schema
         };
       } else {
@@ -115,14 +115,9 @@ export const useOnboardingState = () => {
 
   // Function to calculate progress percentage
   const calculateProgress = () => {
-    const totalSteps = 5; // Total number of steps in the onboarding process
+    const totalSteps = 6; // Total number of steps in the onboarding process (including completion)
     const currentIndex = currentStep;
     return Math.round((currentIndex / totalSteps) * 100);
-  };
-
-  // Function to skip directly to the dashboard
-  const skipOnboarding = () => {
-    navigate("/app/dashboard");
   };
 
   // Function to update a specific step in the onboarding process
@@ -142,7 +137,7 @@ export const useOnboardingState = () => {
   const isFirstStep = () => currentStep === 0;
   
   // Check if this is the last step
-  const isLastStep = () => currentStep === 4;
+  const isLastStep = () => currentStep === 4; // Employment is the last form step
   
   // Go to the previous step
   const goToPreviousStep = () => {
@@ -251,7 +246,7 @@ export const useOnboardingState = () => {
     setIsSubmitting(true);
     try {
       updateStep('employmentInfo', data);
-      setCurrentStep(5);
+      setCurrentStep(5); // Go to completion step
       return true;
     } catch (error) {
       console.error("Employment info error:", error);
@@ -270,11 +265,11 @@ export const useOnboardingState = () => {
   };
 
   // Handle finish
-  const handleFinish = async () => {
+  const handleFinish = async (): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      // Handle finishing the onboarding process
-      navigate("/app/dashboard");
+      // In the real implementation, this should call the hook to complete onboarding
+      // The navigate happens in the useOnboardingCompletion hook
       return true;
     } catch (error) {
       console.error("Finish error:", error);
@@ -302,7 +297,6 @@ export const useOnboardingState = () => {
     setCurrentStep,
     updateStep,
     isStepCompleted,
-    skipOnboarding,
     accountData,
     personalData,
     visaData,
