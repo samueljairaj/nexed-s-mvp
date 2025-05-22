@@ -1,7 +1,7 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ComplianceChecklist } from "./ComplianceChecklist";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -22,22 +22,43 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
   const [showChecklist, setShowChecklist] = useState(true);
   const { isDSO, currentUser } = useAuth();
   const navigate = useNavigate();
+  
+  // Set flag when component mounts to temporarily disable redirects
+  useEffect(() => {
+    localStorage.setItem('onboarding_completion_in_progress', 'true');
+    
+    // Clean up when component unmounts
+    return () => {
+      localStorage.removeItem('onboarding_completion_in_progress');
+    };
+  }, []);
 
   // Handle go to dashboard button click
   const handleGoToDashboard = async () => {
     console.log("Go to Dashboard button clicked in CompletionStep");
     try {
       // Mark onboarding as complete in the database
-      await onFinish();
+      const success = await onFinish();
+      if (!success) {
+        console.error("Onboarding completion failed");
+        return;
+      }
+      
+      // Remove the flag now that database update is complete
+      localStorage.removeItem('onboarding_completion_in_progress');
+      
+      // Force a small delay to ensure the database update is registered
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Determine where to navigate based on user role
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Navigation target:", targetPath);
       
-      // Navigate directly using React Router
+      // Navigate directly using React Router with replace to prevent back button issues
       navigate(targetPath, { replace: true });
     } catch (error) {
       console.error("Error navigating to dashboard:", error);
+      localStorage.removeItem('onboarding_completion_in_progress');
     }
   };
 

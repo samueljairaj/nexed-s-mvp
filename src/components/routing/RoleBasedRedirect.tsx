@@ -43,14 +43,18 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     }
 
     if (!isLoading && currentUser) {
+      // Force refresh onboardingComplete from user object to ensure we have latest state
+      const userIsOnboardingComplete = !!currentUser.onboardingComplete;
+      
       console.log("Checking user state for redirect:", {
-        onboardingComplete: currentUser.onboardingComplete,
+        onboardingComplete: userIsOnboardingComplete,
         isDSO,
-        path: location.pathname
+        path: location.pathname,
+        currentUser
       });
       
       // For users who have completed onboarding
-      if (currentUser.onboardingComplete) {
+      if (userIsOnboardingComplete) {
         // Direct DSO users to DSO dashboard if they're on onboarding or student dashboard
         if (isDSO && (location.pathname === '/app/dashboard' || location.pathname === '/onboarding')) {
           console.log("Redirecting DSO to DSO dashboard");
@@ -66,7 +70,7 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
       }
       
       // For users who haven't completed onboarding
-      if (!currentUser.onboardingComplete && !location.pathname.includes("/onboarding")) {
+      if (!userIsOnboardingComplete && !location.pathname.includes("/onboarding")) {
         console.log("User needs to complete onboarding, redirecting");
         navigate('/onboarding', { replace: true });
         return;

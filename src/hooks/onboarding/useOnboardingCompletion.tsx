@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { generateMockTasks } from "@/utils/mockTasks";
 import { DocumentCategory } from "@/types/document";
@@ -13,7 +12,6 @@ type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
 export function useOnboardingCompletion() {
   const { completeOnboarding, isDSO, currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
 
   // Helper function to normalize visa types for database compatibility
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
@@ -73,7 +71,10 @@ export function useOnboardingCompletion() {
       return false;
     }
     
+    // Set a flag in localStorage to prevent redirect loops
+    localStorage.setItem('onboarding_completion_in_progress', 'true');
     setIsSubmitting(true);
+    
     console.log("Starting onboarding completion process...");
     
     try {
@@ -84,25 +85,19 @@ export function useOnboardingCompletion() {
       // Generate and save tasks if user has data - do this asynchronously
       if (currentUser?.id && currentUser?.visaType) {
         console.log("Starting task creation for user:", currentUser.id);
-        saveTasksToDatabase(currentUser.id, currentUser.visaType)
+        await saveTasksToDatabase(currentUser.id, currentUser.visaType)
           .catch(err => console.error("Error saving tasks:", err));
       }
       
       // Success message
       toast.success("Onboarding completed successfully!");
       
-      // Determine dashboard path based on user role
-      const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
-      console.log("Onboarding complete, navigating to:", targetPath);
-      
-      // Clear any localStorage flags used during onboarding
-      localStorage.removeItem('onboarding_completion_in_progress');
-      
-      // We'll let the component handle navigation
+      // Return success
       return true;
     } catch (error) {
       toast.error("Failed to complete onboarding");
       console.error("Error completing onboarding:", error);
+      localStorage.removeItem('onboarding_completion_in_progress');
       setIsSubmitting(false);
       return false;
     } finally {
