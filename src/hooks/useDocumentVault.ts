@@ -122,7 +122,8 @@ export function useDocumentVault() {
             size: '1.2 MB', // This would need to be stored in the database
             required: doc.is_required || false,
             fileUrl: doc.file_url,
-            expiryDate: doc.expiry_date,
+            // Fix: Handle expiry_date not being in the database schema
+            expiryDate: doc.expiry_date || undefined,
             status: doc.expiry_date ? getDocumentStatus(doc.expiry_date) : undefined,
             user_id: doc.user_id
           }));

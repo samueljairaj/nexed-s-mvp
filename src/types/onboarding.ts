@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 export interface AccountCreationFormValues {
@@ -28,6 +27,8 @@ export interface VisaStatusFormValues {
   otherVisaType?: string;
   hadUnemploymentPeriods?: boolean;
   totalUnemployedDays?: string;
+  i20ExpiryDate?: Date;
+  programStartDate?: Date;
 }
 
 export interface AcademicInfoFormValues {
@@ -134,6 +135,8 @@ export const visaStatusSchema = z.object({
   otherVisaType: z.string().optional(),
   hadUnemploymentPeriods: z.boolean().default(false),
   totalUnemployedDays: z.string().optional(),
+  i20ExpiryDate: z.date().optional(),
+  programStartDate: z.date().optional(),
 });
 
 export const educationalInfoSchema = z.object({

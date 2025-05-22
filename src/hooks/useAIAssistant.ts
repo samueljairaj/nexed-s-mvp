@@ -54,10 +54,12 @@ export function useAIAssistant() {
               return prev;
             }
             
-            // Convert database message to our Message format
+            // Convert database message to our Message format and ensure role is correctly typed
             const newMessage: Message = {
               id: payload.new.id,
-              role: payload.new.role,
+              role: payload.new.role === "user" || payload.new.role === "assistant" 
+                ? payload.new.role 
+                : "assistant", // Default to assistant if invalid role
               content: payload.new.content,
               timestamp: payload.new.created_at
             };
@@ -97,7 +99,10 @@ export function useAIAssistant() {
         if (data && data.length > 0) {
           const formattedMessages: Message[] = data.map(msg => ({
             id: msg.id,
-            role: msg.role,
+            // Ensure role is correctly typed as "user" | "assistant"
+            role: msg.role === "user" || msg.role === "assistant" 
+              ? msg.role as "user" | "assistant" 
+              : "assistant", // Default to assistant if invalid role
             content: msg.content,
             timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }));

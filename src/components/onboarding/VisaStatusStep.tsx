@@ -101,7 +101,7 @@ export function VisaStatusStep({
 
   // Handle visa type change
   const handleVisaTypeChange = (type: string) => {
-    setSelectedVisaType(type);
+    setSelectedVisaType(type as VisaType); // Fix: Convert string to VisaType
     form.setValue('visaType', type as VisaType);
     form.setValue('visaStatus', ""); // Reset visa status when visa type changes
     onVisaTypeChange(type);
