@@ -49,7 +49,10 @@ export function useOnboardingCompletion() {
         // Insert the tasks into the database
         const { error } = await supabase
           .from('compliance_tasks')
-          .insert(dbTasks);
+          .upsert(dbTasks, {
+            onConflict: 'user_id,title',
+            ignoreDuplicates: false
+          });
           
         if (error) {
           console.error('Error saving onboarding tasks to database:', error);
@@ -92,9 +95,10 @@ export function useOnboardingCompletion() {
       const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
       console.log("Onboarding complete, navigating to:", targetPath);
       
-      // Use replace to prevent back button from returning to onboarding
-      navigate(targetPath, { replace: true });
+      // Clear any localStorage flags used during onboarding
+      localStorage.removeItem('onboarding_completion_in_progress');
       
+      // We'll let the component handle navigation
       return true;
     } catch (error) {
       toast.error("Failed to complete onboarding");

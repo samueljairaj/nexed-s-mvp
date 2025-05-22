@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -628,7 +627,13 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
           {/* Call to Action for Dashboard */}
           <div className="mt-8 flex justify-center">
             <Button 
-              onClick={onContinue}
+              onClick={() => {
+                console.log("Continue to Dashboard button clicked");
+                // Close the dialog first
+                onOpenChange(false);
+                // Use the callback provided by parent
+                setTimeout(() => onContinue(), 100);
+              }}
               className="px-6 nexed-gradient-button"
             >
               Continue to Dashboard

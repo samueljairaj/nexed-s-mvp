@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { ComplianceChecklist } from "./ComplianceChecklist";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface CompletionStepProps {
   onFinish: () => Promise<boolean>;
@@ -19,12 +20,31 @@ interface CompletionStepProps {
 
 export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }: CompletionStepProps) {
   const [showChecklist, setShowChecklist] = useState(true);
-  const { isDSO } = useAuth();
+  const { isDSO, currentUser } = useAuth();
+  const navigate = useNavigate();
 
   // Handle go to dashboard button click
-  const handleGoToDashboard = () => {
-    // Call the parent's onFinish handler which completes onboarding
-    onFinish();
+  const handleGoToDashboard = async () => {
+    console.log("Go to Dashboard button clicked in CompletionStep");
+    try {
+      // Mark onboarding as complete in the database
+      await onFinish();
+      
+      // Determine where to navigate based on user role
+      const targetPath = isDSO ? "/app/dso-dashboard" : "/app/dashboard";
+      console.log("Navigation target:", targetPath);
+      
+      // Navigate directly using React Router
+      navigate(targetPath, { replace: true });
+    } catch (error) {
+      console.error("Error navigating to dashboard:", error);
+    }
+  };
+
+  // Handle continue from checklist
+  const handleContinueFromChecklist = async () => {
+    console.log("Continue from checklist called");
+    handleGoToDashboard();
   };
 
   return (
@@ -78,7 +98,7 @@ export function CompletionStep({ onFinish, isSubmitting = false, userData = {} }
           open={showChecklist} 
           onOpenChange={setShowChecklist}
           userData={userData}
-          onContinue={handleGoToDashboard}
+          onContinue={handleContinueFromChecklist}
         />
       )}
     </>

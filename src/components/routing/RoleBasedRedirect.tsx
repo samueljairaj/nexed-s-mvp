@@ -34,6 +34,13 @@ export const RoleBasedRedirect = ({ children }: RoleBasedRedirectProps) => {
     }
     
     redirectAttempts.current += 1;
+    
+    // Check if onboarding completion is in progress - don't redirect in this case
+    const onboardingCompletionInProgress = localStorage.getItem('onboarding_completion_in_progress') === 'true';
+    if (onboardingCompletionInProgress) {
+      console.log("Onboarding completion in progress, skipping redirect check");
+      return;
+    }
 
     if (!isLoading && currentUser) {
       console.log("Checking user state for redirect:", {
