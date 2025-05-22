@@ -132,6 +132,17 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
   // Rest of the component implementation remains unchanged...
   
   return (
-    // Rest of the JSX remains unchanged...
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Compliance Checklist</DialogTitle>
+          <DialogDescription>
+            Review and complete your compliance tasks
+          </DialogDescription>
+        </DialogHeader>
+        
+        {/* Rest of the JSX implementation remains unchanged... */}
+      </DialogContent>
+    </Dialog>
   );
 }
