@@ -82,10 +82,13 @@ export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }
   }
   
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
-    if (visaType === "F1") return "F1";
-    if (visaType === "J1" || visaType === "J-1") return "Other";
-    if (visaType === "OPT") return "OPT";
-    if (visaType === "H1B") return "H1B";
+    if (!visaType) return "Other";
+    
+    const upperVisaType = visaType.toUpperCase();
+    if (upperVisaType === "F1" || upperVisaType === "F-1") return "F1";
+    if (upperVisaType === "OPT") return "OPT";
+    if (upperVisaType === "H1B" || upperVisaType === "H-1B") return "H1B";
+    if (upperVisaType === "J1" || upperVisaType === "J-1") return "Other";
     return "Other";
   };
   
