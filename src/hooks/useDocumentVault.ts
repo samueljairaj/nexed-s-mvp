@@ -1,9 +1,28 @@
+
 import { useState, useEffect } from "react";
 import { Document, DocumentCategory, DocumentStatus, DocumentPacket, DocumentFolder } from "@/types/document";
 import { toast } from "sonner";
 import { getDocumentStatus } from "@/utils/documentUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+
+// Define the database document type to match what Supabase returns
+interface DatabaseDocument {
+  id: string;
+  title: string;
+  file_type?: string;
+  category: string;
+  created_at: string;
+  is_required: boolean;
+  file_url: string;
+  expiry_date?: string;
+  user_id: string;
+  status?: string;
+  review_comment?: string;
+  reviewed_at?: string;
+  reviewed_by?: string;
+  updated_at: string;
+}
 
 export function useDocumentVault() {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -114,7 +133,7 @@ export function useDocumentVault() {
         
         if (data && data.length > 0) {
           // Transform database format to our Document format
-          const transformedDocs: Document[] = data.map(doc => ({
+          const transformedDocs: Document[] = data.map((doc: DatabaseDocument) => ({
             id: doc.id,
             name: doc.title,
             type: doc.file_type || 'application/pdf',
