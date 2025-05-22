@@ -95,24 +95,25 @@ export function useAICompliance() {
         throw new Error('Invalid response from compliance service');
       }
 
-      // Delete existing tasks for this user
-      const { error: deleteError } = await supabase
-        .from('compliance_tasks')
-        .delete()
-        .eq('user_id', currentUser.id);
+      // Transform tasks to match database schema
+      const transformedTasks = data.tasks.map((task: AITask) => ({
+        user_id: currentUser.id,
+        title: task.title,
+        description: task.description,
+        due_date: task.dueDate,
+        is_completed: task.completed || false, // Use is_completed instead of completed
+        category: task.category,
+        phase: task.phase || 'general',
+        priority: task.priority || 'medium',
+        visa_type: visaType
+      }));
 
-      if (deleteError) {
-        console.error('Error deleting existing tasks:', deleteError);
-        throw new Error('Failed to update compliance tasks');
-      }
-
-      // Insert new tasks
+      // Insert new tasks with UPSERT
       const { error: insertError } = await supabase
         .from('compliance_tasks')
-        .insert(data.tasks.map((task: AITask) => ({
-          ...task,
-          user_id: currentUser.id
-        })));
+        .upsert(transformedTasks, {
+          onConflict: 'user_id,title,phase'
+        });
 
       if (insertError) {
         throw new Error('Failed to save generated tasks');
