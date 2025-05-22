@@ -30,6 +30,10 @@ export interface UserProfile {
   address?: string;
   visa_expiry_date?: string;
   employerName?: string;
+  employmentStatus?: string;
+  jobTitle?: string;
+  authType?: string;
+  eadNumber?: string;
   employer?: string;
 }
 
@@ -157,6 +161,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           visa_expiry_date: data.visa_expiry_date || undefined,
           // Handle employer fields - use a type assertion to tell TypeScript these fields could exist
           employerName: (data as any).employer_name || undefined,
+          employmentStatus: (data as any).employment_status || undefined,
+          jobTitle: (data as any).job_title || undefined,
+          authType: (data as any).auth_type || undefined,
+          eadNumber: (data as any).ead_number || undefined,
           employer: (data as any).employer || undefined
         };
         
