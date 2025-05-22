@@ -59,9 +59,9 @@ export function VisaStatusSection() {
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
       visaType: currentUser?.visaType || "",
-      visaStatus: currentUser?.visaStatus || "",
-      sevisId: currentUser?.sevisId || "",
-      i94Number: currentUser?.i94Number || "",
+      visaStatus: "", // Add default empty values for fields not in UserProfile
+      sevisId: "",
+      i94Number: "",
       entryDate: parseDate(currentUser?.usEntryDate),
       visaExpiryDate: parseDate(currentUser?.visa_expiry_date),
     },
@@ -72,10 +72,20 @@ export function VisaStatusSection() {
     try {
       const updateData: Record<string, any> = {
         visaType: data.visaType,
-        visaStatus: data.visaStatus,
-        sevisId: data.sevisId,
-        i94Number: data.i94Number,
       };
+      
+      // Add additional fields to store in custom fields
+      if (data.visaStatus) {
+        updateData.visaStatus = data.visaStatus;
+      }
+      
+      if (data.sevisId) {
+        updateData.sevisId = data.sevisId;
+      }
+      
+      if (data.i94Number) {
+        updateData.i94Number = data.i94Number;
+      }
       
       // Format dates as YYYY-MM-DD strings
       if (data.entryDate) {

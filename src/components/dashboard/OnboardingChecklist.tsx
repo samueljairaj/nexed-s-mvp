@@ -26,12 +26,12 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     employer: currentUser?.employerName || currentUser?.employer || "",
     email: currentUser?.email || "",
     country: currentUser?.country || "",
-    courseStartDate: currentUser?.courseStartDate || null,
-    usEntryDate: currentUser?.usEntryDate || null,
-    employmentStartDate: currentUser?.employmentStartDate || null,
-    employmentStatus: currentUser?.employment_status || "Unemployed Student",
-    optType: currentUser?.optType || "",
-    graduationDate: currentUser?.graduationDate || null
+    courseStartDate: currentUser?.courseStartDate ? new Date(currentUser.courseStartDate).toISOString().split('T')[0] : null,
+    usEntryDate: currentUser?.usEntryDate ? new Date(currentUser.usEntryDate).toISOString().split('T')[0] : null,
+    employmentStartDate: currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate).toISOString().split('T')[0] : null,
+    employmentStatus: currentUser?.employmentStatus || "Unemployed Student",
+    optType: currentUser?.authType || "",
+    graduationDate: currentUser?.programCompletionDate ? new Date(currentUser.programCompletionDate).toISOString().split('T')[0] : null
   };
 
   // Handle continue to dashboard
@@ -114,7 +114,7 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
       onOpenChange={onOpenChange} 
       userData={userData}
       onContinue={handleContinue}
-      isProcessing={isGeneratingTasks || isGenerating}
+      loading={isGeneratingTasks || isGenerating}
       sections={getSections()}
     />
   );

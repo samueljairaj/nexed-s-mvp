@@ -45,6 +45,12 @@ const academicInfoSchema = z.object({
   dsoPhone: z.string().optional()
 });
 
+interface DSOContact {
+  name?: string;
+  email?: string;
+  phone?: string;
+}
+
 export function AcademicInfoSection() {
   const { currentUser, updateProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,6 +65,9 @@ export function AcademicInfoSection() {
     }
   };
 
+  // Handle DSO contact info if it exists in the user data
+  const dsoContact = currentUser?.dsoContact as DSOContact | undefined;
+
   // Initialize form with current user data
   const form = useForm<z.infer<typeof academicInfoSchema>>({
     resolver: zodResolver(academicInfoSchema),
@@ -68,10 +77,10 @@ export function AcademicInfoSection() {
       fieldOfStudy: currentUser?.fieldOfStudy || "",
       isSTEM: currentUser?.isSTEM || false,
       programStartDate: parseDate(currentUser?.courseStartDate),
-      programCompletionDate: parseDate(currentUser?.programCompletionDate),
-      dsoName: currentUser?.dsoContact?.name || "",
-      dsoEmail: currentUser?.dsoContact?.email || "",
-      dsoPhone: currentUser?.dsoContact?.phone || "",
+      programCompletionDate: undefined, // We'll handle this separately
+      dsoName: dsoContact?.name || "",
+      dsoEmail: dsoContact?.email || "",
+      dsoPhone: dsoContact?.phone || "",
     },
   });
 
