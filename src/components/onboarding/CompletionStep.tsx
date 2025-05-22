@@ -1,91 +1,54 @@
 
-import React from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 
 interface CompletionStepProps {
   onFinish: () => Promise<boolean>;
   isSubmitting: boolean;
-  userData: {
-    name?: string;
-    visaType?: string;
-    university?: string;
-    fieldOfStudy?: string;
-    employer?: string;
-  };
 }
 
-export function CompletionStep({ 
-  onFinish, 
-  isSubmitting,
-  userData
-}: CompletionStepProps) {
+export function CompletionStep({ onFinish, isSubmitting }: CompletionStepProps) {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-center justify-center py-6">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-          <CheckCircle2 className="h-10 w-10 text-green-600" />
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+          <CheckCircle2 className="h-8 w-8 text-green-600" />
         </div>
-        <h2 className="mt-6 text-2xl font-bold text-center text-nexed-800">
-          You're All Set!
-        </h2>
-        <p className="mt-2 text-center text-gray-600 max-w-md">
-          Thank you for completing your onboarding. Your account is now ready to use with neXed.
+        <h2 className="text-2xl font-semibold">Onboarding Complete!</h2>
+        <p className="text-muted-foreground mt-2">
+          Thank you for completing the onboarding process. You're all set to use the platform.
         </p>
       </div>
 
-      <div className="bg-slate-50 p-6 rounded-lg border mt-6">
-        <h3 className="font-semibold text-lg mb-4">Your Information Summary</h3>
-        <div className="space-y-3">
-          {userData.name && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Name:</span>
-              <span className="font-medium">{userData.name}</span>
-            </div>
-          )}
-          {userData.visaType && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Visa Type:</span>
-              <span className="font-medium">{userData.visaType}</span>
-            </div>
-          )}
-          {userData.university && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">University:</span>
-              <span className="font-medium">{userData.university}</span>
-            </div>
-          )}
-          {userData.fieldOfStudy && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Field of Study:</span>
-              <span className="font-medium">{userData.fieldOfStudy}</span>
-            </div>
-          )}
-          {userData.employer && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Employer:</span>
-              <span className="font-medium">{userData.employer}</span>
-            </div>
-          )}
-        </div>
-      </div>
+      <Card className="border-green-200 bg-green-50">
+        <CardContent className="pt-6 flex flex-col items-center text-center">
+          <CheckCircle2 className="h-12 w-12 text-green-600 mb-4" />
+          <h3 className="text-lg font-medium text-green-800 mb-2">All Set!</h3>
+          <p className="text-green-700">
+            Your profile has been set up successfully. You can now access all the features of the platform.
+          </p>
+        </CardContent>
+      </Card>
 
-      <div className="flex justify-center mt-8 pt-4">
-        <Button
-          onClick={onFinish}
-          disabled={isSubmitting}
-          className="bg-nexed-500 hover:bg-nexed-600 px-8 py-2"
-        >
-          {isSubmitting ? (
-            <>
-              <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-              Processing...
-            </>
-          ) : (
-            "Go to Dashboard"
-          )}
-        </Button>
-      </div>
+      <Button 
+        onClick={onFinish}
+        disabled={isSubmitting}
+        className="w-full"
+      >
+        {isSubmitting ? (
+          <>
+            <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
+            Processing...
+          </>
+        ) : (
+          <>
+            Continue to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+          </>
+        )}
+      </Button>
     </div>
   );
 }
+
+export default CompletionStep;

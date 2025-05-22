@@ -187,16 +187,54 @@ export function useOnboardingFlow() {
   const handleEmploymentFormSubmit = useCallback(async (data: EmploymentInfoFormValues) => {
     setIsSubmitting(true);
     try {
-      const updateData: Record<string, any> = {};
+      const updateData: Record<string, any> = {
+        employmentStatus: data.employmentStatus,
+      };
       
       if (data.employmentStatus === "Employed") {
-        updateData.employerName = data.employerName;
+        updateData.employer_name = data.employerName;
+        updateData.job_title = data.jobTitle;
+        updateData.jobLocation = data.jobLocation;
         
         if (data.employmentStartDate) {
-          updateData.employmentStartDate = dateUtils.formatToYYYYMMDD(data.employmentStartDate);
+          updateData.employment_start_date = dateUtils.formatToYYYYMMDD(data.employmentStartDate);
+        }
+        
+        if (data.employmentEndDate) {
+          updateData.employmentEndDate = dateUtils.formatToYYYYMMDD(data.employmentEndDate);
+        }
+
+        // Add authorization data if provided
+        if (data.authorizationType && data.authorizationType !== "None") {
+          updateData.auth_type = data.authorizationType;
+          
+          // Add authorization dates if provided
+          if (data.authStartDate) {
+            updateData.auth_start_date = dateUtils.formatToYYYYMMDD(data.authStartDate);
+          }
+          
+          if (data.authEndDate) {
+            updateData.auth_end_date = dateUtils.formatToYYYYMMDD(data.authEndDate);
+          }
+          
+          // Add EAD number if provided
+          if (data.eadNumber) {
+            updateData.ead_number = data.eadNumber;
+          }
+          
+          // Add unemployment days if provided
+          if (data.unemploymentDaysUsed) {
+            updateData.unemployment_days = data.unemploymentDaysUsed;
+          }
+          
+          // Add E-Verify number for STEM OPT
+          if (data.authorizationType === "STEM OPT" && data.eVerifyNumber) {
+            updateData.e_verify_number = data.eVerifyNumber;
+          }
         }
       }
       
+      console.log("Updating profile with employment data:", updateData);
       await updateProfile(updateData);
       
       // Update local state and proceed to completion

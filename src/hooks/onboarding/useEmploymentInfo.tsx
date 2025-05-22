@@ -38,8 +38,8 @@ export function useEmploymentInfo() {
       
       // Only add employment related fields if employed
       if (data.employmentStatus === "Employed") {
-        updateData.employerName = data.employerName;
-        updateData.jobTitle = data.jobTitle;
+        updateData.employer_name = data.employerName;
+        updateData.job_title = data.jobTitle;
         updateData.jobLocation = data.jobLocation;
         
         // Add field relation info if available
@@ -49,7 +49,7 @@ export function useEmploymentInfo() {
         
         // Format employment start date if provided
         if (data.employmentStartDate) {
-          updateData.employmentStartDate = dateUtils.formatToYYYYMMDD(data.employmentStartDate);
+          updateData.employment_start_date = dateUtils.formatToYYYYMMDD(data.employmentStartDate);
         }
         
         // Format employment end date if provided
@@ -59,45 +59,45 @@ export function useEmploymentInfo() {
         
         // Add authorization data if provided
         if (data.authorizationType && data.authorizationType !== "None") {
-          updateData.authorizationType = data.authorizationType;
+          updateData.auth_type = data.authorizationType;
           
           // Map authorization type to opt status for database consistency
           switch (data.authorizationType) {
             case "CPT":
-              updateData.optStatus = OptStatus.None;
+              updateData.opt_status = OptStatus.None;
               break;
             case "OPT":
-              updateData.optStatus = OptStatus.Opt;
+              updateData.opt_status = OptStatus.Opt;
               break;
             case "STEM OPT":
-              updateData.optStatus = OptStatus.StemOpt;
+              updateData.opt_status = OptStatus.StemOpt;
               break;
             default:
-              updateData.optStatus = OptStatus.None;
+              updateData.opt_status = OptStatus.None;
           }
           
           // Add authorization dates if provided
           if (data.authStartDate) {
-            updateData.authStartDate = dateUtils.formatToYYYYMMDD(data.authStartDate);
+            updateData.auth_start_date = dateUtils.formatToYYYYMMDD(data.authStartDate);
           }
           
           if (data.authEndDate) {
-            updateData.authEndDate = dateUtils.formatToYYYYMMDD(data.authEndDate);
+            updateData.auth_end_date = dateUtils.formatToYYYYMMDD(data.authEndDate);
           }
           
           // Add EAD number if provided
           if (data.eadNumber) {
-            updateData.eadNumber = data.eadNumber;
+            updateData.ead_number = data.eadNumber;
           }
           
           // Add unemployment days if provided
           if (data.unemploymentDaysUsed) {
-            updateData.unemploymentDays = data.unemploymentDaysUsed;
+            updateData.unemployment_days = data.unemploymentDaysUsed;
           }
           
           // Add E-Verify number for STEM OPT
           if (data.authorizationType === "STEM OPT" && data.eVerifyNumber) {
-            updateData.eVerifyNumber = data.eVerifyNumber;
+            updateData.e_verify_number = data.eVerifyNumber;
           }
         }
       }

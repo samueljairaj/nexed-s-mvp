@@ -156,7 +156,7 @@ const Onboarding = () => {
         handleAcademicInfo={handleAcademicFormSubmit}
         handleEmploymentInfo={handleEmploymentFormSubmit}
         handleEmploymentStatusChange={handleEmploymentStatusChange}
-        isF1OrJ1={isF1OrJ1()}
+        isF1OrJ1={isF1OrJ1}
         isEmployed={isEmployed}
         isOptOrCpt={isOptOrCpt}
         isStemOpt={isStemOpt}

@@ -254,23 +254,32 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          auth_end_date: string | null
+          auth_start_date: string | null
+          auth_type: string | null
           country: string | null
           course_start_date: string | null
           created_at: string | null
           date_of_birth: string | null
           degree_level: string | null
+          e_verify_number: string | null
+          ead_number: string | null
           email: string | null
+          employer_name: string | null
           employment_start_date: string | null
           field_of_study: string | null
           id: string
           is_stem: boolean | null
+          job_title: string | null
           name: string | null
           nationality: string | null
           onboarding_complete: boolean | null
+          opt_status: string | null
           passport_expiry_date: string | null
           passport_number: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          unemployment_days: string | null
           university: string | null
           university_id: string | null
           updated_at: string | null
@@ -280,23 +289,32 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          auth_end_date?: string | null
+          auth_start_date?: string | null
+          auth_type?: string | null
           country?: string | null
           course_start_date?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           degree_level?: string | null
+          e_verify_number?: string | null
+          ead_number?: string | null
           email?: string | null
+          employer_name?: string | null
           employment_start_date?: string | null
           field_of_study?: string | null
           id: string
           is_stem?: boolean | null
+          job_title?: string | null
           name?: string | null
           nationality?: string | null
           onboarding_complete?: boolean | null
+          opt_status?: string | null
           passport_expiry_date?: string | null
           passport_number?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          unemployment_days?: string | null
           university?: string | null
           university_id?: string | null
           updated_at?: string | null
@@ -306,23 +324,32 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          auth_end_date?: string | null
+          auth_start_date?: string | null
+          auth_type?: string | null
           country?: string | null
           course_start_date?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           degree_level?: string | null
+          e_verify_number?: string | null
+          ead_number?: string | null
           email?: string | null
+          employer_name?: string | null
           employment_start_date?: string | null
           field_of_study?: string | null
           id?: string
           is_stem?: boolean | null
+          job_title?: string | null
           name?: string | null
           nationality?: string | null
           onboarding_complete?: boolean | null
+          opt_status?: string | null
           passport_expiry_date?: string | null
           passport_number?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          unemployment_days?: string | null
           university?: string | null
           university_id?: string | null
           updated_at?: string | null
