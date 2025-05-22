@@ -40,7 +40,9 @@ export function useEmploymentInfo() {
       if (data.employmentStatus === "Employed") {
         updateData.employer_name = data.employerName;
         updateData.job_title = data.jobTitle;
-        updateData.jobLocation = data.jobLocation;
+        
+        // The jobLocation field doesn't exist in the database schema
+        // So we'll omit it or store it in a different column if needed
         
         // Add field relation info if available
         if (data.isFieldRelated) {
