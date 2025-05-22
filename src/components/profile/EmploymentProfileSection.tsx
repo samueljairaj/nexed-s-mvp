@@ -120,8 +120,8 @@ export function EmploymentProfileSection() {
                 <div className="space-y-2">
                   <Label htmlFor="employmentStartDate">Employment Start Date</Label>
                   <DatePicker
-                    selected={employmentData.employmentStartDate}
-                    onSelect={(date) => setEmploymentData(prev => ({ ...prev, employmentStartDate: date }))}
+                    date={employmentData.employmentStartDate}
+                    onDateChange={(date) => setEmploymentData(prev => ({ ...prev, employmentStartDate: date }))}
                   />
                 </div>
 
@@ -129,7 +129,10 @@ export function EmploymentProfileSection() {
                   <Label htmlFor="authorizationType">Authorization Type</Label>
                   <Select 
                     value={employmentData.authorizationType} 
-                    onValueChange={(value) => setEmploymentData(prev => ({ ...prev, authorizationType: value }))}
+                    onValueChange={(value) => setEmploymentData(prev => ({ 
+                      ...prev, 
+                      authorizationType: value as "None" | "CPT" | "OPT" | "STEM OPT" 
+                    }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select authorization type" />
@@ -148,16 +151,16 @@ export function EmploymentProfileSection() {
                     <div className="space-y-2">
                       <Label htmlFor="authStartDate">Authorization Start Date</Label>
                       <DatePicker
-                        selected={employmentData.authStartDate}
-                        onSelect={(date) => setEmploymentData(prev => ({ ...prev, authStartDate: date }))}
+                        date={employmentData.authStartDate}
+                        onDateChange={(date) => setEmploymentData(prev => ({ ...prev, authStartDate: date }))}
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="authEndDate">Authorization End Date</Label>
                       <DatePicker
-                        selected={employmentData.authEndDate}
-                        onSelect={(date) => setEmploymentData(prev => ({ ...prev, authEndDate: date }))}
+                        date={employmentData.authEndDate}
+                        onDateChange={(date) => setEmploymentData(prev => ({ ...prev, authEndDate: date }))}
                       />
                     </div>
 
