@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -138,6 +139,7 @@ const Documents = () => {
   const handleDocumentRename = () => {
     if (!selectedDocument || !newFileName.trim()) return;
     
+    // Fix: Pass the ID and new name instead of the Document object
     handleRenameDocument(selectedDocument.id, newFileName);
     setIsRenameDialogOpen(false);
     setNewFileName("");

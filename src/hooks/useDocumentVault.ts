@@ -56,7 +56,8 @@ export function useDocumentVault() {
               size: '1.2 MB', // This would need to be stored in the database
               required: payload.new.is_required || false,
               fileUrl: payload.new.file_url,
-              expiryDate: payload.new.expiry_date,
+              // Check if expiry_date exists in the payload
+              expiryDate: payload.new.expiry_date || undefined,
               status: payload.new.expiry_date ? getDocumentStatus(payload.new.expiry_date) : undefined,
               user_id: payload.new.user_id
             };
@@ -73,7 +74,7 @@ export function useDocumentVault() {
                 category: payload.new.category as DocumentCategory,
                 required: payload.new.is_required,
                 fileUrl: payload.new.file_url,
-                expiryDate: payload.new.expiry_date,
+                expiryDate: payload.new.expiry_date || undefined,
                 status: payload.new.expiry_date ? getDocumentStatus(payload.new.expiry_date) : doc.status
               };
             }
@@ -122,7 +123,7 @@ export function useDocumentVault() {
             size: '1.2 MB', // This would need to be stored in the database
             required: doc.is_required || false,
             fileUrl: doc.file_url,
-            // Fix: Handle expiry_date not being in the database schema
+            // Handle case where expiry_date might not exist in database schema
             expiryDate: doc.expiry_date || undefined,
             status: doc.expiry_date ? getDocumentStatus(doc.expiry_date) : undefined,
             user_id: doc.user_id
@@ -329,24 +330,25 @@ export function useDocumentVault() {
     }
   };
 
-  const handleRenameDocument = async (doc: Document, newName: string) => {
+  // Fix the handleRenameDocument function to match the correct signature
+  const handleRenameDocument = async (id: string, newName: string) => {
     // Update in database first
-    const success = await updateDocumentInDatabase(doc.id, { name: newName });
+    const success = await updateDocumentInDatabase(id, { name: newName });
     
     if (success) {
       setDocuments(prev => 
         prev.map(d => 
-          d.id === doc.id ? { ...d, name: newName } : d
+          d.id === id ? { ...d, name: newName } : d
         )
       );
       
-      if (selectedDocument?.id === doc.id) {
+      if (selectedDocument?.id === id) {
         setSelectedDocument(prev => prev ? { ...prev, name: newName } : null);
       }
       
       setSelectedDocuments(prev => 
         prev.map(d => 
-          d.id === doc.id ? { ...d, name: newName } : d
+          d.id === id ? { ...d, name: newName } : d
         )
       );
       
@@ -355,17 +357,17 @@ export function useDocumentVault() {
       // If database update fails, still update UI but show warning
       setDocuments(prev => 
         prev.map(d => 
-          d.id === doc.id ? { ...d, name: newName } : d
+          d.id === id ? { ...d, name: newName } : d
         )
       );
       
-      if (selectedDocument?.id === doc.id) {
+      if (selectedDocument?.id === id) {
         setSelectedDocument(prev => prev ? { ...prev, name: newName } : null);
       }
       
       setSelectedDocuments(prev => 
         prev.map(d => 
-          d.id === doc.id ? { ...d, name: newName } : d
+          d.id === id ? { ...d, name: newName } : d
         )
       );
       
