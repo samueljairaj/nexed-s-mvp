@@ -1,8 +1,8 @@
-
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { EmploymentInfoFormValues } from "@/types/onboarding";
+import { EmploymentInfoFormValues, employmentInfoSchema } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,14 +23,15 @@ import {
 } from "@/components/ui/select";
 import { FormDatePicker } from "@/components/ui/form-date-picker";
 
-// Employment info schema defined in types/onboarding.ts
-// Using the imported version now
-
 interface EmploymentStepProps {
   defaultValues: Partial<EmploymentInfoFormValues>;
   onSubmit: (data: EmploymentInfoFormValues) => Promise<boolean>;
   isSubmitting?: boolean;
   isF1?: boolean;
+  isOptOrCpt?: boolean;
+  isStemOpt?: boolean;
+  isF1OrJ1?: boolean;
+  isEmployed?: boolean;
   onEmploymentStatusChange?: (status: "Employed" | "Not Employed") => void;
 }
 
@@ -39,23 +40,12 @@ export function EmploymentStep({
   onSubmit,
   isSubmitting = false,
   isF1 = true,
+  isOptOrCpt = false,
+  isStemOpt = false,
+  isF1OrJ1 = true,
+  isEmployed = false,
   onEmploymentStatusChange
 }: EmploymentStepProps) {
-  // Importing schema from types file now
-  const employmentInfoSchema = z.object({
-    employmentStatus: z.enum(["Employed", "Not Employed"]),
-    employerName: z.string().optional(),
-    jobTitle: z.string().optional(),
-    employmentStartDate: z.date().optional(),
-    employmentEndDate: z.date().optional(),
-    authorizationType: z.enum(["None", "CPT", "OPT", "STEM OPT"]).optional(),
-    authStartDate: z.date().optional(),
-    authEndDate: z.date().optional(),
-    eadNumber: z.string().optional(),
-    eVerifyNumber: z.string().optional(),
-    unemploymentDaysUsed: z.string().optional(),
-  });
-  
   const form = useForm<EmploymentInfoFormValues>({
     resolver: zodResolver(employmentInfoSchema),
     defaultValues: {
@@ -64,7 +54,6 @@ export function EmploymentStep({
       jobTitle: defaultValues?.jobTitle || "",
       employmentStartDate: defaultValues?.employmentStartDate || undefined,
       employmentEndDate: defaultValues?.employmentEndDate || undefined,
-      // Removed jobLocation since it doesn't exist in the database
       authorizationType: defaultValues?.authorizationType || "None",
       authStartDate: defaultValues?.authStartDate || undefined,
       authEndDate: defaultValues?.authEndDate || undefined,
@@ -79,7 +68,7 @@ export function EmploymentStep({
   const authorizationType = form.watch("authorizationType");
   
   // Call the onEmploymentStatusChange callback when status changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (onEmploymentStatusChange) {
       onEmploymentStatusChange(employmentStatus);
     }

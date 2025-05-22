@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PersonalInfoFormValues, personalInfoSchema, countries } from "@/types/onboarding"; // Updated import
+import { PersonalInfoFormValues, personalInfoSchema, countries } from "@/types/onboarding"; 
 import { FormDatePicker } from "@/components/ui/form-date-picker";
 import { Calendar, Phone, MapPin, User } from "lucide-react";
 import {

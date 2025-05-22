@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -74,7 +75,7 @@ export function VisaStatusStep({
   isSubmitting?: boolean;
   handleBackToLogin?: () => void;
 }) {
-  const [selectedVisaType, setSelectedVisaType] = useState<string>(defaultValues.visaType || "F1");
+  const [selectedVisaType, setSelectedVisaType] = useState<VisaType>(defaultValues.visaType || "F1");
   const [otherVisaType, setOtherVisaType] = useState<string>(defaultValues.otherVisaType || "");
   const [hasUnemploymentPeriods, setHasUnemploymentPeriods] = useState<boolean>(
     defaultValues.hadUnemploymentPeriods || false
