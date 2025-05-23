@@ -46,10 +46,10 @@ export function VisaStatusSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Parse dates from string to Date objects for the form
-  const parseDate = (dateString: string | null | undefined) => {
+  const parseDate = (dateString: string | Date | null | undefined) => {
     if (!dateString) return undefined;
     try {
-      return new Date(dateString);
+      return typeof dateString === 'string' ? new Date(dateString) : dateString;
     } catch (e) {
       return undefined;
     }

@@ -41,14 +41,17 @@ export function AcademicInfoSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Parse dates from string to Date objects for the form
-  const parseDate = (dateString: string | null | undefined) => {
+  const parseDate = (dateString: string | Date | null | undefined) => {
     if (!dateString) return undefined;
     try {
-      return new Date(dateString);
+      return typeof dateString === 'string' ? new Date(dateString) : dateString;
     } catch (e) {
       return undefined;
     }
   };
+
+  // Extract DSO contact information safely
+  const dsoContact = currentUser?.dsoContact || { name: '', email: '' };
 
   const form = useForm<z.infer<typeof academicInfoSchema>>({
     resolver: zodResolver(academicInfoSchema),
@@ -59,8 +62,8 @@ export function AcademicInfoSection() {
       courseStartDate: parseDate(currentUser?.courseStartDate),
       graduationDate: parseDate(currentUser?.graduationDate),
       isSTEM: currentUser?.isSTEM || false,
-      dsoName: currentUser?.dsoContact?.name || "",
-      dsoEmail: currentUser?.dsoContact?.email || "",
+      dsoName: dsoContact.name || "",
+      dsoEmail: dsoContact.email || "",
     },
   });
 

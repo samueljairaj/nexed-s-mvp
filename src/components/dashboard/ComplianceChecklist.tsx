@@ -12,9 +12,14 @@ interface ComplianceChecklistProps {
     total: number;
     completed: number;
   };
+  isGenerating?: boolean;
 }
 
-const ComplianceChecklist: React.FC<ComplianceChecklistProps> = ({ complianceProgress, tasksCount }) => {
+const ComplianceChecklist: React.FC<ComplianceChecklistProps> = ({ 
+  complianceProgress, 
+  tasksCount,
+  isGenerating 
+}) => {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">

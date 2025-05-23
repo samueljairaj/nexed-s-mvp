@@ -19,9 +19,9 @@ export interface UserProfile {
   degreeLevel?: string;     
   fieldOfStudy?: string;    
   isSTEM?: boolean;         
-  courseStartDate?: Date;
-  usEntryDate?: Date;
-  employmentStartDate?: Date;
+  courseStartDate?: Date | string;
+  usEntryDate?: Date | string;
+  employmentStartDate?: Date | string;
   onboardingComplete: boolean;
   dateOfBirth?: Date | string;
   passportExpiryDate?: Date | string;
@@ -39,6 +39,14 @@ export interface UserProfile {
   unemploymentDays?: string;
   eVerifyNumber?: string;
   employer?: string;
+  graduationDate?: Date | string;
+  visaStatus?: string;
+  sevisId?: string;
+  i94Number?: string;
+  dsoContact?: {
+    name: string;
+    email: string;
+  };
 }
 
 interface DSOProfile {
@@ -173,7 +181,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           eadNumber: (data as any).ead_number || undefined,
           unemploymentDays: (data as any).unemployment_days || undefined,
           eVerifyNumber: (data as any).e_verify_number || undefined,
-          employer: (data as any).employer || undefined
+          employer: (data as any).employer || undefined,
+          graduationDate: data.graduation_date || undefined,
+          visaStatus: data.visa_status || undefined,
+          sevisId: data.sevis_id || undefined,
+          i94Number: data.i94_number || undefined,
+          dsoContact: {
+            name: (data as any).dso_contact_name || undefined,
+            email: (data as any).dso_contact_email || undefined
+          }
         };
         
         setCurrentUser(userProfile);
