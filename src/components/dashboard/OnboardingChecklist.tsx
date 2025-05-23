@@ -31,8 +31,8 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     employmentStartDate: currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate).toISOString().split('T')[0] : null,
     employmentStatus: currentUser?.employmentStatus || "Unemployed Student",
     optType: currentUser?.authType || "",
-    // Get graduation date from either property that might exist
-    graduationDate: currentUser?.courseEndDate || null
+    // Use programCompletionDate if it exists, otherwise try to get it from courseEndDate
+    graduationDate: currentUser?.programCompletionDate || currentUser?.courseEndDate || null
   };
 
   // Handle continue to dashboard

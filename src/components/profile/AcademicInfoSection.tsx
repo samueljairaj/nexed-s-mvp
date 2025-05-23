@@ -82,7 +82,7 @@ export function AcademicInfoSection() {
       fieldOfStudy: currentUser?.fieldOfStudy || "",
       isSTEM: currentUser?.isSTEM || false,
       programStartDate: parseDate(currentUser?.courseStartDate),
-      programCompletionDate: parseDate(currentUser?.courseEndDate),
+      programCompletionDate: parseDate(currentUser?.programCompletionDate || currentUser?.courseEndDate),
       dsoName: dsoContact.name || "",
       dsoEmail: dsoContact.email || "",
       dsoPhone: dsoContact.phone || "",
@@ -106,7 +106,9 @@ export function AcademicInfoSection() {
       }
       
       if (data.programCompletionDate) {
+        // Store in both courseEndDate for existing code compatibility and programCompletionDate for new code
         updateData.courseEndDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
+        updateData.programCompletionDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
       }
       
       // Create DSO contact object if any fields are filled
@@ -128,7 +130,6 @@ export function AcademicInfoSection() {
     }
   };
 
-  
   return (
     <Card>
       <CardHeader>
