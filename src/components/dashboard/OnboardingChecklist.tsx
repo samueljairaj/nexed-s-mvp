@@ -123,7 +123,7 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
       onOpenChange={onOpenChange} 
       userData={userData}
       onContinue={handleContinue}
-      isGenerating={isGeneratingTasks || isGenerating}
+      loading={isGeneratingTasks || isGenerating} // Changed from isGenerating to loading
       sections={getSections()}
     />
   );

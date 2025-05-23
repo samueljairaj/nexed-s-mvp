@@ -182,10 +182,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           unemploymentDays: (data as any).unemployment_days || undefined,
           eVerifyNumber: (data as any).e_verify_number || undefined,
           employer: (data as any).employer || undefined,
-          graduationDate: data.graduation_date || undefined,
-          visaStatus: data.visa_status || undefined,
-          sevisId: data.sevis_id || undefined,
-          i94Number: data.i94_number || undefined,
+          // Access the correct field names from database response
+          graduationDate: (data as any).graduation_date || undefined,
+          visaStatus: (data as any).visa_status || undefined,
+          sevisId: (data as any).sevis_id || undefined,
+          i94Number: (data as any).i94_number || undefined,
           dsoContact: {
             name: (data as any).dso_contact_name || undefined,
             email: (data as any).dso_contact_email || undefined
