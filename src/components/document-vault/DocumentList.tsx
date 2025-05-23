@@ -2,7 +2,7 @@
 import { Document } from "@/types/document";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { FileText, FileImage, FileArchive, FilePen } from "lucide-react";
+import { FileText, FileImage, FileArchive, FilePen, Clock, AlertTriangle } from "lucide-react";
 import { DocumentActions } from "./DocumentActions";
 import { getStatusColor } from "@/utils/documentUtils";
 
@@ -34,6 +34,14 @@ export function DocumentList({
     } else {
       return <FilePen size={20} className="text-gray-400" />;
     }
+  };
+  
+  // Get status icon
+  const getStatusIcon = (status?: string) => {
+    if (!status || status === "valid") return null;
+    return status === "expired" ? 
+      <AlertTriangle className="w-3 h-3 mr-1" /> : 
+      <Clock className="w-3 h-3 mr-1" />;
   };
 
   if (documents.length === 0) {
@@ -91,8 +99,9 @@ export function DocumentList({
                   {doc.size}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {doc.expiryDate ? (
-                    <Badge className={getStatusColor(doc.status || 'valid')}>
+                  {doc.status ? (
+                    <Badge className={`flex items-center ${getStatusColor(doc.status)}`}>
+                      {getStatusIcon(doc.status)}
                       {doc.status === "valid" && "Valid"}
                       {doc.status === "expiring" && "Expiring Soon"}
                       {doc.status === "expired" && "Expired"}

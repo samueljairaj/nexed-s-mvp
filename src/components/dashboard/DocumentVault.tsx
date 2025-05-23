@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { generateMockDocuments } from "@/utils/mockDocuments";
 
 interface DocumentVaultProps {
   documentsCount: {
@@ -18,12 +19,15 @@ interface DocumentVaultProps {
 const DocumentVault: React.FC<DocumentVaultProps> = ({ documentsCount }) => {
   const uploadPercentage = Math.round((documentsCount.uploaded / documentsCount.total) * 100);
   
-  // Sample document list for UI purposes
-  const recentDocuments = [
-    { name: "Passport Copy", type: "ID", status: "Verified", expiry: "2026-05-10", versions: 1 },
-    { name: "I-20 Form", type: "Visa", status: "Verified", expiry: "2025-08-15", versions: 3 },
-    { name: "Health Insurance", type: "Health", status: "Expiring Soon", expiry: "2025-06-01", versions: 1 }
-  ];
+  // Get mock documents for display
+  const documents = generateMockDocuments();
+  const recentDocuments = documents.slice(0, 3).map(doc => ({
+    name: doc.name,
+    type: doc.category,
+    status: doc.status || "Valid",
+    expiry: doc.expiryDate,
+    versions: doc.versions?.length || 1
+  }));
   
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-100">
@@ -78,12 +82,16 @@ const DocumentVault: React.FC<DocumentVaultProps> = ({ documentsCount }) => {
                 </div>
                 <div className="flex flex-col items-end">
                   <span className={`text-xs px-2 py-1 rounded-full ${
-                    doc.status === "Verified" ? "bg-green-100 text-green-700" : 
-                    doc.status === "Expiring Soon" ? "bg-amber-100 text-amber-700 flex items-center gap-1" : 
+                    doc.status === "valid" ? "bg-green-100 text-green-700" : 
+                    doc.status === "expiring" ? "bg-amber-100 text-amber-700 flex items-center gap-1" : 
+                    doc.status === "expired" ? "bg-red-100 text-red-700 flex items-center gap-1" :
                     "bg-gray-100 text-gray-600"
                   }`}>
-                    {doc.status === "Expiring Soon" && <Clock size={10} />}
-                    {doc.status}
+                    {doc.status === "expiring" && <Clock size={10} />}
+                    {doc.status === "expired" && <AlertTriangle size={10} />}
+                    {doc.status === "valid" ? "Valid" : 
+                     doc.status === "expiring" ? "Expiring Soon" : 
+                     doc.status === "expired" ? "Expired" : doc.status}
                   </span>
                   {doc.expiry && (
                     <span className="text-[10px] text-gray-500 mt-1">

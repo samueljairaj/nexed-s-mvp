@@ -84,7 +84,7 @@ export function DocumentCard({ document, onSelect, onDelete, onRename, onToggleR
               <Badge variant="secondary" className="text-xs">Required</Badge>
             )}
             
-            {document.expiryDate && document.status && (
+            {document.status && (
               <Badge 
                 variant={document.status === "valid" ? "outline" : document.status === "expiring" ? "warning" : "destructive"}
                 className="text-xs flex items-center gap-1"

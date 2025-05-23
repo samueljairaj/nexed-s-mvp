@@ -3,14 +3,16 @@ import { Document, DocumentCategory, DocumentFolder, DocumentPacket, DocumentSta
 import { toast } from "sonner";
 import { getDocumentStatus, detectDocumentType, suggestDocumentTags } from "@/utils/documentUtils";
 import { useDocumentSync } from "./useDocumentSync";
+import { generateMockDocuments } from "@/utils/mockDocuments";
 
 export function useDocuments() {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [folders, setFolders] = useState<DocumentFolder[]>([]);
-  const [packets, setPackets] = useState<DocumentPacket[]>([]);
+  // Initialize with mock documents
+  const [documents, setDocuments] = useState<Document[]>(generateMockDocuments());
+  const [folders, setFolders] = useState<DocumentFolder[]>(mockFolders);
+  const [packets, setPackets] = useState<DocumentPacket[]>(mockPackets);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Set to false since we have mock data
   
   const { 
     saveDocumentToDatabase, 
@@ -456,7 +458,7 @@ export function useDocuments() {
   };
 }
 
-// Mock folders - moved to this file since they're only used here
+// Mock folders 
 const mockFolders: DocumentFolder[] = [
   {
     id: "folder-1",
@@ -472,5 +474,38 @@ const mockFolders: DocumentFolder[] = [
     id: "folder-3",
     name: "Work Documents",
     category: "employment"
+  },
+  {
+    id: "folder-4",
+    name: "Financial Records",
+    category: "financial" 
+  },
+  {
+    id: "folder-5",
+    name: "Personal IDs",
+    category: "personal"
+  }
+];
+
+// Mock document packets
+const mockPackets: DocumentPacket[] = [
+  {
+    id: "packet-1",
+    name: "University Application Documents",
+    documentIds: ["doc-1", "doc-3", "doc-5"],
+    shareLink: "https://nexed.app/share/abc123",
+    shareExpiry: "2025-07-15",
+    accessType: "view",
+    createdAt: "2025-05-01T10:30:00Z"
+  },
+  {
+    id: "packet-2",
+    name: "OPT Application Package",
+    documentIds: ["doc-2", "doc-6", "doc-8"],
+    shareLink: "https://nexed.app/share/def456",
+    shareExpiry: "2025-06-30",
+    sharePassword: "optdocs2025",
+    accessType: "view",
+    createdAt: "2025-05-10T14:45:00Z"
   }
 ];
