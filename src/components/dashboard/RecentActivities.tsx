@@ -167,30 +167,33 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
 
   return (
     <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+      <CardHeader className="pb-3">
         <CardTitle className="text-lg font-medium text-nexed-800 flex items-center">
           <History className="mr-2 h-5 w-5 text-nexed-600" />
           Recent Activities
         </CardTitle>
-        <Button asChild variant="ghost" size="icon" className="rounded-full">
-          <Link to="/app/profile">
-            <ArrowRight size={16} />
-          </Link>
-        </Button>
       </CardHeader>
-      <CardContent className="space-y-1">
+      <CardContent className="space-y-0 p-4 pt-0">
         {displayActivities.map((activity, index) => (
-          <div key={index} className="flex items-start py-3 border-b last:border-0 last:pb-0 hover:bg-gray-50 rounded-md px-2 transition-colors duration-200">
-            <div className="h-8 w-8 rounded-full bg-nexed-50 flex items-center justify-center mr-3">
+          <div key={index} className="flex items-start py-2 border-b last:border-0 last:pb-0 hover:bg-gray-50 rounded-md px-2 transition-colors duration-200">
+            <div className="h-7 w-7 rounded-full bg-nexed-50 flex items-center justify-center mr-3">
               {activity.icon || <Clock size={16} className="text-gray-500" />}
             </div>
             <div>
-              <p className="font-medium text-gray-900">{activity.action}</p>
-              <p className="text-sm text-gray-600">{activity.item}</p>
-              <p className="text-xs text-gray-500 mt-1">{activity.date}</p>
+              <p className="font-medium text-sm text-gray-900">{activity.action}</p>
+              <p className="text-xs text-gray-600">{activity.item}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{activity.date}</p>
             </div>
           </div>
         ))}
+        <div className="pt-2">
+          <Button asChild variant="ghost" size="sm" className="w-full text-xs text-nexed-600 hover:text-nexed-800 mt-1">
+            <Link to="/app/profile" className="flex items-center justify-center gap-1">
+              View all activity
+              <ArrowRight size={14} />
+            </Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
