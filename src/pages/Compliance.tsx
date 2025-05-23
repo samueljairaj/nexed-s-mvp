@@ -58,17 +58,23 @@ const Compliance = () => {
     });
   };
   
-  // Generate mock data if no tasks exist
+  // Generate mock data if no tasks exist - FIXED to prevent infinite loops
   useEffect(() => {
-    if (!isLoading && tasks.length === 0 && !isGenerating) {
-      // Set a slight delay to ensure the component is fully mounted
+    // Store a flag in sessionStorage to prevent repeated generation
+    const tasksGenerated = sessionStorage.getItem('tasksGenerated');
+    
+    if (!isLoading && tasks.length === 0 && !isGenerating && !tasksGenerated) {
+      // Set the flag to prevent future generations in this session
+      sessionStorage.setItem('tasksGenerated', 'true');
+      
+      // Generate tasks after a slight delay
       const timer = setTimeout(() => {
         generateTasksWithAI();
       }, 300);
       
       return () => clearTimeout(timer);
     }
-  }, [isLoading, tasks.length, isGenerating]);
+  }, [isLoading, tasks.length, isGenerating, generateTasksWithAI]);
 
   if (isLoading) {
     return (
@@ -123,7 +129,10 @@ const Compliance = () => {
             Get a personalized checklist of compliance tasks based on your visa status and profile information.
           </p>
           <Button
-            onClick={generateTasksWithAI}
+            onClick={() => {
+              sessionStorage.setItem('tasksGenerated', 'true');
+              generateTasksWithAI();
+            }}
             className="gap-2"
             size="lg"
           >

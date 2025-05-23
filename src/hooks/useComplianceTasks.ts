@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DocumentCategory } from '@/types/document';
@@ -46,6 +47,7 @@ export const useComplianceTasks = () => {
   const [selectedPhase, setSelectedPhase] = useState<string>('all_phases');
   const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
   const [realtimeSubscription, setRealtimeSubscription] = useState<any>(null);
+  const [subscriptionSetup, setSubscriptionSetup] = useState<boolean>(false);
 
   // Helper function to format dates or provide defaults
   const formatDateOrDefault = (dateStr: string | Date | null | undefined): string => {
@@ -74,7 +76,7 @@ export const useComplianceTasks = () => {
 
   // Set up Supabase realtime subscription - FIXED to prevent multiple subscriptions
   useEffect(() => {
-    if (!currentUser?.id) return;
+    if (!currentUser?.id || subscriptionSetup) return;
     
     // Clean up any existing subscription
     if (realtimeSubscription) {
@@ -146,20 +148,18 @@ export const useComplianceTasks = () => {
       .subscribe();
 
     setRealtimeSubscription(channel);
+    setSubscriptionSetup(true);
 
     // Clean up subscription on unmount
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser?.id]);
+  }, [currentUser?.id, subscriptionSetup]);
 
   // Load tasks on component mount - FIXED to prevent infinite loops
   useEffect(() => {
     if (currentUser?.id) {
-      // Only load tasks if we don't have any yet
-      if (tasks.length === 0) {
-        loadTasks();
-      }
+      loadTasks();
     }
   }, [currentUser?.id]);
 
