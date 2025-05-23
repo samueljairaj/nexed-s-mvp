@@ -1,10 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import ComplianceChecklist from "@/components/dashboard/ComplianceChecklist";
 import DocumentVault from "@/components/dashboard/DocumentVault";
-import UpcomingDeadlines from "@/components/dashboard/UpcomingDeadlines";
 import QuickLinksCard from "@/components/dashboard/QuickLinksCard";
 import RecentActivities from "@/components/dashboard/RecentActivities";
 import TipsAndReminders from "@/components/dashboard/TipsAndReminders";
@@ -13,6 +10,7 @@ import { useLocation } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Clock, FileCheck, Upload } from "lucide-react";
+import ComplianceDashboard from "@/components/dashboard/ComplianceDashboard";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -185,17 +183,13 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Main Content - Row 1: Compliance & Upcoming Deadlines */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Compliance Checklist Card - Takes 1 column */}
-        <div className="lg:col-span-1">
-          <ComplianceChecklist complianceProgress={complianceProgress} tasksCount={tasksCount} />
-        </div>
-
-        {/* Upcoming Deadlines - Takes 2 columns - MOVED UP */}
-        <div className="lg:col-span-2">
-          <UpcomingDeadlines deadlines={deadlines} />
-        </div>
+      {/* Main Content - Row 1: Combined Compliance Dashboard */}
+      <div className="grid grid-cols-1 gap-5">
+        <ComplianceDashboard 
+          complianceProgress={complianceProgress} 
+          tasksCount={tasksCount}
+          deadlines={deadlines}
+        />
       </div>
 
       {/* Main Content - Row 2: Document Vault & Recent Activities */}
@@ -211,7 +205,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Main Content - Row 3: Quick Links & Tips and Guides - MOVED DOWN */}
+      {/* Main Content - Row 3: Quick Links & Tips and Guides */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Quick Links Card */}
         <div className="lg:col-span-1">
