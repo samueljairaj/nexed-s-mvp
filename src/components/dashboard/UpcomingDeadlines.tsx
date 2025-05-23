@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Calendar } from "lucide-react";
+import { Calendar, ArrowRight, Clock, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,59 +41,78 @@ const UpcomingDeadlines: React.FC<UpcomingDeadlinesProps> = ({ deadlines = [] })
       description: "Current policy expires on this date",
       category: "personal",
       priority: "medium"
-    },
-    {
-      title: "I-20 Extension Application",
-      due_date: "2025-04-05",
-      description: "Current I-20 expires in 60 days",
-      category: "immigration",
-      priority: "high"
     }
   ];
   
   // Use actual deadlines if available, otherwise fallback to sample deadlines
-  const displayDeadlines = deadlines.length > 0 ? deadlines : defaultDeadlines;
+  const displayDeadlines = deadlines.length > 0 ? deadlines.slice(0, 3) : defaultDeadlines;
+
+  // Calculate days remaining
+  const getDaysRemaining = (dateString: string) => {
+    try {
+      const dueDate = new Date(dateString);
+      const today = new Date();
+      const diffTime = dueDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    } catch (e) {
+      return 30; // Default fallback
+    }
+  };
 
   return (
-    <Card className="nexed-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center text-xl">
-          <Calendar className="mr-2 h-5 w-5 text-nexed-600" />
-          Upcoming Deadlines
-        </CardTitle>
+    <Card className="h-full">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-lg font-medium flex items-center">
+            <Calendar className="mr-2 h-5 w-5 text-nexed-600" />
+            Upcoming Deadlines
+          </CardTitle>
+        </div>
+        <Button asChild variant="ghost" size="icon" className="rounded-full">
+          <Link to="/app/compliance">
+            <ArrowRight size={16} />
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {displayDeadlines.map((deadline, index) => {
             const dueDate = new Date(deadline.due_date);
             const isValidDate = !isNaN(dueDate.getTime());
+            const daysRemaining = getDaysRemaining(deadline.due_date);
+            const isUrgent = daysRemaining <= 7;
             
             return (
-              <div key={index} className="flex border-b pb-3 last:border-0 last:pb-0">
-                <div className="h-12 w-12 flex-shrink-0 flex flex-col items-center justify-center rounded-md bg-nexed-50 text-nexed-600 mr-4">
-                  <span className="text-xs font-semibold">{isValidDate ? format(dueDate, 'MMM') : 'TBD'}</span>
-                  <span className="text-lg font-bold">{isValidDate ? format(dueDate, 'd') : '--'}</span>
+              <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between mb-2">
+                  <span className={`text-xs rounded-full px-2 py-0.5 ${
+                    deadline.priority === "high" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                  }`}>
+                    {deadline.category}
+                  </span>
+                  <span className={`text-xs rounded-full px-2 py-1 flex items-center ${
+                    isUrgent ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                  }`}>
+                    {isUrgent && <AlertTriangle size={12} className="mr-1" />}
+                    <Clock size={12} className="mr-1" />
+                    {daysRemaining > 0 
+                      ? `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left` 
+                      : "Due today"}
+                  </span>
                 </div>
-                <div className="flex-grow">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-gray-900">{deadline.title}</h4>
-                    <span className={`text-xs rounded-full px-2 py-0.5 ${
-                      deadline.priority === "high" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
-                    }`}>
-                      {deadline.priority === "high" ? "High Priority" : "Medium Priority"}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{deadline.description}</p>
+                <h4 className="font-medium text-gray-900">{deadline.title}</h4>
+                <p className="text-sm text-gray-600 mt-1">{deadline.description}</p>
+                <div className="mt-2 text-sm text-gray-500">
+                  Due: {isValidDate ? format(dueDate, 'MMM d, yyyy') : 'TBD'}
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="mt-4">
-          <Button asChild variant="outline" className="w-full">
-            <Link to="/app/compliance">View All Deadlines</Link>
-          </Button>
-        </div>
+        <Button asChild variant="outline" size="sm" className="w-full mt-4">
+          <Link to="/app/compliance">View All Deadlines</Link>
+        </Button>
       </CardContent>
     </Card>
   );

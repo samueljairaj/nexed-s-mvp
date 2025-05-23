@@ -1,6 +1,9 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Lightbulb, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface TipsAndRemindersProps {
   visaType?: string;
@@ -31,21 +34,36 @@ const TipsAndReminders: React.FC<TipsAndRemindersProps> = ({ visaType }) => {
   }
 
   return (
-    <Card className="nexed-card">
-      <CardHeader>
-        <CardTitle className="text-xl">Tips & Reminders</CardTitle>
+    <Card className="h-full">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-medium">Tips & Guides</CardTitle>
+        <Button asChild variant="ghost" size="icon" className="rounded-full">
+          <Link to="/app/assistant">
+            <ExternalLink size={16} />
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-3">
+        <div className="space-y-3">
           {tips.map((tip, index) => (
-            <li key={index} className="flex items-start">
-              <div className="h-5 w-5 rounded-full bg-nexed-100 flex-shrink-0 flex items-center justify-center text-nexed-600 mr-3">
-                <span className="text-xs">{index + 1}</span>
+            <div key={index} className="flex items-center p-3 bg-nexed-50 rounded-lg">
+              <div className="h-8 w-8 flex-shrink-0 rounded-md bg-nexed-100 flex items-center justify-center text-nexed-600 mr-3">
+                <Lightbulb size={18} />
               </div>
-              <span className="text-gray-700">{tip}</span>
-            </li>
+              <p className="text-sm">{tip}</p>
+            </div>
           ))}
-        </ul>
+        </div>
+        
+        <div className="mt-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+          <h3 className="font-medium text-sm flex items-center">
+            <span className="text-nexed-600 mr-2">💡</span> Did you know?
+          </h3>
+          <p className="text-xs text-gray-600 mt-1">
+            Students on F-1 visas can work on-campus for up to 20 hours per week during the academic year
+            and full-time during breaks.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

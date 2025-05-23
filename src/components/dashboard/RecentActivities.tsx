@@ -3,11 +3,15 @@ import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { Clock, CheckCircle2, Upload, MessageSquare, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface Activity {
   action: string;
   item: string;
   date: string;
+  icon?: React.ReactNode;
 }
 
 interface RecentActivitiesProps {
@@ -51,7 +55,8 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
             activities.push({
               action: "Uploaded document",
               item: doc.title,
-              date: formatActivityDate(doc.created_at)
+              date: formatActivityDate(doc.created_at),
+              icon: <Upload size={16} className="text-blue-500" />
             });
           });
         }
@@ -62,7 +67,8 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
             activities.push({
               action: "Completed task",
               item: task.title,
-              date: formatActivityDate(task.updated_at)
+              date: formatActivityDate(task.updated_at),
+              icon: <CheckCircle2 size={16} className="text-green-500" />
             });
           });
         }
@@ -73,12 +79,14 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
             {
               action: "Asked assistant",
               item: "How do I apply for OPT?",
-              date: "May 5, 2025"
+              date: "2 days ago",
+              icon: <MessageSquare size={16} className="text-purple-500" />
             },
             {
-              action: "Marked as done",
+              action: "Completed task",
               item: "Health Insurance Verification",
-              date: "May 3, 2025"
+              date: "3 days ago",
+              icon: <CheckCircle2 size={16} className="text-green-500" />
             }
           ];
           
@@ -120,7 +128,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
       } else if (date.toDateString() === yesterday.toDateString()) {
         return "Yesterday, " + format(date, "h:mm a");
       } else {
-        return format(date, "MMM d, yyyy");
+        return format(date, "MMM d");
       }
     } catch (e) {
       return "Recent";
@@ -132,45 +140,54 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
     {
       action: "Uploaded document",
       item: "Passport Copy",
-      date: "Today, 2:34 PM"
+      date: "Today",
+      icon: <Upload size={16} className="text-blue-500" />
     },
     {
       action: "Completed task",
       item: "Update Local Address",
-      date: "Yesterday, 11:15 AM"
+      date: "Yesterday",
+      icon: <CheckCircle2 size={16} className="text-green-500" />
     },
     {
       action: "Asked assistant",
       item: "How do I apply for OPT?",
-      date: "May 5, 2025"
+      date: "2 days ago",
+      icon: <MessageSquare size={16} className="text-purple-500" />
     },
     {
-      action: "Marked as done",
+      action: "Completed task",
       item: "Health Insurance Verification",
-      date: "May 3, 2025"
+      date: "3 days ago",
+      icon: <CheckCircle2 size={16} className="text-green-500" />
     }
   ];
 
   const displayActivities = activities.length > 0 ? activities : defaultActivities;
 
   return (
-    <Card className="nexed-card">
-      <CardHeader>
-        <CardTitle className="text-xl">Recent Activities</CardTitle>
+    <Card className="h-full">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-medium">Recent Activities</CardTitle>
+        <Button asChild variant="ghost" size="icon" className="rounded-full">
+          <Link to="/app/profile">
+            <ArrowRight size={16} />
+          </Link>
+        </Button>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {displayActivities.map((activity, index) => (
-            <div key={index} className="flex items-start pb-3 border-b last:border-0 last:pb-0">
-              <div className="h-8 w-8 rounded-full bg-nexed-100 flex items-center justify-center text-nexed-600 mr-3"></div>
-              <div>
-                <p className="font-medium text-gray-900">{activity.action}</p>
-                <p className="text-sm text-gray-600">{activity.item}</p>
-                <p className="text-xs text-gray-500 mt-1">{activity.date}</p>
-              </div>
+      <CardContent className="space-y-1">
+        {displayActivities.map((activity, index) => (
+          <div key={index} className="flex items-start py-3 border-b last:border-0 last:pb-0">
+            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+              {activity.icon || <Clock size={16} className="text-gray-500" />}
             </div>
-          ))}
-        </div>
+            <div>
+              <p className="font-medium text-gray-900">{activity.action}</p>
+              <p className="text-sm text-gray-600">{activity.item}</p>
+              <p className="text-xs text-gray-500 mt-1">{activity.date}</p>
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

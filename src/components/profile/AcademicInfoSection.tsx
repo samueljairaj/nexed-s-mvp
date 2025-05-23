@@ -18,31 +18,22 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { CalendarIcon, BookOpen } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { dateUtils } from "@/lib/date-utils";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const academicInfoSchema = z.object({
-  university: z.string().min(1, "University is required"),
-  degreeLevel: z.string().min(1, "Degree level is required"),
+  university: z.string().min(1, "University name is required"),
   fieldOfStudy: z.string().min(1, "Field of study is required"),
+  degreeLevel: z.string().optional(),
+  courseStartDate: z.date().optional(),
+  graduationDate: z.date().optional(),
   isSTEM: z.boolean().optional(),
-  programStartDate: z.date().optional(),
-  programCompletionDate: z.date().optional(),
   dsoName: z.string().optional(),
-  dsoEmail: z.string().email("Invalid email").optional().or(z.literal('')),
-  dsoPhone: z.string().optional()
+  dsoEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
 });
 
 export function AcademicInfoSection() {
@@ -59,49 +50,39 @@ export function AcademicInfoSection() {
     }
   };
 
-  // Initialize form with current user data
   const form = useForm<z.infer<typeof academicInfoSchema>>({
     resolver: zodResolver(academicInfoSchema),
     defaultValues: {
       university: currentUser?.university || "",
-      degreeLevel: currentUser?.degreeLevel || "",
       fieldOfStudy: currentUser?.fieldOfStudy || "",
+      degreeLevel: currentUser?.degreeLevel || "",
+      courseStartDate: parseDate(currentUser?.courseStartDate),
+      graduationDate: parseDate(currentUser?.graduationDate),
       isSTEM: currentUser?.isSTEM || false,
-      programStartDate: parseDate(currentUser?.courseStartDate),
-      programCompletionDate: parseDate(currentUser?.programCompletionDate),
-      dsoName: currentUser?.dsoContact?.name || "",
-      dsoEmail: currentUser?.dsoContact?.email || "",
-      dsoPhone: currentUser?.dsoContact?.phone || "",
+      dsoName: currentUser?.dsoName || "",
+      dsoEmail: currentUser?.dsoEmail || "",
     },
   });
 
   const onSubmit = async (data: z.infer<typeof academicInfoSchema>) => {
     setIsSubmitting(true);
     try {
-      // Prepare data for API
       const updateData: Record<string, any> = {
         university: data.university,
-        degreeLevel: data.degreeLevel,
         fieldOfStudy: data.fieldOfStudy,
-        isSTEM: data.isSTEM
+        degreeLevel: data.degreeLevel,
+        isSTEM: data.isSTEM,
+        dsoName: data.dsoName,
+        dsoEmail: data.dsoEmail,
       };
       
-      // Format dates
-      if (data.programStartDate) {
-        updateData.courseStartDate = dateUtils.formatToYYYYMMDD(data.programStartDate);
+      // Format dates as YYYY-MM-DD strings
+      if (data.courseStartDate) {
+        updateData.courseStartDate = dateUtils.formatToYYYYMMDD(data.courseStartDate);
       }
       
-      if (data.programCompletionDate) {
-        updateData.programCompletionDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
-      }
-      
-      // Create DSO contact object if any fields are filled
-      if (data.dsoName || data.dsoEmail || data.dsoPhone) {
-        updateData.dsoContact = {
-          name: data.dsoName || "",
-          email: data.dsoEmail || "",
-          phone: data.dsoPhone || ""
-        };
+      if (data.graduationDate) {
+        updateData.graduationDate = dateUtils.formatToYYYYMMDD(data.graduationDate);
       }
       
       await updateProfile(updateData);
@@ -118,8 +99,7 @@ export function AcademicInfoSection() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
-          <BookOpen className="mr-2 h-5 w-5 text-nexed-600" />
-          Academic Information
+          <span className="text-nexed-600 mr-2">Academic Information</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -131,42 +111,15 @@ export function AcademicInfoSection() {
                 name="university"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>University</FormLabel>
+                    <FormLabel>University / School</FormLabel>
                     <FormControl>
-                      <Input placeholder="University name" {...field} />
+                      <Input placeholder="Enter university name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="degreeLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Degree Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select degree level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="bachelor">Bachelor's</SelectItem>
-                        <SelectItem value="master">Master's</SelectItem>
-                        <SelectItem value="phd">PhD / Doctorate</SelectItem>
-                        <SelectItem value="associate">Associate</SelectItem>
-                        <SelectItem value="certificate">Certificate</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="fieldOfStudy"
@@ -174,42 +127,52 @@ export function AcademicInfoSection() {
                   <FormItem>
                     <FormLabel>Field of Study</FormLabel>
                     <FormControl>
-                      <Input placeholder="Your major" {...field} />
+                      <Input placeholder="Enter your major" {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="isSTEM"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>STEM Designated Degree</FormLabel>
-                      <FormDescription>
-                        Check if your degree is on the STEM Designated Degree Program List
-                      </FormDescription>
-                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
             
-            <Separator className="my-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="degreeLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Degree Level</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Bachelor's, Master's, PhD, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="isSTEM"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 pt-6">
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-nexed-600 focus:ring-nexed-500 border-gray-300 rounded"
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                      />
+                    </FormControl>
+                    <FormLabel>This is a STEM designated program</FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="programStartDate"
+                name="courseStartDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Program Start Date</FormLabel>
@@ -237,7 +200,6 @@ export function AcademicInfoSection() {
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date > new Date()}
                           initialFocus
                         />
                       </PopoverContent>
@@ -249,10 +211,10 @@ export function AcademicInfoSection() {
               
               <FormField
                 control={form.control}
-                name="programCompletionDate"
+                name="graduationDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Expected Completion Date</FormLabel>
+                    <FormLabel>Expected Graduation Date</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -277,6 +239,7 @@ export function AcademicInfoSection() {
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
+                          disabled={(date) => date < new Date()}
                           initialFocus
                         />
                       </PopoverContent>
@@ -288,9 +251,8 @@ export function AcademicInfoSection() {
             </div>
             
             <Separator className="my-4" />
-            <h3 className="text-lg font-medium mb-2">DSO Contact Information</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="dsoName"
@@ -298,8 +260,9 @@ export function AcademicInfoSection() {
                   <FormItem>
                     <FormLabel>DSO Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Your DSO's name" {...field} />
+                      <Input placeholder="Designated School Official name" {...field} />
                     </FormControl>
+                    <FormDescription>Your primary DSO contact</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -312,21 +275,7 @@ export function AcademicInfoSection() {
                   <FormItem>
                     <FormLabel>DSO Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="dso@university.edu" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="dsoPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>DSO Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="+1 (123) 456-7890" {...field} />
+                      <Input placeholder="dso@university.edu" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

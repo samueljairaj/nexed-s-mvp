@@ -1,40 +1,60 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Upload, FileCheck, FolderArchive, MessageCircle } from "lucide-react";
+import { Upload, FileCheck, FolderArchive, MessageCircle, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 const QuickLinksCard: React.FC = () => {
   const links = [
-    { title: "Upload New Document", icon: <Upload size={16} />, to: "/app/documents", color: "bg-blue-50 text-blue-600" },
-    { title: "Complete Tasks", icon: <FileCheck size={16} />, to: "/app/compliance", color: "bg-green-50 text-green-600" },
-    { title: "Browse Documents", icon: <FolderArchive size={16} />, to: "/app/documents", color: "bg-amber-50 text-amber-600" },
+    { title: "Upload Documents", icon: <Upload size={16} />, to: "/app/documents", color: "bg-blue-50 text-blue-600" },
+    { title: "Compliance Tasks", icon: <FileCheck size={16} />, to: "/app/compliance", color: "bg-green-50 text-green-600" },
+    { title: "Document Vault", icon: <FolderArchive size={16} />, to: "/app/documents", color: "bg-amber-50 text-amber-600" },
     { title: "Ask Assistant", icon: <MessageCircle size={16} />, to: "/app/assistant", color: "bg-purple-50 text-purple-600" }
+  ];
+  
+  const externalLinks = [
+    { title: "SEVP Portal", description: "Student Exchange Portal" },
+    { title: "USCIS Website", description: "Immigration Services" },
   ];
 
   return (
-    <Card className="nexed-card">
+    <Card className="h-full">
       <CardHeader>
-        <CardTitle className="text-xl">Quick Links</CardTitle>
+        <CardTitle className="text-lg font-medium">Quick Access</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-2 gap-3">
           {links.map((link, index) => (
             <Button
               key={index}
               asChild
               variant="outline"
-              className="w-full justify-start h-auto py-3"
+              className="h-auto py-4 flex-col items-center justify-center text-center"
             >
-              <Link to={link.to} className="flex items-center">
-                <span className={`w-8 h-8 mr-3 rounded-md ${link.color} flex items-center justify-center`}>
+              <Link to={link.to}>
+                <span className={`h-8 w-8 rounded-md ${link.color} flex items-center justify-center mb-2`}>
                   {link.icon}
                 </span>
-                <span>{link.title}</span>
+                <span className="text-xs font-medium">{link.title}</span>
               </Link>
             </Button>
           ))}
+        </div>
+        
+        <div className="pt-2">
+          <h3 className="text-sm font-medium mb-3 text-gray-700">External Resources</h3>
+          <div className="space-y-2">
+            {externalLinks.map((link, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                <div>
+                  <p className="text-sm font-medium">{link.title}</p>
+                  <p className="text-xs text-gray-500">{link.description}</p>
+                </div>
+                <ExternalLink size={14} className="text-gray-400" />
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>

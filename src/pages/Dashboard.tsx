@@ -122,34 +122,98 @@ const Dashboard = () => {
         onOpenChange={setShowChecklist} 
       />
 
-      <header className="page-header">
-        <h1 className="page-title">Welcome back, {currentUser?.name || "Student"}</h1>
-        <p className="page-subtitle">
-          Here's an overview of your visa status and compliance
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Welcome back, {currentUser?.name || "Student"}
+        </h1>
+        <p className="text-gray-600">
+          Here's your visa compliance overview
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <VisaStatusCard />
-        <ComplianceChecklist 
-          complianceProgress={complianceProgress} 
-          tasksCount={tasksCount}
-        />
-        <DocumentVault documentsCount={documentsCount} />
+      {/* Primary section - Key metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+        <div className="col-span-1 lg:col-span-3 bg-white rounded-lg border p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Visa Status</span>
+              <div className="flex items-center mt-1">
+                <span className="font-bold text-xl">
+                  {currentUser?.visaType || "F1"} Student
+                </span>
+                <span className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
+                  currentUser?.visa_expiry_date && new Date(currentUser.visa_expiry_date) < new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-green-100 text-green-800"
+                }`}>
+                  {currentUser?.visa_expiry_date && new Date(currentUser.visa_expiry_date) < new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+                    ? "Expiring Soon"
+                    : "Active"
+                  }
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Compliance Status</span>
+              <div className="flex items-center mt-1 gap-3">
+                <span className="font-bold text-xl">{complianceProgress}%</span>
+                <div className="flex-1">
+                  <div className="h-2 w-full bg-gray-200 rounded-full">
+                    <div 
+                      className="h-2 bg-nexed-500 rounded-full" 
+                      style={{ width: `${complianceProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500">Documents</span>
+              <div className="mt-1">
+                <span className="font-bold text-xl">{documentsCount.uploaded}/{documentsCount.total}</span>
+                <span className="ml-1 text-gray-600">uploaded</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* Bento Box Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Compliance Checklist Card */}
         <div className="lg:col-span-2">
-          <UpcomingDeadlines deadlines={deadlines} />
+          <ComplianceChecklist 
+            complianceProgress={complianceProgress} 
+            tasksCount={tasksCount}
+          />
         </div>
-        <div>
+
+        {/* Document Vault */}
+        <div className="lg:col-span-2">
+          <DocumentVault documentsCount={documentsCount} />
+        </div>
+
+        {/* Quick Links Card */}
+        <div className="lg:col-span-1 row-span-2">
           <QuickLinksCard />
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <RecentActivities currentUser={currentUser} />
-        <TipsAndReminders visaType={currentUser?.visaType} />
+        {/* Upcoming Deadlines */}
+        <div className="lg:col-span-3">
+          <UpcomingDeadlines deadlines={deadlines} />
+        </div>
+
+        {/* Recent Activities */}
+        <div className="lg:col-span-2">
+          <RecentActivities currentUser={currentUser} />
+        </div>
+
+        {/* Tips and Reminders */}
+        <div className="lg:col-span-2">
+          <TipsAndReminders visaType={currentUser?.visaType} />
+        </div>
       </div>
     </div>
   );
