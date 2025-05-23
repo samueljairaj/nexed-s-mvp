@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import VisaStatusCard from "@/components/dashboard/VisaStatusCard";
 import ComplianceChecklist from "@/components/dashboard/ComplianceChecklist";
 import DocumentVault from "@/components/dashboard/DocumentVault";
 import UpcomingDeadlines from "@/components/dashboard/UpcomingDeadlines";
@@ -11,6 +10,9 @@ import RecentActivities from "@/components/dashboard/RecentActivities";
 import TipsAndReminders from "@/components/dashboard/TipsAndReminders";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import { useLocation } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Clock, FileCheck, Upload } from "lucide-react";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -114,11 +116,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-5">
+    <div className="animate-fade-in space-y-6">
       {/* Onboarding Checklist Dialog */}
       <OnboardingChecklist open={showChecklist} onOpenChange={setShowChecklist} />
 
-      <header className="page-header mb-4">
+      <header className="page-header mb-6">
         <h1 className="page-title text-nexed-800">
           Welcome back, {currentUser?.name || "Student"}
         </h1>
@@ -127,74 +129,97 @@ const Dashboard = () => {
         </p>
       </header>
 
-      {/* Status Summary Section */}
-      <div className="bg-white rounded-lg shadow-sm border p-5 mb-5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Visa Status</span>
-            <div className="flex items-center mt-1">
-              <span className="font-bold text-xl">
-                {currentUser?.visaType || "F1"} Student
-              </span>
-              <span className={`ml-2 status-badge ${currentUser?.visa_expiry_date && new Date(currentUser.visa_expiry_date) < new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) ? "status-badge-warning" : "status-badge-success"}`}>
-                {currentUser?.visa_expiry_date && new Date(currentUser.visa_expiry_date) < new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) ? "Expiring Soon" : "Active"}
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Compliance Status</span>
-            <div className="flex items-center mt-1 gap-3">
-              <span className="font-bold text-xl">{complianceProgress}%</span>
-              <div className="flex-1">
-                <div className="h-2 w-full bg-gray-200 rounded-full">
-                  <div className="h-2 bg-nexed-500 rounded-full" style={{
-                    width: `${complianceProgress}%`
-                  }}></div>
-                </div>
+      {/* Status Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Visa Status Card */}
+        <Card className="bg-white shadow-sm overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500 mb-2">Visa Status</span>
+              <div className="flex items-center">
+                <span className="font-bold text-xl text-gray-800">
+                  {currentUser?.visaType || "F1"} Student
+                </span>
+                <span className={`ml-2 status-badge ${currentUser?.visa_expiry_date && new Date(currentUser.visa_expiry_date) < new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) ? "status-badge-warning" : "status-badge-success"}`}>
+                  {currentUser?.visa_expiry_date && new Date(currentUser.visa_expiry_date) < new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) ? "Expiring Soon" : "Active"}
+                </span>
               </div>
+              <span className="text-xs mt-2 text-gray-500">
+                {currentUser?.visa_expiry_date ? `Expires: ${new Date(currentUser.visa_expiry_date).toLocaleDateString()}` : "No expiry date set"}
+              </span>
             </div>
-          </div>
-          
-          <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Documents</span>
-            <div className="mt-1">
-              <span className="font-bold text-xl">{documentsCount.uploaded}/{documentsCount.total}</span>
-              <span className="ml-1 text-gray-600">uploaded</span>
+          </CardContent>
+        </Card>
+
+        {/* Compliance Status Card */}
+        <Card className="bg-white shadow-sm overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500 mb-2">Compliance Status</span>
+              <div className="flex items-center mb-2">
+                <span className="font-bold text-xl text-gray-800">{complianceProgress}%</span>
+                <span className="ml-2 text-sm text-gray-600">
+                  ({tasksCount.completed}/{tasksCount.total} tasks)
+                </span>
+              </div>
+              <Progress value={complianceProgress} className="h-2 w-full bg-gray-200" />
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+
+        {/* Documents Card */}
+        <Card className="bg-white shadow-sm overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex flex-col">
+              <span className="text-sm text-gray-500 mb-2">Documents</span>
+              <div className="flex items-center mb-2">
+                <span className="font-bold text-xl text-gray-800">{documentsCount.uploaded}/{documentsCount.total}</span>
+                <span className="ml-2 text-sm text-gray-600">uploaded</span>
+              </div>
+              <Progress 
+                value={documentsCount.total > 0 ? (documentsCount.uploaded / documentsCount.total) * 100 : 0} 
+                className="h-2 w-full bg-gray-200" 
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {/* Compliance Checklist Card */}
-        <div className="lg:col-span-2 h-full">
+      {/* Main Content - Row 1 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Compliance Checklist Card - Takes 2 columns */}
+        <div className="lg:col-span-2">
           <ComplianceChecklist complianceProgress={complianceProgress} tasksCount={tasksCount} />
         </div>
 
+        {/* Quick Links Card */}
+        <div className="lg:col-span-1">
+          <QuickLinksCard />
+        </div>
+      </div>
+
+      {/* Main Content - Row 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Document Vault */}
-        <div className="lg:col-span-2 h-full">
+        <div className="lg:col-span-2">
           <DocumentVault documentsCount={documentsCount} />
         </div>
 
-        {/* Quick Links Card */}
-        <div className="lg:col-span-1 h-auto">
-          <QuickLinksCard />
-        </div>
-
         {/* Tips and Reminders */}
-        <div className="lg:col-span-1 h-full">
+        <div className="lg:col-span-1">
           <TipsAndReminders visaType={currentUser?.visaType} />
         </div>
+      </div>
 
+      {/* Main Content - Row 3 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Recent Activities */}
-        <div className="lg:col-span-1 h-full">
+        <div className="lg:col-span-1">
           <RecentActivities currentUser={currentUser} />
         </div>
 
         {/* Upcoming Deadlines */}
-        <div className="lg:col-span-3 h-full">
+        <div className="lg:col-span-2">
           <UpcomingDeadlines deadlines={deadlines} />
         </div>
       </div>

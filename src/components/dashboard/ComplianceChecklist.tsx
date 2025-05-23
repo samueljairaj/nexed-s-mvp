@@ -1,10 +1,11 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { FileCheck, ArrowRight, CheckCircle } from "lucide-react";
+import { FileCheck, ArrowRight, CheckCircle, Calendar } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 interface ComplianceChecklistProps {
   complianceProgress: number;
@@ -21,13 +22,13 @@ const ComplianceChecklist: React.FC<ComplianceChecklistProps> = ({
   isGenerating 
 }) => {
   const sampleTasks = [
-    "Submit I-94 form",
-    "Update SEVIS address",
-    "Complete health insurance"
+    { name: "Submit I-94 form", dueDate: "May 30, 2025", priority: "high" },
+    { name: "Update SEVIS address", dueDate: "June 15, 2025", priority: "medium" },
+    { name: "Complete health insurance", dueDate: "July 1, 2025", priority: "high" }
   ];
 
   return (
-    <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
+    <Card className="h-full hover:shadow-md transition-shadow">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-lg font-medium text-nexed-800">Compliance Checklist</CardTitle>
@@ -39,29 +40,55 @@ const ComplianceChecklist: React.FC<ComplianceChecklistProps> = ({
           </Link>
         </Button>
       </CardHeader>
-      <CardContent>
-        <div className="mb-4 flex justify-between text-sm">
-          <span>{complianceProgress}% complete</span>
-          <span className="text-nexed-600 font-medium">{tasksCount.completed} of {tasksCount.total} tasks</span>
+      <CardContent className="p-4 pt-0">
+        <div className="mb-4">
+          <div className="flex justify-between text-sm mb-1">
+            <span>{complianceProgress}% complete</span>
+            <span className="text-nexed-600 font-medium">{tasksCount.completed} of {tasksCount.total} tasks</span>
+          </div>
+          <Progress value={complianceProgress} className="h-2" />
         </div>
-        <Progress value={complianceProgress} className="h-2 mb-6" />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-          {sampleTasks.map((task, index) => (
-            <div key={index} className="flex items-center bg-nexed-50 p-3 rounded-md">
-              <div className="h-6 w-6 rounded-full bg-nexed-100 flex items-center justify-center text-nexed-600 mr-3">
-                <FileCheck size={14} />
-              </div>
-              <span className="text-sm">{task}</span>
-            </div>
-          ))}
-          
-          <Button asChild variant="outline" size="sm" className="flex items-center justify-center">
-            <Link to="/app/compliance" className="flex gap-1 h-full">
-              <span>View all</span>
-            </Link>
-          </Button>
-        </div>
+        <Table>
+          <TableBody>
+            {sampleTasks.map((task, idx) => (
+              <TableRow key={idx} className="border-b hover:bg-gray-50">
+                <TableCell className="py-3 pl-3 pr-2">
+                  <div className="flex items-center">
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-3 ${
+                      task.priority === "high" ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"
+                    }`}>
+                      <FileCheck size={16} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{task.name}</p>
+                      <p className="text-xs text-gray-500 flex items-center">
+                        <Calendar size={12} className="mr-1" />
+                        Due {task.dueDate}
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-7 text-xs"
+                  >
+                    Complete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        
+        <Button asChild variant="default" size="sm" className="w-full mt-4">
+          <Link to="/app/compliance" className="flex items-center justify-center gap-1">
+            <CheckCircle size={16} />
+            View All Tasks
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   );
