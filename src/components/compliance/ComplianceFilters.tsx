@@ -12,14 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface ComplianceFiltersProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  selectedFilters: DocumentCategory[];
-  toggleFilter: (filter: DocumentCategory) => void;
+  selectedFilters: string[];
+  toggleFilter: (filter: string) => void;
   isGenerating: boolean;
   generateTasksWithAI: () => void;
   phaseGroups: {[key: string]: any[]};
   selectedPhase: string;
   setSelectedPhase: (phase: string) => void;
-  setSelectedFilters: (filters: DocumentCategory[]) => void;
+  setSelectedFilters: (filters: string[]) => void;
 }
 
 export function ComplianceFilters({
@@ -36,7 +36,7 @@ export function ComplianceFilters({
 }: ComplianceFiltersProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const categoryOptions: { label: string; value: DocumentCategory; color: string }[] = [
+  const categoryOptions: { label: string; value: string; color: string }[] = [
     { label: "Immigration", value: "immigration", color: "bg-blue-500" },
     { label: "Education", value: "education", color: "bg-green-500" },
     { label: "Employment", value: "employment", color: "bg-amber-500" },

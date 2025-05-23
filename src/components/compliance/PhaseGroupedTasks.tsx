@@ -3,13 +3,12 @@ import React from "react";
 import { TaskList } from "@/components/compliance/TaskList";
 import { Task } from "@/hooks/useComplianceTasks";
 import { FileCheck } from "lucide-react";
-import { DocumentCategory } from "@/types/document";
 
 interface PhaseGroupedTasksProps {
   phaseGroups: {[key: string]: Task[]};
   toggleTaskStatus: (id: string) => void;
   selectedPhase: string;
-  selectedFilters: DocumentCategory[];
+  selectedFilters: string[];
   searchQuery: string;
 }
 
@@ -56,7 +55,7 @@ export function PhaseGroupedTasks({
               (selectedFilters.length === 0 || selectedFilters.includes(task.category)) &&
               (!searchQuery || 
                 task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                task.description.toLowerCase().includes(searchQuery.toLowerCase())
+                (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()))
               )
             )}
             toggleTaskStatus={toggleTaskStatus}

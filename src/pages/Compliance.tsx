@@ -11,70 +11,127 @@ import { TaskList } from "@/components/compliance/TaskList";
 import { ComplianceStatusSummary } from "@/components/compliance/ComplianceStatusSummary";
 import { ComplianceFilters } from "@/components/compliance/ComplianceFilters";
 import { PhaseGroupedTasks } from "@/components/compliance/PhaseGroupedTasks";
-import { useComplianceTasks, Task } from "@/hooks/useComplianceTasks";
+import { Task } from "@/hooks/useComplianceTasks";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskReminders } from "@/components/compliance/TaskReminders";
 import { CalendarView } from "@/components/compliance/CalendarView";
 import { DailyTasks } from "@/components/compliance/DailyTasks";
+import { generateMockTasks } from "@/utils/mockTasks";
 
-const Compliance = () => {
-  const {
-    tasks,
-    filteredTasks,
-    searchQuery,
-    setSearchQuery,
-    selectedFilters,
-    toggleFilter,
-    selectedPhase,
-    setSelectedPhase,
-    isLoading,
-    isGenerating,
-    phaseGroups,
-    toggleTaskStatus,
-    generateTasksWithAI,
-    setSelectedFilters,
-    addCustomTask
-  } = useComplianceTasks();
-
+// Create a mock implementation for the UI first, separate from backend
+const ComplianceUI = () => {
+  // Static mock data
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [selectedPhase, setSelectedPhase] = useState<string>('all_phases');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDateTasks, setSelectedDateTasks] = useState<Task[]>([]);
+
+  // Initialize with mock data on first render
+  useEffect(() => {
+    // Short timeout to simulate loading
+    const timer = setTimeout(() => {
+      const mockData = generateMockTasks('F1');
+      setTasks(mockData);
+      setIsLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Create local state management functions
+  const toggleFilter = (category: string) => {
+    setSelectedFilters(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(c => c !== category);
+      } else {
+        return [...prev, category];
+      }
+    });
+  };
+
+  const toggleTaskStatus = (taskId: string) => {
+    setTasks(prev => 
+      prev.map(task => 
+        task.id === taskId 
+          ? { ...task, completed: !task.completed } 
+          : task
+      )
+    );
+  };
+
+  const generateTasksWithAI = () => {
+    setIsGenerating(true);
+    
+    // Simulate API call with timeout
+    setTimeout(() => {
+      const mockData = generateMockTasks('F1');
+      setTasks(mockData);
+      setIsGenerating(false);
+    }, 1500);
+  };
+
+  // Add a custom task or reminder
+  const handleAddCustomReminder = (title: string, dueDate: string, priority: "low" | "medium" | "high") => {
+    const newTask: Task = {
+      id: `custom-${Date.now()}`,
+      title,
+      description: "Custom reminder",
+      dueDate,
+      priority,
+      category: "personal",
+      phase: "general",
+      completed: false
+    };
+    
+    setTasks(prev => [...prev, newTask]);
+  };
 
   // Handle calendar date selection
   const handleDateClick = (date: Date, tasksForDate: Task[]) => {
     setSelectedDate(date);
     setSelectedDateTasks(tasksForDate);
   };
-
-  // Handle adding a custom reminder
-  const handleAddCustomReminder = (title: string, dueDate: string, priority: "low" | "medium" | "high") => {
-    addCustomTask({
-      title,
-      description: "Custom reminder",
-      dueDate,
-      priority,
-      category: "personal",
-      phase: "general"
-    });
-  };
   
-  // Generate mock data if no tasks exist - FIXED to prevent infinite loops
-  useEffect(() => {
-    // Store a flag in sessionStorage to prevent repeated generation
-    const tasksGenerated = sessionStorage.getItem('tasksGenerated');
+  // Filter tasks based on search query, category filters, and phase
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = searchQuery === '' || 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    if (!isLoading && tasks.length === 0 && !isGenerating && !tasksGenerated) {
-      // Set the flag to prevent future generations in this session
-      sessionStorage.setItem('tasksGenerated', 'true');
-      
-      // Generate tasks after a slight delay
-      const timer = setTimeout(() => {
-        generateTasksWithAI();
-      }, 300);
-      
-      return () => clearTimeout(timer);
+    const matchesCategory = selectedFilters.length === 0 || 
+      selectedFilters.includes(task.category);
+    
+    const matchesPhase = selectedPhase === 'all_phases' || 
+      task.phase === selectedPhase;
+    
+    return matchesSearch && matchesCategory && matchesPhase;
+  });
+
+  // Group tasks by phase
+  const phaseGroups = tasks.reduce((groups: {[key: string]: Task[]}, task) => {
+    const phase = task.phase || 'general';
+    if (!groups[phase]) {
+      groups[phase] = [];
     }
-  }, [isLoading, tasks.length, isGenerating, generateTasksWithAI]);
+    
+    const matchesSearch = searchQuery === '' || 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesCategory = selectedFilters.length === 0 || 
+      selectedFilters.includes(task.category);
+      
+    if (matchesSearch && matchesCategory) {
+      groups[phase].push(task);
+    }
+    
+    return groups;
+  }, {});
 
   if (isLoading) {
     return (
@@ -119,27 +176,6 @@ const Compliance = () => {
         setSelectedPhase={setSelectedPhase}
         setSelectedFilters={setSelectedFilters}
       />
-
-      {/* Initial AI Generation Prompt - show if no tasks are available */}
-      {tasks.length === 0 && !isGenerating && (
-        <div className="bg-blue-50 border border-blue-100 p-6 rounded-lg text-center mb-8">
-          <Sparkles className="h-10 w-10 text-blue-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">Generate Personalized Compliance Tasks</h3>
-          <p className="text-gray-600 mb-4">
-            Get a personalized checklist of compliance tasks based on your visa status and profile information.
-          </p>
-          <Button
-            onClick={() => {
-              sessionStorage.setItem('tasksGenerated', 'true');
-              generateTasksWithAI();
-            }}
-            className="gap-2"
-            size="lg"
-          >
-            <Sparkles className="h-4 w-4" /> Generate Tasks with AI
-          </Button>
-        </div>
-      )}
 
       {/* Reminders Section */}
       {tasks.length > 0 && (
@@ -214,4 +250,6 @@ const Compliance = () => {
   );
 };
 
+// Export the UI component as default
+const Compliance = () => <ComplianceUI />;
 export default Compliance;
