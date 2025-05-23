@@ -9,6 +9,8 @@ export interface DocumentVersion {
   uploadDate: string;
   size: string;
   versionNumber: number;
+  notes?: string;
+  is_current?: boolean;
 }
 
 export interface Document {
@@ -25,6 +27,11 @@ export interface Document {
   versions?: DocumentVersion[];
   folderId?: string;
   user_id?: string;
+  
+  // New fields for enhanced features
+  detected_type?: string;
+  tags?: string[];
+  latest_version_id?: string;
 }
 
 export interface DocumentFolder {

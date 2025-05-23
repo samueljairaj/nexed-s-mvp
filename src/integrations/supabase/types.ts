@@ -191,18 +191,68 @@ export type Database = {
         }
         Relationships: []
       }
+      document_versions: {
+        Row: {
+          document_id: string
+          file_url: string
+          id: string
+          is_current: boolean | null
+          notes: string | null
+          size: string
+          upload_date: string
+          uploaded_by: string | null
+          version_number: number
+        }
+        Insert: {
+          document_id: string
+          file_url: string
+          id?: string
+          is_current?: boolean | null
+          notes?: string | null
+          size: string
+          upload_date?: string
+          uploaded_by?: string | null
+          version_number: number
+        }
+        Update: {
+          document_id?: string
+          file_url?: string
+          id?: string
+          is_current?: boolean | null
+          notes?: string | null
+          size?: string
+          upload_date?: string
+          uploaded_by?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string
           created_at: string | null
+          detected_type: string | null
+          expiry_date: string | null
+          expiry_notification_sent: boolean | null
           file_type: string | null
           file_url: string
           id: string
           is_required: boolean | null
+          latest_version_id: string | null
+          notification_schedule: Json | null
           review_comment: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string | null
+          tags: string[] | null
           title: string
           updated_at: string | null
           user_id: string
@@ -210,14 +260,20 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string | null
+          detected_type?: string | null
+          expiry_date?: string | null
+          expiry_notification_sent?: boolean | null
           file_type?: string | null
           file_url: string
           id?: string
           is_required?: boolean | null
+          latest_version_id?: string | null
+          notification_schedule?: Json | null
           review_comment?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string | null
+          tags?: string[] | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -225,19 +281,33 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string | null
+          detected_type?: string | null
+          expiry_date?: string | null
+          expiry_notification_sent?: boolean | null
           file_type?: string | null
           file_url?: string
           id?: string
           is_required?: boolean | null
+          latest_version_id?: string | null
+          notification_schedule?: Json | null
           review_comment?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_latest_version_id_fkey"
+            columns: ["latest_version_id"]
+            isOneToOne: false
+            referencedRelation: "document_versions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dso_profiles: {
         Row: {

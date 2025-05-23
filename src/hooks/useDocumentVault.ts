@@ -1,5 +1,5 @@
 
-import { Document, DocumentCategory, DocumentStatus, DocumentPacket, DocumentFolder } from "@/types/document";
+import { Document, DocumentCategory, DocumentStatus, DocumentPacket, DocumentFolder, DocumentVersion } from "@/types/document";
 import { useDocuments } from "./document/useDocuments";
 import { useDocumentFilters } from "./document/useDocumentFilters";
 
@@ -20,6 +20,7 @@ export function useDocumentVault() {
     handleRenameDocument,
     handleToggleRequired,
     handleUpdateExpiry,
+    handleAddVersion,
     handleCreatePacket,
     syncDocuments
   } = useDocuments();
@@ -63,6 +64,7 @@ export function useDocumentVault() {
     handleRenameDocument,
     handleToggleRequired,
     handleUpdateExpiry,
+    handleAddVersion,
     handleCreatePacket,
     sortedDocuments,
     clearFilters

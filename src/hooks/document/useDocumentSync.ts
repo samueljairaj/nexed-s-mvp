@@ -1,9 +1,9 @@
 
 import { useState, useEffect, Dispatch, SetStateAction } from "react";
-import { Document, DocumentCategory, DocumentFolder } from "@/types/document";
+import { Document, DocumentCategory, DocumentFolder, DocumentVersion } from "@/types/document";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { getDocumentStatus } from "@/utils/documentUtils";
+import { getDocumentStatus, detectDocumentType, suggestDocumentTags } from "@/utils/documentUtils";
 
 // Define the database document type to match what Supabase returns
 interface DatabaseDocument {
@@ -21,6 +21,22 @@ interface DatabaseDocument {
   reviewed_at?: string;
   reviewed_by?: string;
   updated_at: string;
+  detected_type?: string;
+  tags?: string[];
+  latest_version_id?: string;
+}
+
+// Define the database document version type
+interface DatabaseDocumentVersion {
+  id: string;
+  document_id: string;
+  version_number: number;
+  file_url: string;
+  upload_date: string;
+  size: string;
+  uploaded_by?: string;
+  notes?: string;
+  is_current: boolean;
 }
 
 export function useDocumentSync(
@@ -40,9 +56,9 @@ export function useDocumentSync(
       realtimeSubscription.unsubscribe();
     }
 
-    // Set up a new subscription
-    const subscription = supabase
-      .channel('document-vault-changes')
+    // Set up a new subscription for documents
+    const documentChannel = supabase
+      .channel('document-changes')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -99,11 +115,70 @@ export function useDocumentSync(
       })
       .subscribe();
 
-    setRealtimeSubscription(subscription);
+    // Set up a new subscription for document versions
+    const versionChannel = supabase
+      .channel('document-version-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'document_versions'
+      }, async (payload) => {
+        console.log('Realtime document version update received:', payload);
+        
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          // Get the document ID
+          const documentId = payload.new.document_id;
+          
+          // Check if this document belongs to the current user
+          const { data: docData } = await supabase
+            .from('documents')
+            .select('user_id')
+            .eq('id', documentId)
+            .single();
+            
+          if (docData && docData.user_id === currentUser.id) {
+            // Fetch all versions for this document
+            const { data: versions } = await supabase
+              .from('document_versions')
+              .select('*')
+              .eq('document_id', documentId)
+              .order('version_number', { ascending: false });
+              
+            if (versions) {
+              // Transform versions to our format
+              const transformedVersions: DocumentVersion[] = versions.map((v: DatabaseDocumentVersion) => ({
+                id: v.id,
+                fileUrl: v.file_url,
+                uploadDate: new Date(v.upload_date).toLocaleDateString(),
+                size: v.size,
+                versionNumber: v.version_number,
+                notes: v.notes,
+                is_current: v.is_current
+              }));
+              
+              // Update the document with the versions
+              setDocuments(prev => 
+                prev.map(doc => 
+                  doc.id === documentId ? {
+                    ...doc,
+                    versions: transformedVersions,
+                    // Update fileUrl with the latest version if it's current
+                    fileUrl: transformedVersions.find(v => v.is_current)?.fileUrl || doc.fileUrl
+                  } : doc
+                )
+              );
+            }
+          }
+        }
+      })
+      .subscribe();
+
+    setRealtimeSubscription({ documentChannel, versionChannel });
 
     // Clean up subscription on unmount
     return () => {
-      subscription.unsubscribe();
+      documentChannel.unsubscribe();
+      versionChannel.unsubscribe();
     };
   }, [currentUser?.id, setDocuments]);
 
@@ -117,16 +192,48 @@ export function useDocumentSync(
     setIsLoading(true);
     try {
       // Fetch documents from Supabase
-      const { data, error } = await supabase
+      const { data: documents, error: documentsError } = await supabase
         .from('documents')
         .select('*')
         .eq('user_id', currentUser.id);
         
-      if (error) throw error;
+      if (documentsError) throw documentsError;
       
-      if (data && data.length > 0) {
+      let transformedDocs: Document[] = [];
+      
+      if (documents && documents.length > 0) {
+        // Get document IDs
+        const documentIds = documents.map((doc: DatabaseDocument) => doc.id);
+        
+        // Fetch document versions
+        const { data: versions, error: versionsError } = await supabase
+          .from('document_versions')
+          .select('*')
+          .in('document_id', documentIds);
+          
+        if (versionsError) throw versionsError;
+        
+        // Group versions by document ID
+        const versionsByDocId: Record<string, DocumentVersion[]> = {};
+        if (versions) {
+          versions.forEach((version: DatabaseDocumentVersion) => {
+            if (!versionsByDocId[version.document_id]) {
+              versionsByDocId[version.document_id] = [];
+            }
+            versionsByDocId[version.document_id].push({
+              id: version.id,
+              fileUrl: version.file_url,
+              uploadDate: new Date(version.upload_date).toLocaleDateString(),
+              size: version.size,
+              versionNumber: version.version_number,
+              notes: version.notes,
+              is_current: version.is_current
+            });
+          });
+        }
+        
         // Transform database format to our Document format
-        const transformedDocs: Document[] = data.map((doc: DatabaseDocument) => ({
+        transformedDocs = documents.map((doc: DatabaseDocument) => ({
           id: doc.id,
           name: doc.title,
           type: doc.file_type || 'application/pdf',
@@ -135,21 +242,22 @@ export function useDocumentSync(
           size: '1.2 MB', // This would need to be stored in the database
           required: doc.is_required || false,
           fileUrl: doc.file_url,
-          // Handle case where expiry_date might not exist in database schema
           expiryDate: doc.expiry_date || undefined,
           status: doc.expiry_date ? getDocumentStatus(doc.expiry_date) : undefined,
-          user_id: doc.user_id
+          user_id: doc.user_id,
+          detected_type: doc.detected_type,
+          tags: doc.tags,
+          latest_version_id: doc.latest_version_id,
+          versions: versionsByDocId[doc.id] || []
         }));
         
         setDocuments(transformedDocs);
       } else {
         // If no documents found, use mock data for now
-        // In a production app, you'd start with an empty array
         setDocuments(processMockDocuments(mockDocuments));
       }
       
       // Fetch folders if you have a folders table
-      // For now, use mock folders
       setFolders(mockFolders);
       
     } catch (error) {
@@ -164,10 +272,18 @@ export function useDocumentSync(
 
   // Process mock documents to add status based on expiry date
   const processMockDocuments = (docs: Document[]) => {
-    return docs.map(doc => ({
-      ...doc,
-      status: doc.expiryDate ? getDocumentStatus(doc.expiryDate) : undefined
-    }));
+    return docs.map(doc => {
+      // Add smart categorization fields to mock data
+      const detectedType = detectDocumentType(doc.name);
+      const suggestedTags = suggestDocumentTags(doc.name, doc.category);
+      
+      return {
+        ...doc,
+        status: doc.expiryDate ? getDocumentStatus(doc.expiryDate) : undefined,
+        detected_type: detectedType,
+        tags: suggestedTags
+      };
+    });
   };
 
   // Load documents on component mount
@@ -190,7 +306,9 @@ export function useDocumentSync(
           file_url: doc.fileUrl,
           is_required: doc.required,
           expiry_date: doc.expiryDate,
-          user_id: currentUser.id
+          user_id: currentUser.id,
+          detected_type: doc.detected_type,
+          tags: doc.tags
         })
         .select();
         
@@ -199,6 +317,32 @@ export function useDocumentSync(
       return data?.[0]?.id || null;
     } catch (error) {
       console.error("Error saving document to database:", error);
+      return null;
+    }
+  };
+
+  // Save document version to Supabase
+  const saveDocumentVersionToDatabase = async (documentId: string, version: DocumentVersion) => {
+    if (!currentUser?.id) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('document_versions')
+        .insert({
+          document_id: documentId,
+          version_number: version.versionNumber,
+          file_url: version.fileUrl,
+          size: version.size,
+          uploaded_by: currentUser.id,
+          notes: version.notes
+        })
+        .select();
+        
+      if (error) throw error;
+      
+      return data?.[0]?.id || null;
+    } catch (error) {
+      console.error("Error saving document version to database:", error);
       return null;
     }
   };
@@ -257,6 +401,7 @@ export function useDocumentSync(
     saveDocumentToDatabase,
     updateDocumentInDatabase,
     deleteDocumentFromDatabase,
+    saveDocumentVersionToDatabase,
     syncDocuments
   };
 }

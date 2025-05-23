@@ -1,8 +1,7 @@
-
 import { useState } from "react";
-import { Document, DocumentCategory, DocumentFolder, DocumentPacket, DocumentStatus } from "@/types/document";
+import { Document, DocumentCategory, DocumentFolder, DocumentPacket, DocumentStatus, DocumentVersion } from "@/types/document";
 import { toast } from "sonner";
-import { getDocumentStatus } from "@/utils/documentUtils";
+import { getDocumentStatus, detectDocumentType, suggestDocumentTags } from "@/utils/documentUtils";
 import { useDocumentSync } from "./useDocumentSync";
 
 export function useDocuments() {
@@ -17,7 +16,8 @@ export function useDocuments() {
     saveDocumentToDatabase, 
     updateDocumentInDatabase, 
     deleteDocumentFromDatabase,
-    syncDocuments
+    syncDocuments,
+    saveDocumentVersionToDatabase
   } = useDocumentSync(setDocuments, setFolders, setIsLoading);
 
   // Toggle document selection for multi-select operations
@@ -43,25 +43,52 @@ export function useDocuments() {
   const handleAddDocument = async (files: FileList, category: DocumentCategory, expiryDate?: string) => {
     try {
       // Simulate upload to server
-      const newDocs: Document[] = Array.from(files).map((file, index) => ({
-        id: `doc-${Date.now()}-${index}`,
-        name: file.name,
-        type: file.type,
-        category: category,
-        uploadDate: new Date().toLocaleDateString(),
-        size: formatFileSize(file.size),
-        required: false,
-        fileUrl: URL.createObjectURL(file),
-        expiryDate,
-        status: expiryDate ? getDocumentStatus(expiryDate) : undefined
-      }));
+      const newDocs: Document[] = Array.from(files).map((file, index) => {
+        // Smart categorization: detect document type from filename
+        const detectedType = detectDocumentType(file.name);
+        
+        // Generate suggested tags
+        const suggestedTags = suggestDocumentTags(file.name, category);
+        
+        return {
+          id: `doc-${Date.now()}-${index}`,
+          name: file.name,
+          type: file.type,
+          category: category,
+          uploadDate: new Date().toLocaleDateString(),
+          size: formatFileSize(file.size),
+          required: false,
+          fileUrl: URL.createObjectURL(file),
+          expiryDate,
+          status: expiryDate ? getDocumentStatus(expiryDate) : undefined,
+          
+          // Add smart categorization fields
+          detected_type: detectedType || undefined,
+          tags: suggestedTags
+        };
+      });
 
-      // Save each document to Supabase
+      // Create initial version for each document
       for (const doc of newDocs) {
         const dbId = await saveDocumentToDatabase(doc);
         if (dbId) {
           // Update the document ID with the one from the database
           doc.id = dbId;
+          
+          // Create initial version
+          const initialVersion: DocumentVersion = {
+            id: `version-${Date.now()}-1`,
+            fileUrl: doc.fileUrl,
+            uploadDate: doc.uploadDate,
+            size: doc.size,
+            versionNumber: 1
+          };
+          
+          // Save version to database
+          await saveDocumentVersionToDatabase(doc.id, initialVersion);
+          
+          // Update document with versions
+          doc.versions = [initialVersion];
         }
       }
 
@@ -260,7 +287,14 @@ export function useDocuments() {
         )
       );
       
-      toast.success(`Expiry date updated`);
+      // Show different toast based on status
+      if (updatedStatus === "expired") {
+        toast.warning(`Document has expired as of ${new Date(expiryDate).toLocaleDateString()}`);
+      } else if (updatedStatus === "expiring") {
+        toast.info(`Document will expire soon on ${new Date(expiryDate).toLocaleDateString()}`);
+      } else {
+        toast.success(`Expiry date updated to ${new Date(expiryDate).toLocaleDateString()}`);
+      }
     } else {
       // If database update fails, still update UI but show warning
       setDocuments(prev => 
@@ -294,6 +328,76 @@ export function useDocuments() {
       );
       
       toast.warning(`Expiry date updated locally but sync failed`);
+    }
+  };
+
+  const handleAddVersion = async (documentId: string, files: FileList, notes?: string) => {
+    try {
+      const doc = documents.find(d => d.id === documentId);
+      if (!doc) {
+        toast.error("Document not found");
+        return null;
+      }
+      
+      // Get the file
+      const file = files[0];
+      if (!file) {
+        toast.error("No file selected");
+        return null;
+      }
+      
+      // Get current versions
+      const currentVersions = doc.versions || [];
+      const nextVersionNumber = currentVersions.length + 1;
+      
+      // Create new version
+      const newVersion: DocumentVersion = {
+        id: `version-${Date.now()}-${nextVersionNumber}`,
+        fileUrl: URL.createObjectURL(file),
+        uploadDate: new Date().toLocaleDateString(),
+        size: formatFileSize(file.size),
+        versionNumber: nextVersionNumber,
+        notes
+      };
+      
+      // Save version to database
+      const versionId = await saveDocumentVersionToDatabase(documentId, newVersion);
+      
+      if (versionId) {
+        newVersion.id = versionId;
+        
+        // Update document with new version
+        const updatedVersions = [...currentVersions, newVersion];
+        
+        setDocuments(prev => 
+          prev.map(d => 
+            d.id === documentId ? {
+              ...d,
+              versions: updatedVersions,
+              fileUrl: newVersion.fileUrl // Update to use the latest version
+            } : d
+          )
+        );
+        
+        if (selectedDocument?.id === documentId) {
+          setSelectedDocument(prev => 
+            prev ? {
+              ...prev,
+              versions: updatedVersions,
+              fileUrl: newVersion.fileUrl
+            } : null
+          );
+        }
+        
+        toast.success(`Version ${nextVersionNumber} uploaded successfully`);
+        return newVersion;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error adding document version:", error);
+      toast.error("Failed to add document version");
+      return null;
     }
   };
 
@@ -345,6 +449,7 @@ export function useDocuments() {
     handleRenameDocument,
     handleToggleRequired,
     handleUpdateExpiry,
+    handleAddVersion,
     handleCreatePacket,
     syncDocuments,
     processDocuments,

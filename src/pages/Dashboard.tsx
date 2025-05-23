@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Clock, FileCheck, Upload } from "lucide-react";
 import ComplianceDashboard from "@/components/dashboard/ComplianceDashboard";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
@@ -105,6 +106,82 @@ const Dashboard = () => {
     }
   }, [currentUser]);
 
+  // Function to check for expiring documents
+  useEffect(() => {
+    const checkExpiringDocuments = async () => {
+      if (!currentUser?.id) return;
+      
+      try {
+        // Get current date
+        const today = new Date();
+        
+        // Get date 30 days from now
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(today.getDate() + 30);
+        
+        // Format dates for database query
+        const todayFormatted = today.toISOString().split('T')[0];
+        const thirtyDaysFormatted = thirtyDaysFromNow.toISOString().split('T')[0];
+        
+        // Query documents that are expiring soon but notification not sent
+        const { data: expiringDocuments, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .eq('expiry_notification_sent', false)
+          .gte('expiry_date', todayFormatted)
+          .lte('expiry_date', thirtyDaysFormatted);
+          
+        if (error) throw error;
+        
+        // Show notification for expiring documents
+        if (expiringDocuments && expiringDocuments.length > 0) {
+          // Group by expiry date for better notification
+          const byDate: Record<string, { count: number, titles: string[] }> = {};
+          
+          expiringDocuments.forEach(doc => {
+            const date = new Date(doc.expiry_date).toLocaleDateString();
+            if (!byDate[date]) {
+              byDate[date] = { count: 0, titles: [] };
+            }
+            byDate[date].count++;
+            if (byDate[date].titles.length < 3) { // Limit to 3 titles per date
+              byDate[date].titles.push(doc.title);
+            }
+          });
+          
+          // Show notification for each date group
+          Object.entries(byDate).forEach(([date, info]) => {
+            toast.warning(
+              `${info.count} document${info.count > 1 ? 's' : ''} expiring on ${date}`,
+              {
+                description: info.titles.join(', ') + 
+                  (info.count > info.titles.length ? ` and ${info.count - info.titles.length} more...` : ''),
+                action: {
+                  label: "View",
+                  onClick: () => window.location.href = '/app/documents'
+                },
+                duration: 10000
+              }
+            );
+          });
+          
+          // Mark notifications as sent
+          const docIds = expiringDocuments.map(doc => doc.id);
+          await supabase
+            .from('documents')
+            .update({ expiry_notification_sent: true })
+            .in('id', docIds);
+        }
+        
+      } catch (error) {
+        console.error("Error checking for expiring documents:", error);
+      }
+    };
+    
+    checkExpiringDocuments();
+  }, [currentUser?.id]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -130,7 +207,7 @@ const Dashboard = () => {
       {/* Status Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Visa Status Card */}
-        <Card className="bg-white shadow-sm overflow-hidden">
+        <Card className="bg-white shadow-sm overflow-hidden hover:shadow-md transition-all">
           <CardContent className="p-5">
             <div className="flex flex-col">
               <span className="text-sm text-gray-500 mb-2">Visa Status</span>
@@ -150,7 +227,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Compliance Status Card */}
-        <Card className="bg-white shadow-sm overflow-hidden">
+        <Card className="bg-white shadow-sm overflow-hidden hover:shadow-md transition-all">
           <CardContent className="p-5">
             <div className="flex flex-col">
               <span className="text-sm text-gray-500 mb-2">Compliance Status</span>
@@ -160,13 +237,17 @@ const Dashboard = () => {
                   ({tasksCount.completed}/{tasksCount.total} tasks)
                 </span>
               </div>
-              <Progress value={complianceProgress} className="h-2 w-full bg-gray-200" />
+              <Progress 
+                value={complianceProgress} 
+                className="h-2 w-full bg-gray-100" 
+                indicatorClassName={`${complianceProgress < 30 ? 'bg-red-500' : complianceProgress < 70 ? 'bg-amber-500' : 'bg-green-500'}`} 
+              />
             </div>
           </CardContent>
         </Card>
 
         {/* Documents Card */}
-        <Card className="bg-white shadow-sm overflow-hidden">
+        <Card className="bg-white shadow-sm overflow-hidden hover:shadow-md transition-all">
           <CardContent className="p-5">
             <div className="flex flex-col">
               <span className="text-sm text-gray-500 mb-2">Documents</span>
@@ -176,7 +257,8 @@ const Dashboard = () => {
               </div>
               <Progress 
                 value={documentsCount.total > 0 ? (documentsCount.uploaded / documentsCount.total) * 100 : 0} 
-                className="h-2 w-full bg-gray-200" 
+                className="h-2 w-full bg-gray-100" 
+                indicatorClassName={`bg-gradient-to-r from-nexed-400 to-nexed-500`}
               />
             </div>
           </CardContent>
