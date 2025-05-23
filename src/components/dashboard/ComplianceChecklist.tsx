@@ -27,37 +27,37 @@ const ComplianceChecklist: React.FC<ComplianceChecklistProps> = ({
   ];
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-0 pt-4 px-4 flex flex-row items-center justify-between">
+    <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-base font-medium text-nexed-800">Compliance Checklist</CardTitle>
-          <CardDescription className="text-xs">Task completion progress</CardDescription>
+          <CardTitle className="text-lg font-medium text-nexed-800">Compliance Checklist</CardTitle>
+          <CardDescription>Task completion progress</CardDescription>
         </div>
-        <Button asChild variant="ghost" size="icon" className="h-6 w-6">
+        <Button asChild variant="ghost" size="icon" className="rounded-full">
           <Link to="/app/compliance">
-            <ArrowRight size={14} />
+            <ArrowRight size={16} />
           </Link>
         </Button>
       </CardHeader>
-      <CardContent className="px-4 pb-4 pt-2">
-        <div className="mb-2 flex justify-between text-xs">
+      <CardContent>
+        <div className="mb-4 flex justify-between text-sm">
           <span>{complianceProgress}% complete</span>
           <span className="text-nexed-600 font-medium">{tasksCount.completed} of {tasksCount.total} tasks</span>
         </div>
-        <Progress value={complianceProgress} className="h-1.5 mb-4" />
+        <Progress value={complianceProgress} className="h-2 mb-6" />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
           {sampleTasks.map((task, index) => (
-            <div key={index} className="flex items-center bg-green-50 p-2 rounded-md">
-              <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-2">
-                <FileCheck size={12} />
+            <div key={index} className="flex items-center bg-nexed-50 p-3 rounded-md">
+              <div className="h-6 w-6 rounded-full bg-nexed-100 flex items-center justify-center text-nexed-600 mr-3">
+                <FileCheck size={14} />
               </div>
-              <span className="text-xs">{task}</span>
+              <span className="text-sm">{task}</span>
             </div>
           ))}
           
-          <Button asChild variant="outline" size="sm" className="flex items-center justify-center h-[34px]">
-            <Link to="/app/compliance" className="flex gap-1 text-xs">
+          <Button asChild variant="outline" size="sm" className="flex items-center justify-center">
+            <Link to="/app/compliance" className="flex gap-1 h-full">
               <span>View all</span>
             </Link>
           </Button>

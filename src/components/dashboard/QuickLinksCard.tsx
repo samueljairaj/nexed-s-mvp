@@ -19,21 +19,21 @@ const QuickLinksCard: React.FC = () => {
   ];
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-0 pt-4 px-4">
-        <CardTitle className="text-base font-medium text-nexed-800">Quick Access</CardTitle>
+    <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-medium text-nexed-800">Quick Access</CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="grid grid-cols-2 gap-2 px-4 py-2">
+      <CardContent className="space-y-5 p-4 pt-0">
+        <div className="grid grid-cols-2 gap-3">
           {links.map((link, index) => (
             <Button
               key={index}
               asChild
               variant="outline"
-              className="h-auto py-2 flex-col items-center justify-center text-center hover:bg-nexed-50 hover:border-nexed-200"
+              className="h-auto py-3 flex-col items-center justify-center text-center hover:bg-nexed-50 hover:border-nexed-200"
             >
               <Link to={link.to}>
-                <span className={`h-7 w-7 rounded-md ${link.color} flex items-center justify-center mb-1.5`}>
+                <span className={`h-8 w-8 rounded-md ${link.color} flex items-center justify-center mb-2`}>
                   {link.icon}
                 </span>
                 <span className="text-xs font-medium">{link.title}</span>
@@ -42,16 +42,16 @@ const QuickLinksCard: React.FC = () => {
           ))}
         </div>
         
-        <div className="px-4 pb-3 pt-1">
-          <h3 className="text-xs font-medium mb-1.5 text-gray-700">External Resources</h3>
-          <div className="space-y-1.5">
+        <div>
+          <h3 className="text-sm font-medium mb-2 text-gray-700">External Resources</h3>
+          <div className="space-y-2">
             {externalLinks.map((link, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors duration-200">
+              <div key={index} className="flex items-center justify-between p-2 bg-nexed-50 rounded-md hover:bg-nexed-100 transition-colors duration-200">
                 <div>
-                  <p className="text-xs font-medium">{link.title}</p>
+                  <p className="text-sm font-medium">{link.title}</p>
                   <p className="text-xs text-gray-500">{link.description}</p>
                 </div>
-                <ExternalLink size={12} className="text-gray-400" />
+                <ExternalLink size={14} className="text-gray-400" />
               </div>
             ))}
           </div>
