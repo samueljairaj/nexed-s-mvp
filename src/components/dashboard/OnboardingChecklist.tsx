@@ -31,10 +31,9 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     employmentStartDate: currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate).toISOString().split('T')[0] : null,
     employmentStatus: currentUser?.employmentStatus || "Unemployed Student",
     optType: currentUser?.authType || "",
-    // Fix: Use graduationDate instead of programCompletionDate
-    graduationDate: currentUser?.graduationDate ? 
-      new Date(currentUser.graduationDate).toISOString().split('T')[0] : 
-      null
+    // Use string directly if available, otherwise fall back to null
+    graduationDate: currentUser?.courseEndDate || 
+      (currentUser?.programCompletionDate ? new Date(currentUser.programCompletionDate).toISOString().split('T')[0] : null)
   };
 
   // Handle continue to dashboard
@@ -111,7 +110,6 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     return sections;
   };
 
-  // Fix: Use "loading" prop which matches the ComplianceChecklist component
   return (
     <ComplianceChecklist 
       open={open} 

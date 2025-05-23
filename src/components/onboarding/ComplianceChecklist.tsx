@@ -23,6 +23,8 @@ interface ComplianceChecklistProps {
     employer?: string;
   };
   onContinue: () => void;
+  loading?: boolean;
+  sections?: any[];
 }
 
 interface GroupedDocuments {
@@ -34,7 +36,14 @@ interface GroupedDocuments {
 
 type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
 
-export function ComplianceChecklist({ open, onOpenChange, userData, onContinue }: ComplianceChecklistProps) {
+export function ComplianceChecklist({ 
+  open, 
+  onOpenChange, 
+  userData, 
+  onContinue,
+  loading = false,
+  sections = []
+}: ComplianceChecklistProps) {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState("all-documents");

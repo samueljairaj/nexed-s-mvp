@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -54,11 +55,27 @@ export function VisaStatusSection() {
     }
   };
 
-  // Get custom fields from currentUser if they exist
-  // These properties might not be in the TypeScript definition but could be in the actual data
-  const customVisaStatus = typeof currentUser?.visaStatus === 'string' ? currentUser.visaStatus : "";
-  const customSevisId = typeof currentUser?.sevisId === 'string' ? currentUser.sevisId : "";
-  const customI94Number = typeof currentUser?.i94Number === 'string' ? currentUser.i94Number : "";
+  // Safely check for custom fields
+  const customVisaStatus = (
+    typeof currentUser === 'object' && 
+    currentUser !== null &&
+    'visaStatus' in currentUser && 
+    typeof currentUser.visaStatus === 'string'
+  ) ? currentUser.visaStatus : "";
+  
+  const customSevisId = (
+    typeof currentUser === 'object' && 
+    currentUser !== null &&
+    'sevisId' in currentUser && 
+    typeof currentUser.sevisId === 'string'
+  ) ? currentUser.sevisId : "";
+  
+  const customI94Number = (
+    typeof currentUser === 'object' && 
+    currentUser !== null &&
+    'i94Number' in currentUser && 
+    typeof currentUser.i94Number === 'string'
+  ) ? currentUser.i94Number : "";
 
   const form = useForm<z.infer<typeof visaStatusSchema>>({
     resolver: zodResolver(visaStatusSchema),

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -64,11 +65,14 @@ export function AcademicInfoSection() {
     }
   };
 
-  // Handle DSO contact info if it exists in the user data
-  // Create a safe default for dsoContact since it might not exist in UserProfile
-  const dsoContact: DSOContact = (typeof currentUser?.dsoContact === 'object' && currentUser?.dsoContact) 
-    ? currentUser.dsoContact as DSOContact 
-    : { name: "", email: "", phone: "" };
+  // Safely access dsoContact with type guards
+  const dsoContact: DSOContact = (
+    typeof currentUser === 'object' && 
+    currentUser !== null && 
+    'dsoContact' in currentUser && 
+    typeof currentUser.dsoContact === 'object' &&
+    currentUser.dsoContact !== null
+  ) ? currentUser.dsoContact as DSOContact : { name: "", email: "", phone: "" };
 
   // Initialize form with current user data
   const form = useForm<z.infer<typeof academicInfoSchema>>({
@@ -79,7 +83,7 @@ export function AcademicInfoSection() {
       fieldOfStudy: currentUser?.fieldOfStudy || "",
       isSTEM: currentUser?.isSTEM || false,
       programStartDate: parseDate(currentUser?.courseStartDate),
-      programCompletionDate: parseDate(currentUser?.graduationDate || ""),
+      programCompletionDate: parseDate(currentUser?.courseEndDate),
       dsoName: dsoContact.name || "",
       dsoEmail: dsoContact.email || "",
       dsoPhone: dsoContact.phone || "",
@@ -103,7 +107,7 @@ export function AcademicInfoSection() {
       }
       
       if (data.programCompletionDate) {
-        updateData.graduationDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
+        updateData.courseEndDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
       }
       
       // Create DSO contact object if any fields are filled
