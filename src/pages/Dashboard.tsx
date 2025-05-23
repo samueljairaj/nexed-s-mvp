@@ -185,42 +185,42 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Main Content - Row 1 */}
+      {/* Main Content - Row 1: Compliance & Upcoming Deadlines */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Compliance Checklist Card - Takes 2 columns */}
-        <div className="lg:col-span-2">
+        {/* Compliance Checklist Card - Takes 1 column */}
+        <div className="lg:col-span-1">
           <ComplianceChecklist complianceProgress={complianceProgress} tasksCount={tasksCount} />
         </div>
 
-        {/* Quick Links Card */}
-        <div className="lg:col-span-1">
-          <QuickLinksCard />
+        {/* Upcoming Deadlines - Takes 2 columns - MOVED UP */}
+        <div className="lg:col-span-2">
+          <UpcomingDeadlines deadlines={deadlines} />
         </div>
       </div>
 
-      {/* Main Content - Row 2 */}
+      {/* Main Content - Row 2: Document Vault & Recent Activities */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Document Vault */}
         <div className="lg:col-span-2">
           <DocumentVault documentsCount={documentsCount} />
         </div>
 
-        {/* Tips and Reminders */}
-        <div className="lg:col-span-1">
-          <TipsAndReminders visaType={currentUser?.visaType} />
-        </div>
-      </div>
-
-      {/* Main Content - Row 3 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Recent Activities */}
         <div className="lg:col-span-1">
           <RecentActivities currentUser={currentUser} />
         </div>
+      </div>
 
-        {/* Upcoming Deadlines */}
+      {/* Main Content - Row 3: Quick Links & Tips and Guides - MOVED DOWN */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Quick Links Card */}
+        <div className="lg:col-span-1">
+          <QuickLinksCard />
+        </div>
+
+        {/* Tips and Reminders */}
         <div className="lg:col-span-2">
-          <UpcomingDeadlines deadlines={deadlines} />
+          <TipsAndReminders visaType={currentUser?.visaType} />
         </div>
       </div>
     </div>
