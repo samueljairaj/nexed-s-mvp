@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -56,9 +55,10 @@ export function VisaStatusSection() {
   };
 
   // Get custom fields from currentUser if they exist
-  const customVisaStatus = currentUser?.visaStatus || "";
-  const customSevisId = currentUser?.sevisId || "";
-  const customI94Number = currentUser?.i94Number || "";
+  // These properties might not be in the TypeScript definition but could be in the actual data
+  const customVisaStatus = typeof currentUser?.visaStatus === 'string' ? currentUser.visaStatus : "";
+  const customSevisId = typeof currentUser?.sevisId === 'string' ? currentUser.sevisId : "";
+  const customI94Number = typeof currentUser?.i94Number === 'string' ? currentUser.i94Number : "";
 
   const form = useForm<z.infer<typeof visaStatusSchema>>({
     resolver: zodResolver(visaStatusSchema),
@@ -92,7 +92,7 @@ export function VisaStatusSection() {
         updateData.i94Number = data.i94Number;
       }
       
-      // Format dates as YYYY-MM-DD strings
+      // Format dates as YYYY-MM-DD strings for API
       if (data.entryDate) {
         updateData.usEntryDate = dateUtils.formatToYYYYMMDD(data.entryDate);
       }

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -66,8 +65,10 @@ export function AcademicInfoSection() {
   };
 
   // Handle DSO contact info if it exists in the user data
-  // Use type assertion with a default empty object if dsoContact doesn't exist
-  const dsoContact = (currentUser?.dsoContact as DSOContact) || { name: "", email: "", phone: "" };
+  // Create a safe default for dsoContact since it might not exist in UserProfile
+  const dsoContact: DSOContact = (typeof currentUser?.dsoContact === 'object' && currentUser?.dsoContact) 
+    ? currentUser.dsoContact as DSOContact 
+    : { name: "", email: "", phone: "" };
 
   // Initialize form with current user data
   const form = useForm<z.infer<typeof academicInfoSchema>>({
@@ -96,7 +97,7 @@ export function AcademicInfoSection() {
         isSTEM: data.isSTEM
       };
       
-      // Format dates
+      // Format dates to strings for API
       if (data.programStartDate) {
         updateData.courseStartDate = dateUtils.formatToYYYYMMDD(data.programStartDate);
       }
