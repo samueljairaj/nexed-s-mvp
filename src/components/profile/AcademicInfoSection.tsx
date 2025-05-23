@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -129,6 +128,7 @@ export function AcademicInfoSection() {
     }
   };
 
+  
   return (
     <Card>
       <CardHeader>

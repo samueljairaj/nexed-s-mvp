@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -109,7 +108,7 @@ export function VisaStatusSection() {
         updateData.i94Number = data.i94Number;
       }
       
-      // Format dates as YYYY-MM-DD strings for API
+      // Format dates as strings for API using dateUtils
       if (data.entryDate) {
         updateData.usEntryDate = dateUtils.formatToYYYYMMDD(data.entryDate);
       }
