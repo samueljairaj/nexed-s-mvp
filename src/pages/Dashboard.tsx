@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,10 +11,9 @@ import RecentActivities from "@/components/dashboard/RecentActivities";
 import TipsAndReminders from "@/components/dashboard/TipsAndReminders";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import { useLocation } from "react-router-dom";
+
 const Dashboard = () => {
-  const {
-    currentUser
-  } = useAuth();
+  const { currentUser } = useAuth();
   const location = useLocation();
   const [complianceProgress, setComplianceProgress] = useState(0);
   const [documentsCount, setDocumentsCount] = useState({
@@ -43,6 +43,7 @@ const Dashboard = () => {
       localStorage.removeItem('show_onboarding_checklist');
     }
   }, [location]);
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -65,8 +66,7 @@ const Dashboard = () => {
         if (documents) {
           const requiredDocs = documents.filter(doc => doc.is_required).length;
           setDocumentsCount({
-            total: Math.max(requiredDocs, 12),
-            // Ensure minimum of 12 for UI
+            total: Math.max(requiredDocs, 12), // Ensure minimum of 12 for UI
             uploaded: documents.length
           });
         }
@@ -75,8 +75,7 @@ const Dashboard = () => {
         if (tasks) {
           const completedTasks = tasks.filter(task => task.is_completed).length;
           setTasksCount({
-            total: tasks.length || 20,
-            // Ensure minimum of 20 for UI
+            total: tasks.length || 20, // Ensure minimum of 20 for UI
             completed: completedTasks
           });
 
@@ -85,7 +84,10 @@ const Dashboard = () => {
           setComplianceProgress(progressPercentage);
 
           // Get upcoming deadlines (not completed tasks, sorted by due date)
-          const upcomingDeadlines = tasks.filter(task => !task.is_completed && task.due_date).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()).slice(0, 4); // Get top 4 deadlines
+          const upcomingDeadlines = tasks
+            .filter(task => !task.is_completed && task.due_date)
+            .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+            .slice(0, 4); // Get top 4 deadlines
 
           setDeadlines(upcomingDeadlines);
         }
@@ -95,18 +97,24 @@ const Dashboard = () => {
         setIsLoading(false);
       }
     };
+
     if (currentUser?.id) {
       fetchData();
     } else {
       setIsLoading(false);
     }
   }, [currentUser]);
+
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">
+    return (
+      <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nexed-500"></div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="animate-fade-in space-y-6">
+
+  return (
+    <div className="animate-fade-in space-y-6">
       {/* Onboarding Checklist Dialog */}
       <OnboardingChecklist open={showChecklist} onOpenChange={setShowChecklist} />
 
@@ -141,8 +149,8 @@ const Dashboard = () => {
               <div className="flex-1">
                 <div className="h-2 w-full bg-gray-200 rounded-full">
                   <div className="h-2 bg-nexed-500 rounded-full" style={{
-                  width: `${complianceProgress}%`
-                }}></div>
+                    width: `${complianceProgress}%`
+                  }}></div>
                 </div>
               </div>
             </div>
@@ -181,7 +189,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Activities */}
-        <div className="lg:col-span-2 h-full mx-[100px]">
+        <div className="lg:col-span-2 h-full">
           <RecentActivities currentUser={currentUser} />
         </div>
 
@@ -190,6 +198,8 @@ const Dashboard = () => {
           <TipsAndReminders visaType={currentUser?.visaType} />
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Dashboard;
