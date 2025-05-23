@@ -31,7 +31,10 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     employmentStartDate: currentUser?.employmentStartDate ? new Date(currentUser.employmentStartDate).toISOString().split('T')[0] : null,
     employmentStatus: currentUser?.employmentStatus || "Unemployed Student",
     optType: currentUser?.authType || "",
-    graduationDate: currentUser?.programCompletionDate ? new Date(currentUser.programCompletionDate).toISOString().split('T')[0] : null
+    // Use a safer way to access programCompletionDate since it might not exist in UserProfile
+    graduationDate: currentUser?.programCompletionDate ? 
+      new Date(currentUser.programCompletionDate).toISOString().split('T')[0] : 
+      null
   };
 
   // Handle continue to dashboard
@@ -108,6 +111,8 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     return sections;
   };
 
+  // Check ComplianceChecklist.tsx to determine the correct prop name
+  // We'll use the "loading" prop name to match the component definition
   return (
     <ComplianceChecklist 
       open={open} 

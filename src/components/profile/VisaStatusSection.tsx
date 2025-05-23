@@ -55,13 +55,18 @@ export function VisaStatusSection() {
     }
   };
 
+  // Get custom fields from currentUser if they exist
+  const customVisaStatus = currentUser?.visaStatus || "";
+  const customSevisId = currentUser?.sevisId || "";
+  const customI94Number = currentUser?.i94Number || "";
+
   const form = useForm<z.infer<typeof visaStatusSchema>>({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
       visaType: currentUser?.visaType || "",
-      visaStatus: "", // Add default empty values for fields not in UserProfile
-      sevisId: "",
-      i94Number: "",
+      visaStatus: customVisaStatus,
+      sevisId: customSevisId,
+      i94Number: customI94Number,
       entryDate: parseDate(currentUser?.usEntryDate),
       visaExpiryDate: parseDate(currentUser?.visa_expiry_date),
     },

@@ -66,7 +66,8 @@ export function AcademicInfoSection() {
   };
 
   // Handle DSO contact info if it exists in the user data
-  const dsoContact = currentUser?.dsoContact as DSOContact | undefined;
+  // Use type assertion with a default empty object if dsoContact doesn't exist
+  const dsoContact = (currentUser?.dsoContact as DSOContact) || { name: "", email: "", phone: "" };
 
   // Initialize form with current user data
   const form = useForm<z.infer<typeof academicInfoSchema>>({
@@ -77,10 +78,10 @@ export function AcademicInfoSection() {
       fieldOfStudy: currentUser?.fieldOfStudy || "",
       isSTEM: currentUser?.isSTEM || false,
       programStartDate: parseDate(currentUser?.courseStartDate),
-      programCompletionDate: undefined, // We'll handle this separately
-      dsoName: dsoContact?.name || "",
-      dsoEmail: dsoContact?.email || "",
-      dsoPhone: dsoContact?.phone || "",
+      programCompletionDate: parseDate(currentUser?.graduationDate || ""),
+      dsoName: dsoContact.name || "",
+      dsoEmail: dsoContact.email || "",
+      dsoPhone: dsoContact.phone || "",
     },
   });
 
@@ -101,7 +102,7 @@ export function AcademicInfoSection() {
       }
       
       if (data.programCompletionDate) {
-        updateData.programCompletionDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
+        updateData.graduationDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
       }
       
       // Create DSO contact object if any fields are filled
