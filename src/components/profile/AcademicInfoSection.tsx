@@ -57,10 +57,10 @@ export function AcademicInfoSection() {
       fieldOfStudy: currentUser?.fieldOfStudy || "",
       degreeLevel: currentUser?.degreeLevel || "",
       courseStartDate: parseDate(currentUser?.courseStartDate),
-      graduationDate: parseDate(currentUser?.graduationDate),
+      graduationDate: parseDate(currentUser?.programCompletionDate),
       isSTEM: currentUser?.isSTEM || false,
-      dsoName: currentUser?.dsoName || "",
-      dsoEmail: currentUser?.dsoEmail || "",
+      dsoName: currentUser?.dsoContact?.name || "",
+      dsoEmail: currentUser?.dsoContact?.email || "",
     },
   });
 
@@ -72,8 +72,10 @@ export function AcademicInfoSection() {
         fieldOfStudy: data.fieldOfStudy,
         degreeLevel: data.degreeLevel,
         isSTEM: data.isSTEM,
-        dsoName: data.dsoName,
-        dsoEmail: data.dsoEmail,
+        dsoContact: {
+          name: data.dsoName,
+          email: data.dsoEmail,
+        }
       };
       
       // Format dates as YYYY-MM-DD strings
@@ -82,7 +84,7 @@ export function AcademicInfoSection() {
       }
       
       if (data.graduationDate) {
-        updateData.graduationDate = dateUtils.formatToYYYYMMDD(data.graduationDate);
+        updateData.programCompletionDate = dateUtils.formatToYYYYMMDD(data.graduationDate);
       }
       
       await updateProfile(updateData);

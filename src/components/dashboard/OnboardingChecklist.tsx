@@ -29,9 +29,9 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     courseStartDate: currentUser?.courseStartDate || null,
     usEntryDate: currentUser?.usEntryDate || null,
     employmentStartDate: currentUser?.employmentStartDate || null,
-    employmentStatus: currentUser?.employment_status || "Unemployed Student",
-    optType: currentUser?.optType || "",
-    graduationDate: currentUser?.graduationDate || null
+    employmentStatus: currentUser?.employmentStatus || "Unemployed Student",
+    optType: currentUser?.auth_type || "",
+    graduationDate: currentUser?.programCompletionDate || null
   };
 
   // Handle continue to dashboard
@@ -41,7 +41,16 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
       
       // Generate personalized compliance tasks based on user data
       if (currentUser) {
-        await generateCompliance(userData);
+        // Convert Date objects to strings before passing to generateCompliance
+        const stringifiedUserData = {
+          ...userData,
+          courseStartDate: userData.courseStartDate ? String(userData.courseStartDate) : null,
+          usEntryDate: userData.usEntryDate ? String(userData.usEntryDate) : null,
+          employmentStartDate: userData.employmentStartDate ? String(userData.employmentStartDate) : null,
+          graduationDate: userData.graduationDate ? String(userData.graduationDate) : null
+        };
+        
+        await generateCompliance(stringifiedUserData);
       }
       
       // Close dialog and clear flag
@@ -114,7 +123,7 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
       onOpenChange={onOpenChange} 
       userData={userData}
       onContinue={handleContinue}
-      isProcessing={isGeneratingTasks || isGenerating}
+      loading={isGeneratingTasks || isGenerating}
       sections={getSections()}
     />
   );
