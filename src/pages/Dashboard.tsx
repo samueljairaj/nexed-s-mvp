@@ -115,29 +115,29 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in space-y-5">
       {/* Onboarding Checklist Dialog */}
       <OnboardingChecklist 
         open={showChecklist} 
         onOpenChange={setShowChecklist} 
       />
 
-      <header className="page-header">
+      <header className="page-header mb-4">
         <h1 className="page-title text-nexed-800">
           Welcome back, {currentUser?.name || "Student"}
         </h1>
-        <p className="page-subtitle">
+        <p className="page-subtitle text-sm">
           Here's your visa compliance overview
         </p>
       </header>
 
       {/* Status Summary Section */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="bg-white rounded-lg shadow-sm border p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Visa Status</span>
+            <span className="text-xs text-gray-500">Visa Status</span>
             <div className="flex items-center mt-1">
-              <span className="font-bold text-xl">
+              <span className="font-bold text-lg">
                 {currentUser?.visaType || "F1"} Student
               </span>
               <span className={`ml-2 status-badge ${
@@ -154,9 +154,9 @@ const Dashboard = () => {
           </div>
           
           <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Compliance Status</span>
+            <span className="text-xs text-gray-500">Compliance Status</span>
             <div className="flex items-center mt-1 gap-3">
-              <span className="font-bold text-xl">{complianceProgress}%</span>
+              <span className="font-bold text-lg">{complianceProgress}%</span>
               <div className="flex-1">
                 <div className="h-2 w-full bg-gray-200 rounded-full">
                   <div 
@@ -169,17 +169,17 @@ const Dashboard = () => {
           </div>
           
           <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Documents</span>
+            <span className="text-xs text-gray-500">Documents</span>
             <div className="mt-1">
-              <span className="font-bold text-xl">{documentsCount.uploaded}/{documentsCount.total}</span>
-              <span className="ml-1 text-gray-600">uploaded</span>
+              <span className="font-bold text-lg">{documentsCount.uploaded}/{documentsCount.total}</span>
+              <span className="ml-1 text-gray-600 text-sm">uploaded</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Compliance Checklist Card */}
         <div className="lg:col-span-2 h-full">
           <ComplianceChecklist 

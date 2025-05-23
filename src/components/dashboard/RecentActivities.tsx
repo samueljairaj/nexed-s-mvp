@@ -124,11 +124,11 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
       yesterday.setDate(yesterday.getDate() - 1);
       
       if (date.toDateString() === now.toDateString()) {
-        return "Today, " + format(date, "h:mm a");
+        return "Today";
       } else if (date.toDateString() === yesterday.toDateString()) {
-        return "Yesterday, " + format(date, "h:mm a");
+        return "Yesterday";
       } else {
-        return format(date, "MMM d");
+        return format(date, "d") + " days ago";
       }
     } catch (e) {
       return "Recent";
@@ -166,28 +166,30 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
   const displayActivities = activities.length > 0 ? activities : defaultActivities;
 
   return (
-    <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-medium text-nexed-800 flex items-center">
-          <History className="mr-2 h-5 w-5 text-nexed-600" />
+    <Card className="h-full">
+      <CardHeader className="pb-0 pt-4 px-4">
+        <CardTitle className="text-base font-medium text-nexed-800 flex items-center">
+          <History className="mr-2 h-4 w-4 text-nexed-600" />
           Recent Activities
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-0 p-4 pt-0">
-        {displayActivities.map((activity, index) => (
-          <div key={index} className="flex items-start py-2 border-b last:border-0 last:pb-0 hover:bg-gray-50 rounded-md px-2 transition-colors duration-200">
-            <div className="h-7 w-7 rounded-full bg-nexed-50 flex items-center justify-center mr-3">
-              {activity.icon || <Clock size={16} className="text-gray-500" />}
+      <CardContent className="p-0">
+        <div className="px-4 py-1">
+          {displayActivities.map((activity, index) => (
+            <div key={index} className="py-3 border-b last:border-0 flex items-start">
+              <div className="h-6 w-6 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                {activity.icon || <Clock size={16} className="text-gray-500" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm text-gray-900">{activity.action}</p>
+                <p className="text-xs text-gray-600 truncate">{activity.item}</p>
+                <p className="text-xs text-gray-500">{activity.date}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-sm text-gray-900">{activity.action}</p>
-              <p className="text-xs text-gray-600">{activity.item}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{activity.date}</p>
-            </div>
-          </div>
-        ))}
-        <div className="pt-2">
-          <Button asChild variant="ghost" size="sm" className="w-full text-xs text-nexed-600 hover:text-nexed-800 mt-1">
+          ))}
+        </div>
+        <div className="text-center px-4 pt-0 pb-3">
+          <Button asChild variant="ghost" size="sm" className="w-full text-xs text-nexed-600 hover:text-nexed-800">
             <Link to="/app/profile" className="flex items-center justify-center gap-1">
               View all activity
               <ArrowRight size={14} />
