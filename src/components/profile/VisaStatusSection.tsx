@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -54,35 +55,13 @@ export function VisaStatusSection() {
     }
   };
 
-  // Safely check for custom fields
-  const customVisaStatus = (
-    typeof currentUser === 'object' && 
-    currentUser !== null &&
-    'visaStatus' in currentUser && 
-    typeof currentUser.visaStatus === 'string'
-  ) ? currentUser.visaStatus : "";
-  
-  const customSevisId = (
-    typeof currentUser === 'object' && 
-    currentUser !== null &&
-    'sevisId' in currentUser && 
-    typeof currentUser.sevisId === 'string'
-  ) ? currentUser.sevisId : "";
-  
-  const customI94Number = (
-    typeof currentUser === 'object' && 
-    currentUser !== null &&
-    'i94Number' in currentUser && 
-    typeof currentUser.i94Number === 'string'
-  ) ? currentUser.i94Number : "";
-
   const form = useForm<z.infer<typeof visaStatusSchema>>({
     resolver: zodResolver(visaStatusSchema),
     defaultValues: {
       visaType: currentUser?.visaType || "",
-      visaStatus: customVisaStatus,
-      sevisId: customSevisId,
-      i94Number: customI94Number,
+      visaStatus: currentUser?.visaStatus || "",
+      sevisId: currentUser?.sevisId || "",
+      i94Number: currentUser?.i94Number || "",
       entryDate: parseDate(currentUser?.usEntryDate),
       visaExpiryDate: parseDate(currentUser?.visa_expiry_date),
     },
@@ -93,22 +72,12 @@ export function VisaStatusSection() {
     try {
       const updateData: Record<string, any> = {
         visaType: data.visaType,
+        visaStatus: data.visaStatus,
+        sevisId: data.sevisId,
+        i94Number: data.i94Number,
       };
       
-      // Add additional fields to store in custom fields
-      if (data.visaStatus) {
-        updateData.visaStatus = data.visaStatus;
-      }
-      
-      if (data.sevisId) {
-        updateData.sevisId = data.sevisId;
-      }
-      
-      if (data.i94Number) {
-        updateData.i94Number = data.i94Number;
-      }
-      
-      // Format dates as strings for API using dateUtils
+      // Format dates as YYYY-MM-DD strings
       if (data.entryDate) {
         updateData.usEntryDate = dateUtils.formatToYYYYMMDD(data.entryDate);
       }

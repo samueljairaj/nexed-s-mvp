@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -44,12 +45,6 @@ const academicInfoSchema = z.object({
   dsoPhone: z.string().optional()
 });
 
-interface DSOContact {
-  name?: string;
-  email?: string;
-  phone?: string;
-}
-
 export function AcademicInfoSection() {
   const { currentUser, updateProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,15 +59,6 @@ export function AcademicInfoSection() {
     }
   };
 
-  // Safely access dsoContact with type guards
-  const dsoContact: DSOContact = (
-    typeof currentUser === 'object' && 
-    currentUser !== null && 
-    'dsoContact' in currentUser && 
-    typeof currentUser.dsoContact === 'object' &&
-    currentUser.dsoContact !== null
-  ) ? currentUser.dsoContact as DSOContact : { name: "", email: "", phone: "" };
-
   // Initialize form with current user data
   const form = useForm<z.infer<typeof academicInfoSchema>>({
     resolver: zodResolver(academicInfoSchema),
@@ -82,10 +68,10 @@ export function AcademicInfoSection() {
       fieldOfStudy: currentUser?.fieldOfStudy || "",
       isSTEM: currentUser?.isSTEM || false,
       programStartDate: parseDate(currentUser?.courseStartDate),
-      programCompletionDate: parseDate(currentUser?.programCompletionDate || currentUser?.courseEndDate),
-      dsoName: dsoContact.name || "",
-      dsoEmail: dsoContact.email || "",
-      dsoPhone: dsoContact.phone || "",
+      programCompletionDate: parseDate(currentUser?.programCompletionDate),
+      dsoName: currentUser?.dsoContact?.name || "",
+      dsoEmail: currentUser?.dsoContact?.email || "",
+      dsoPhone: currentUser?.dsoContact?.phone || "",
     },
   });
 
@@ -100,14 +86,12 @@ export function AcademicInfoSection() {
         isSTEM: data.isSTEM
       };
       
-      // Format dates to strings for API
+      // Format dates
       if (data.programStartDate) {
         updateData.courseStartDate = dateUtils.formatToYYYYMMDD(data.programStartDate);
       }
       
       if (data.programCompletionDate) {
-        // Store in both courseEndDate for existing code compatibility and programCompletionDate for new code
-        updateData.courseEndDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
         updateData.programCompletionDate = dateUtils.formatToYYYYMMDD(data.programCompletionDate);
       }
       
