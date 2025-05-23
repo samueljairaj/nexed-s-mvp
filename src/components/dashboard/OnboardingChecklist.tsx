@@ -30,8 +30,8 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     usEntryDate: currentUser?.usEntryDate || null,
     employmentStartDate: currentUser?.employmentStartDate || null,
     employmentStatus: currentUser?.employmentStatus || "Unemployed Student",
-    optType: currentUser?.auth_type || "",
-    graduationDate: currentUser?.programCompletionDate || null
+    optType: currentUser?.authType || "",
+    graduationDate: currentUser?.graduationDate || null
   };
 
   // Handle continue to dashboard
@@ -123,7 +123,7 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
       onOpenChange={onOpenChange} 
       userData={userData}
       onContinue={handleContinue}
-      loading={isGeneratingTasks || isGenerating}
+      isGenerating={isGeneratingTasks || isGenerating}
       sections={getSections()}
     />
   );
