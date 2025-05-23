@@ -43,28 +43,28 @@ export const ComplianceChecklist = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold mb-2">
+          <DialogTitle className="text-xl font-semibold mb-2 text-nexed-800">
             Welcome to neXed Visa Compliance Platform
           </DialogTitle>
         </DialogHeader>
         
-        <div className="py-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="py-4 space-y-6">
+          <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="text-lg font-medium">Profile Completion</h3>
+              <h3 className="text-lg font-medium text-nexed-800">Profile Completion</h3>
               <p className="text-muted-foreground text-sm">
                 {completedItems} of {totalItems} items completed
               </p>
             </div>
-            <span className="text-2xl font-bold">{completionPercentage}%</span>
+            <span className="text-2xl font-bold text-nexed-600">{completionPercentage}%</span>
           </div>
           
-          <Progress value={completionPercentage} className="h-2 mb-6" />
+          <Progress value={completionPercentage} className="h-2 mb-4" />
           
           {/* Profile summary */}
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <h3 className="text-md font-medium mb-2">Profile Summary</h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="bg-nexed-50 p-5 rounded-lg">
+            <h3 className="text-md font-medium mb-3 text-nexed-800">Profile Summary</h3>
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-muted-foreground">Name</p>
                 <p className="font-medium">{userData.name || "Not provided"}</p>
@@ -85,12 +85,13 @@ export const ComplianceChecklist = ({
           </div>
           
           {/* Checklist sections */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {sections.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="border rounded-lg p-4">
-                <h3 className="text-md font-medium mb-2">{section.title}</h3>
-                <Separator className="mb-3" />
-                <div className="space-y-2">
+              <div key={sectionIndex} className="border border-gray-200 rounded-lg shadow-sm bg-white">
+                <div className="px-5 py-3 border-b border-gray-200">
+                  <h3 className="text-md font-medium text-nexed-800">{section.title}</h3>
+                </div>
+                <div className="p-5 space-y-3">
                   {section.items.map((item, itemIndex) => (
                     <div key={itemIndex} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -121,7 +122,7 @@ export const ComplianceChecklist = ({
           <Button 
             onClick={async () => await onContinue()} 
             disabled={loading}
-            className="bg-nexed-500 hover:bg-nexed-600"
+            className="bg-nexed-500 hover:bg-nexed-600 text-white"
           >
             {loading ? "Setting up your dashboard..." : "Continue to Dashboard"}
           </Button>

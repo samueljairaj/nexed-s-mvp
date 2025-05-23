@@ -24,10 +24,10 @@ const DocumentVault: React.FC<DocumentVaultProps> = ({ documentsCount }) => {
   ];
   
   return (
-    <Card className="h-full">
+    <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-lg font-medium">Document Vault</CardTitle>
+          <CardTitle className="text-lg font-medium text-nexed-800">Document Vault</CardTitle>
           <CardDescription>Essential documents stored</CardDescription>
         </div>
         <Button asChild variant="ghost" size="icon" className="rounded-full">
@@ -45,7 +45,7 @@ const DocumentVault: React.FC<DocumentVaultProps> = ({ documentsCount }) => {
         
         <div className="space-y-3">
           {recentDocuments.map((doc, idx) => (
-            <div key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+            <div key={idx} className="flex items-center justify-between bg-nexed-50 p-3 rounded-md">
               <div className="flex items-center">
                 <div className="h-8 w-8 rounded-md bg-nexed-100 flex items-center justify-center text-nexed-600 mr-3">
                   <FileText size={16} />
@@ -55,7 +55,7 @@ const DocumentVault: React.FC<DocumentVaultProps> = ({ documentsCount }) => {
                   <p className="text-xs text-gray-500">{doc.type}</p>
                 </div>
               </div>
-              <span className="text-xs bg-nexed-100 text-nexed-600 px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                 Verified
               </span>
             </div>

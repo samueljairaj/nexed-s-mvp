@@ -19,9 +19,9 @@ const QuickLinksCard: React.FC = () => {
   ];
 
   return (
-    <Card className="h-full">
+    <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Quick Access</CardTitle>
+        <CardTitle className="text-lg font-medium text-nexed-800">Quick Access</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-2 gap-3">
@@ -30,7 +30,7 @@ const QuickLinksCard: React.FC = () => {
               key={index}
               asChild
               variant="outline"
-              className="h-auto py-4 flex-col items-center justify-center text-center"
+              className="h-auto py-4 flex-col items-center justify-center text-center hover:bg-nexed-50 hover:border-nexed-200"
             >
               <Link to={link.to}>
                 <span className={`h-8 w-8 rounded-md ${link.color} flex items-center justify-center mb-2`}>
@@ -46,7 +46,7 @@ const QuickLinksCard: React.FC = () => {
           <h3 className="text-sm font-medium mb-3 text-gray-700">External Resources</h3>
           <div className="space-y-2">
             {externalLinks.map((link, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+              <div key={index} className="flex items-center justify-between p-3 bg-nexed-50 rounded-md hover:bg-nexed-100 transition-colors duration-200">
                 <div>
                   <p className="text-sm font-medium">{link.title}</p>
                   <p className="text-xs text-gray-500">{link.description}</p>

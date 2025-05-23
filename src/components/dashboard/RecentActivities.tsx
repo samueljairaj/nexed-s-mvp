@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, CheckCircle2, Upload, MessageSquare, ArrowRight } from "lucide-react";
+import { Clock, CheckCircle2, Upload, MessageSquare, ArrowRight, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -166,9 +166,12 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
   const displayActivities = activities.length > 0 ? activities : defaultActivities;
 
   return (
-    <Card className="h-full">
+    <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-medium">Recent Activities</CardTitle>
+        <CardTitle className="text-lg font-medium text-nexed-800 flex items-center">
+          <History className="mr-2 h-5 w-5 text-nexed-600" />
+          Recent Activities
+        </CardTitle>
         <Button asChild variant="ghost" size="icon" className="rounded-full">
           <Link to="/app/profile">
             <ArrowRight size={16} />
@@ -177,8 +180,8 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
       </CardHeader>
       <CardContent className="space-y-1">
         {displayActivities.map((activity, index) => (
-          <div key={index} className="flex items-start py-3 border-b last:border-0 last:pb-0">
-            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+          <div key={index} className="flex items-start py-3 border-b last:border-0 last:pb-0 hover:bg-gray-50 rounded-md px-2 transition-colors duration-200">
+            <div className="h-8 w-8 rounded-full bg-nexed-50 flex items-center justify-center mr-3">
               {activity.icon || <Clock size={16} className="text-gray-500" />}
             </div>
             <div>

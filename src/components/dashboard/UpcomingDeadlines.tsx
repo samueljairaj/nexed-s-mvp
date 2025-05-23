@@ -61,11 +61,11 @@ const UpcomingDeadlines: React.FC<UpcomingDeadlinesProps> = ({ deadlines = [] })
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-lg font-medium flex items-center">
-            <Calendar className="mr-2 h-5 w-5 text-nexed-600" />
+        <div className="flex items-center">
+          <Calendar className="mr-2 h-5 w-5 text-nexed-600" />
+          <CardTitle className="text-lg font-medium text-nexed-800">
             Upcoming Deadlines
           </CardTitle>
         </div>
@@ -76,7 +76,7 @@ const UpcomingDeadlines: React.FC<UpcomingDeadlinesProps> = ({ deadlines = [] })
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {displayDeadlines.map((deadline, index) => {
             const dueDate = new Date(deadline.due_date);
             const isValidDate = !isNaN(dueDate.getTime());
@@ -84,27 +84,31 @@ const UpcomingDeadlines: React.FC<UpcomingDeadlinesProps> = ({ deadlines = [] })
             const isUrgent = daysRemaining <= 7;
             
             return (
-              <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex justify-between mb-2">
-                  <span className={`text-xs rounded-full px-2 py-0.5 ${
-                    deadline.priority === "high" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
-                  }`}>
-                    {deadline.category}
-                  </span>
-                  <span className={`text-xs rounded-full px-2 py-1 flex items-center ${
-                    isUrgent ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
-                  }`}>
-                    {isUrgent && <AlertTriangle size={12} className="mr-1" />}
-                    <Clock size={12} className="mr-1" />
-                    {daysRemaining > 0 
-                      ? `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left` 
-                      : "Due today"}
-                  </span>
-                </div>
-                <h4 className="font-medium text-gray-900">{deadline.title}</h4>
-                <p className="text-sm text-gray-600 mt-1">{deadline.description}</p>
-                <div className="mt-2 text-sm text-gray-500">
-                  Due: {isValidDate ? format(dueDate, 'MMM d, yyyy') : 'TBD'}
+              <div key={index} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="p-4">
+                  <div className="flex justify-between mb-2">
+                    <span className={`text-xs rounded-full px-2 py-0.5 ${
+                      deadline.category === "immigration" ? "bg-blue-100 text-blue-700" : 
+                      deadline.category === "employment" ? "bg-purple-100 text-purple-700" : 
+                      "bg-amber-100 text-amber-700"
+                    }`}>
+                      {deadline.category}
+                    </span>
+                    <span className={`text-xs rounded-full px-2 py-1 flex items-center ${
+                      isUrgent ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                    }`}>
+                      {isUrgent && <AlertTriangle size={12} className="mr-1" />}
+                      <Clock size={12} className="mr-1" />
+                      {daysRemaining > 0 
+                        ? `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left` 
+                        : "Due today"}
+                    </span>
+                  </div>
+                  <h4 className="font-medium text-gray-900 mb-1">{deadline.title}</h4>
+                  <p className="text-sm text-gray-600 mb-2">{deadline.description}</p>
+                  <div className="text-sm text-gray-500 mt-auto">
+                    Due: {isValidDate ? format(dueDate, 'MMM d, yyyy') : 'TBD'}
+                  </div>
                 </div>
               </div>
             );

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { FileCheck, ArrowRight } from "lucide-react";
+import { FileCheck, ArrowRight, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -20,11 +20,17 @@ const ComplianceChecklist: React.FC<ComplianceChecklistProps> = ({
   tasksCount,
   isGenerating 
 }) => {
+  const sampleTasks = [
+    "Submit I-94 form",
+    "Update SEVIS address",
+    "Complete health insurance"
+  ];
+
   return (
-    <Card className="h-full">
+    <Card className="h-full hover:shadow-card-hover transition-shadow duration-300">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-lg font-medium">Compliance Checklist</CardTitle>
+          <CardTitle className="text-lg font-medium text-nexed-800">Compliance Checklist</CardTitle>
           <CardDescription>Task completion progress</CardDescription>
         </div>
         <Button asChild variant="ghost" size="icon" className="rounded-full">
@@ -41,8 +47,8 @@ const ComplianceChecklist: React.FC<ComplianceChecklistProps> = ({
         <Progress value={complianceProgress} className="h-2 mb-6" />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-          {["Submit I-94 form", "Update SEVIS address", "Complete health insurance"].map((task, index) => (
-            <div key={index} className="flex items-center bg-gray-50 p-3 rounded-md">
+          {sampleTasks.map((task, index) => (
+            <div key={index} className="flex items-center bg-nexed-50 p-3 rounded-md">
               <div className="h-6 w-6 rounded-full bg-nexed-100 flex items-center justify-center text-nexed-600 mr-3">
                 <FileCheck size={14} />
               </div>
