@@ -21,8 +21,8 @@ const TipsAndReminders: React.FC<TipsAndRemindersProps> = ({
   }
   
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-3 flex flex-row items-center justify-between">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-medium text-nexed-800 flex items-center">
           <Lightbulb className="mr-2 h-5 w-5 text-nexed-600" />
           Tips & Guides
@@ -33,7 +33,7 @@ const TipsAndReminders: React.FC<TipsAndRemindersProps> = ({
           </Link>
         </Button>
       </CardHeader>
-      <CardContent className="p-4 pt-0 space-y-4">
+      <CardContent className="p-4 pt-0 space-y-3 flex-grow">
         <div className="space-y-2">
           {tips.map((tip, index) => (
             <div key={index} className="flex items-center p-2 bg-nexed-50 rounded-lg hover:bg-nexed-100 transition-colors duration-200">

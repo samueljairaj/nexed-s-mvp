@@ -14,11 +14,11 @@ const QuickLinksCard: React.FC = () => {
   ];
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-3">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2">
         <CardTitle className="text-lg font-medium text-nexed-800">Quick Access</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
+      <CardContent className="p-4 pt-0 flex-grow flex flex-col justify-center">
         <div className="grid grid-cols-2 gap-3">
           {links.map((link, index) => (
             <Button

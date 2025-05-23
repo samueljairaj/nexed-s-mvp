@@ -114,11 +114,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in space-y-5">
       {/* Onboarding Checklist Dialog */}
       <OnboardingChecklist open={showChecklist} onOpenChange={setShowChecklist} />
 
-      <header className="page-header">
+      <header className="page-header mb-4">
         <h1 className="page-title text-nexed-800">
           Welcome back, {currentUser?.name || "Student"}
         </h1>
@@ -128,7 +128,7 @@ const Dashboard = () => {
       </header>
 
       {/* Status Summary Section */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white rounded-lg shadow-sm border p-5 mb-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="flex flex-col">
             <span className="text-sm text-gray-500">Visa Status</span>
@@ -167,7 +167,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {/* Compliance Checklist Card */}
         <div className="lg:col-span-2 h-full">
           <ComplianceChecklist complianceProgress={complianceProgress} tasksCount={tasksCount} />
@@ -179,23 +179,23 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Links Card */}
-        <div className="lg:col-span-1 md:row-span-2 h-full">
+        <div className="lg:col-span-1 h-auto">
           <QuickLinksCard />
+        </div>
+
+        {/* Tips and Reminders */}
+        <div className="lg:col-span-1 h-full">
+          <TipsAndReminders visaType={currentUser?.visaType} />
+        </div>
+
+        {/* Recent Activities */}
+        <div className="lg:col-span-1 h-full">
+          <RecentActivities currentUser={currentUser} />
         </div>
 
         {/* Upcoming Deadlines */}
         <div className="lg:col-span-3 h-full">
           <UpcomingDeadlines deadlines={deadlines} />
-        </div>
-
-        {/* Recent Activities */}
-        <div className="lg:col-span-2 h-full">
-          <RecentActivities currentUser={currentUser} />
-        </div>
-
-        {/* Tips and Reminders */}
-        <div className="lg:col-span-2 h-full">
-          <TipsAndReminders visaType={currentUser?.visaType} />
         </div>
       </div>
     </div>
