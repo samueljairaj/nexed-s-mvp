@@ -35,7 +35,12 @@ export function DocumentVersionUploader({
     
     setIsUploading(true);
     try {
-      await onUploadVersion(selectedFile.name as unknown as FileList, notes);
+      // Create a FileList-like object since FileList is readonly
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(selectedFile);
+      const fileList = dataTransfer.files;
+      
+      await onUploadVersion(fileList, notes);
       onClose();
     } catch (error) {
       console.error("Error uploading new version:", error);

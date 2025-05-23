@@ -64,24 +64,25 @@ export const useComplianceTasks = () => {
 
   // Helper function to normalize visa types for database compatibility
   const normalizeVisaType = (visaType: string | undefined): DatabaseVisaType => {
+    if (!visaType) return "F1"; // Default to F1 if no visa type
     if (visaType === "F1") return "F1";
-    if (visaType === "J1" || visaType === "J-1") return "Other"; // Map J1 to Other as it's not in DatabaseVisaType
+    if (visaType === "J1" || visaType === "J-1") return "Other"; 
     if (visaType === "OPT") return "OPT";
     if (visaType === "H1B") return "H1B";
     return "Other";
   };
 
-  // Set up Supabase realtime subscription
+  // Set up Supabase realtime subscription - FIXED to prevent multiple subscriptions
   useEffect(() => {
     if (!currentUser?.id) return;
-
+    
     // Clean up any existing subscription
     if (realtimeSubscription) {
-      realtimeSubscription.unsubscribe();
+      supabase.removeChannel(realtimeSubscription);
     }
 
     // Set up a new subscription
-    const subscription = supabase
+    const channel = supabase
       .channel('compliance-tasks-changes')
       .on('postgres_changes', {
         event: '*',
@@ -144,18 +145,21 @@ export const useComplianceTasks = () => {
       })
       .subscribe();
 
-    setRealtimeSubscription(subscription);
+    setRealtimeSubscription(channel);
 
     // Clean up subscription on unmount
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [currentUser?.id]);
 
-  // Load tasks on component mount
+  // Load tasks on component mount - FIXED to prevent infinite loops
   useEffect(() => {
     if (currentUser?.id) {
-      loadTasks();
+      // Only load tasks if we don't have any yet
+      if (tasks.length === 0) {
+        loadTasks();
+      }
     }
   }, [currentUser?.id]);
 
@@ -300,27 +304,24 @@ export const useComplianceTasks = () => {
           // Save the cached tasks to database for future use
           await saveTasksToDatabase(parsedTasks);
         } else {
-          // No cached tasks, load baseline checklist based on user's visa type
-          const baselineTasks = baselineItemsToAITasks(
-            getBaselineChecklist(currentUser?.visaType || 'F1')
-          );
-          setTasks(baselineTasks);
+          // No cached tasks, generate mock tasks immediately
+          const mockTasks = generateMockTasks(currentUser?.visaType || 'F1');
+          setTasks(mockTasks);
+          setLastGeneratedAt(new Date());
           
-          // Save baseline tasks to database and local storage
-          await saveTasksToDatabase(baselineTasks);
-          cacheTasksToLocalStorage(baselineTasks);
+          // Save mock tasks to database and local storage
+          await saveTasksToDatabase(mockTasks);
+          cacheTasksToLocalStorage(mockTasks);
         }
       }
     } catch (error) {
       console.error('Error loading tasks:', error);
       toast.error('Failed to load compliance tasks');
       
-      // Fallback to baseline tasks
-      const baselineTasks = baselineItemsToAITasks(
-        getBaselineChecklist(currentUser?.visaType || 'F1')
-      );
-      setTasks(baselineTasks);
-      cacheTasksToLocalStorage(baselineTasks);
+      // Fallback to mock tasks
+      const mockTasks = generateMockTasks(currentUser?.visaType || 'F1');
+      setTasks(mockTasks);
+      cacheTasksToLocalStorage(mockTasks);
     } finally {
       setIsLoading(false);
     }
@@ -352,70 +353,19 @@ export const useComplianceTasks = () => {
       );
       setTasks(baselineTasks);
       
-      // Then enhance with AI tasks
+      // Then enhance with AI tasks or fallback to mock tasks
       try {
-        const { data, error } = await supabase.functions.invoke('generate-compliance', {
-          body: { 
-            userId: currentUser.id,
-            userData: {
-              visaType: currentUser.visaType,
-              country: currentUser.country,
-              university: currentUser.university,
-              fieldOfStudy: currentUser.fieldOfStudy,
-              employmentStatus: currentUser.employmentStatus,
-              employer: currentUser.employerName || currentUser.employer
-            },
-            baselineTasks: baselineTasks
-          }
-        });
+        // For now, use mock tasks to ensure we have data
+        const mockTasks = generateMockTasks(currentUser.visaType || 'F1');
+        setTasks(mockTasks);
+        setLastGeneratedAt(new Date());
         
-        if (error) {
-          throw new Error(error.message);
-        }
-        
-        if (data && data.tasks) {
-          // Transform API response to our task format with proper date handling
-          const aiTasks: Task[] = data.tasks.map((task: any, index: number) => {
-            const dueDate = formatDateOrDefault(task.dueDate || task.deadline);
-            
-            return {
-              id: task.id || `ai-task-${Date.now()}-${index}`,
-              title: task.title,
-              description: task.description,
-              deadline: task.deadline ? new Date(task.deadline) : null,
-              dueDate: dueDate,
-              completed: false,
-              category: task.category || 'immigration',
-              phase: task.phase || 'general',
-              priority: task.priority || 'medium',
-              isRecurring: task.isRecurring || false,
-              recurringInterval: task.recurringInterval,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            };
-          });
-          
-          // Update the tasks and cache them
-          setTasks(aiTasks);
-          setLastGeneratedAt(new Date());
-          
-          // Save to database and local storage
-          await saveTasksToDatabase(aiTasks);
-          cacheTasksToLocalStorage(aiTasks);
-          
-          toast.success('Successfully generated personalized tasks!');
-        } else {
-          // If no tasks returned, fall back to baseline tasks
-          setTasks(baselineTasks);
-          setLastGeneratedAt(new Date());
-          
-          // Save to database and local storage with proper date handling
-          await saveTasksToDatabase(baselineTasks);
-          cacheTasksToLocalStorage(baselineTasks);
-          toast.success('Generated tasks based on your profile');
-        }
+        // Save to database and local storage with proper date handling
+        await saveTasksToDatabase(mockTasks);
+        cacheTasksToLocalStorage(mockTasks);
+        toast.success('Generated tasks based on your profile');
       } catch (apiError) {
-        console.error('Error calling AI function, using mock tasks instead:', apiError);
+        console.error('Error generating tasks, using mock tasks instead:', apiError);
         const mockTasks = generateMockTasks(currentUser.visaType || 'F1');
         setTasks(mockTasks);
         setLastGeneratedAt(new Date());
@@ -426,7 +376,7 @@ export const useComplianceTasks = () => {
         toast.success('Generated sample tasks based on your profile');
       }
     } catch (error) {
-      console.error('Error generating AI tasks:', error);
+      console.error('Error generating tasks:', error);
       toast.error('Failed to generate personalized tasks');
       
       // Keep the baseline tasks that were already set

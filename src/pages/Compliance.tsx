@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Tabs,
   TabsContent,
@@ -57,6 +57,18 @@ const Compliance = () => {
       phase: "general"
     });
   };
+  
+  // Generate mock data if no tasks exist
+  useEffect(() => {
+    if (!isLoading && tasks.length === 0 && !isGenerating) {
+      // Set a slight delay to ensure the component is fully mounted
+      const timer = setTimeout(() => {
+        generateTasksWithAI();
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, tasks.length, isGenerating]);
 
   if (isLoading) {
     return (

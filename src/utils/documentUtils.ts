@@ -1,7 +1,8 @@
+
 import { Document, DocumentStatus } from "@/types/document";
 
 // Calculate document status based on expiry date
-export const getDocumentStatus = (expiryDate: string): "valid" | "expiring" | "expired" => {
+export const getDocumentStatus = (expiryDate: string): DocumentStatus => {
   const now = new Date();
   const expiry = new Date(expiryDate);
   
