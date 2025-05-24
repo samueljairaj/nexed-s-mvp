@@ -50,6 +50,10 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
+## Project Overview
+
+This project is a web application built with Vite, React, TypeScript, and Shadcn UI. It provides a foundation for developing modern user interfaces and includes components for various UI elements like forms, navigation, and data display.
+
 ## What technologies are used for this project?
 
 This project is built with:
@@ -59,6 +63,10 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+
+## Contributing
+
+We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to set up your development environment, run tests, and submit changes.
 
 ## How can I deploy this project?
 
