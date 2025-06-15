@@ -18,12 +18,13 @@ export function getDocumentActions({
   setIsLoading,
   selectedDocument,
   setSelectedDocument,
+  selectedDocuments,
   setSelectedDocuments,
   processDocuments
 }: any) {
 
   // Toggle document selection for multi-select
-  const toggleDocumentSelection = (doc: Document, selectedDocuments: Document[], setSelectedDocuments: (docs: Document[]) => void) => {
+  const toggleDocumentSelection = (doc: Document) => {
     setSelectedDocuments((prev: Document[]) => {
       const isSelected = prev.some(d => d.id === doc.id);
       if (isSelected) {

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Document, DocumentCategory, DocumentFolder, DocumentPacket } from "@/types/document";
 import { useDocumentSync } from "./useDocumentSync";
@@ -54,6 +53,7 @@ export function useDocuments() {
     setIsLoading,
     selectedDocument,
     setSelectedDocument,
+    selectedDocuments,
     setSelectedDocuments,
     processDocuments,
   });
@@ -68,7 +68,7 @@ export function useDocuments() {
     selectedDocuments,
     setSelectedDocuments,
     toggleDocumentSelection: (doc: Document) =>
-      toggleDocumentSelection(doc, selectedDocuments, setSelectedDocuments),
+      toggleDocumentSelection(doc),
     handleAddDocument,
     handleCreateFolder,
     handleDeleteDocument,
