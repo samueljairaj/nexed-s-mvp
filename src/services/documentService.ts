@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentCategory, DocumentStatus } from "@/types/document";
 
@@ -26,7 +25,7 @@ export class DocumentService {
         .from('documents')
         .select('*')
         .eq('user_id', userId)
-        .eq('is_deleted', false)
+        .eq('is_deleted', false) // Ignore soft-deleted docs
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -111,7 +110,7 @@ export class DocumentService {
     }
   }
 
-  // Soft delete: set is_deleted = true
+  // SOFT DELETE: Set is_deleted=true
   static async deleteDocument(id: string): Promise<void> {
     try {
       const { error } = await supabase
@@ -131,7 +130,7 @@ export class DocumentService {
     }
   }
 
-  // Restore a deleted document
+  // RESTORE: Set is_deleted=false
   static async restoreDocument(id: string): Promise<Document> {
     try {
       const { data, error } = await supabase

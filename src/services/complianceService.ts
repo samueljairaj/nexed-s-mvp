@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/hooks/useComplianceTasks";
 
@@ -28,7 +27,7 @@ export class ComplianceService {
         .from('compliance_tasks')
         .select('*')
         .eq('user_id', userId)
-        .eq('is_deleted', false)
+        .eq('is_deleted', false) // Ignore soft-deleted
         .order('due_date', { ascending: true });
 
       if (error) {
@@ -89,11 +88,9 @@ export class ComplianceService {
         updated_at: new Date().toISOString()
       };
 
-      // Ensure visa_type is properly typed if provided
       if (updateData.visa_type) {
         updateData.visa_type = updateData.visa_type as "F1" | "OPT" | "H1B" | "Other";
       }
-      // Ensure priority updates use the DB enum values
       if (updateData.priority) {
         updateData.priority = updateData.priority as TaskPriority;
       }
@@ -119,7 +116,7 @@ export class ComplianceService {
     }
   }
 
-  // Soft delete: set is_deleted = true
+  // SOFT DELETE: Set is_deleted=true
   static async deleteTask(id: string): Promise<void> {
     try {
       const { error } = await supabase
@@ -139,7 +136,7 @@ export class ComplianceService {
     }
   }
 
-  // Restore a deleted task
+  // RESTORE: Set is_deleted=false
   static async restoreTask(id: string): Promise<Task> {
     try {
       const { data, error } = await supabase
@@ -170,4 +167,3 @@ export class ComplianceService {
     };
   }
 }
-

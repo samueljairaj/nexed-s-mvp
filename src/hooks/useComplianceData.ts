@@ -133,7 +133,6 @@ export function useComplianceData() {
     }
   };
 
-  // New: restoreTask 
   const restoreTask = async (taskId: string) => {
     try {
       const restoredTask = await ComplianceService.restoreTask(taskId);

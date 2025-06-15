@@ -32,7 +32,6 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to fetch documents";
-      // Highlight RLS errors
       if (errorMessage.toLowerCase().includes("permission denied")) {
         setError("You do not have access to view these documents. Please ensure you are logged in with the correct user.");
       } else {
@@ -114,7 +113,6 @@ export function useDocumentData() {
     }
   };
 
-  // Use soft delete
   const deleteDocument = async (id: string) => {
     try {
       await DocumentService.deleteDocument(id);
@@ -137,7 +135,6 @@ export function useDocumentData() {
     }
   };
 
-  // New: restoreDocument
   const restoreDocument = async (id: string) => {
     try {
       const restoredDocument = await DocumentService.restoreDocument(id);
