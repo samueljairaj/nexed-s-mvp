@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   Tabs,
   TabsContent,
@@ -11,39 +11,31 @@ import { TaskList } from "@/components/compliance/TaskList";
 import { ComplianceStatusSummary } from "@/components/compliance/ComplianceStatusSummary";
 import { ComplianceFilters } from "@/components/compliance/ComplianceFilters";
 import { PhaseGroupedTasks } from "@/components/compliance/PhaseGroupedTasks";
-import { Task } from "@/hooks/useComplianceTasks";
-import { Loader2, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { TaskReminders } from "@/components/compliance/TaskReminders";
 import { CalendarView } from "@/components/compliance/CalendarView";
 import { DailyTasks } from "@/components/compliance/DailyTasks";
-import { generateMockTasks } from "@/utils/mockTasks";
+import { useComplianceData } from "@/hooks/useComplianceData";
+import { Task } from "@/hooks/useComplianceTasks";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Create a mock implementation for the UI first, separate from backend
-const ComplianceUI = () => {
-  // Static mock data
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+const Compliance = () => {
+  const {
+    tasks,
+    isLoading,
+    error,
+    toggleTaskStatus,
+    addCustomTask,
+    refreshTasks
+  } = useComplianceData();
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [selectedPhase, setSelectedPhase] = useState<string>('all_phases');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDateTasks, setSelectedDateTasks] = useState<Task[]>([]);
 
-  // Initialize with mock data on first render
-  useEffect(() => {
-    // Short timeout to simulate loading
-    const timer = setTimeout(() => {
-      const mockData = generateMockTasks('F1');
-      setTasks(mockData);
-      setIsLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Create local state management functions
   const toggleFilter = (category: string) => {
     setSelectedFilters(prev => {
       if (prev.includes(category)) {
@@ -54,44 +46,6 @@ const ComplianceUI = () => {
     });
   };
 
-  const toggleTaskStatus = (taskId: string) => {
-    setTasks(prev => 
-      prev.map(task => 
-        task.id === taskId 
-          ? { ...task, completed: !task.completed } 
-          : task
-      )
-    );
-  };
-
-  const generateTasksWithAI = () => {
-    setIsGenerating(true);
-    
-    // Simulate API call with timeout
-    setTimeout(() => {
-      const mockData = generateMockTasks('F1');
-      setTasks(mockData);
-      setIsGenerating(false);
-    }, 1500);
-  };
-
-  // Add a custom task or reminder
-  const handleAddCustomReminder = (title: string, dueDate: string, priority: "low" | "medium" | "high") => {
-    const newTask: Task = {
-      id: `custom-${Date.now()}`,
-      title,
-      description: "Custom reminder",
-      dueDate,
-      priority,
-      category: "personal",
-      phase: "general",
-      completed: false
-    };
-    
-    setTasks(prev => [...prev, newTask]);
-  };
-
-  // Handle calendar date selection
   const handleDateClick = (date: Date, tasksForDate: Task[]) => {
     setSelectedDate(date);
     setSelectedDateTasks(tasksForDate);
@@ -151,13 +105,50 @@ const ComplianceUI = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold">Compliance Center</h1>
+          <p className="text-gray-600 mt-2">
+            Track and manage your visa compliance tasks
+          </p>
+        </header>
+        
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>Failed to load compliance tasks: {error}</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={refreshTasks}
+              className="ml-4"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div>
       <header className="mb-8">
-        <h1 className="text-3xl font-bold">Compliance Center</h1>
-        <p className="text-gray-600 mt-2">
-          Track and manage your visa compliance tasks
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Compliance Center</h1>
+            <p className="text-gray-600 mt-2">
+              Track and manage your visa compliance tasks
+            </p>
+          </div>
+          <Button variant="outline" onClick={refreshTasks} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </header>
 
       {/* Status Summary Card */}
@@ -169,8 +160,6 @@ const ComplianceUI = () => {
         setSearchQuery={setSearchQuery}
         selectedFilters={selectedFilters}
         toggleFilter={toggleFilter}
-        isGenerating={isGenerating}
-        generateTasksWithAI={generateTasksWithAI}
         phaseGroups={phaseGroups}
         selectedPhase={selectedPhase}
         setSelectedPhase={setSelectedPhase}
@@ -183,7 +172,7 @@ const ComplianceUI = () => {
           <TaskReminders 
             tasks={tasks} 
             toggleTaskStatus={toggleTaskStatus} 
-            onAddCustomReminder={handleAddCustomReminder}
+            onAddCustomReminder={addCustomTask}
           />
         </div>
       )}
@@ -250,6 +239,4 @@ const ComplianceUI = () => {
   );
 };
 
-// Export the UI component as default
-const Compliance = () => <ComplianceUI />;
 export default Compliance;
