@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Task } from "@/hooks/useComplianceTasks";
@@ -89,7 +88,8 @@ export function useComplianceData() {
         priority,
         category: "personal",
         phase: "general",
-        is_completed: false
+        is_completed: false,
+        is_deleted: false,
       });
 
       setTasks(prev => [...prev, newTask]);
@@ -115,7 +115,7 @@ export function useComplianceData() {
     try {
       await ComplianceService.deleteTask(taskId);
       setTasks(prev => prev.filter(t => t.id !== taskId));
-      toast.success('Task deleted successfully');
+      toast.success('Task deleted successfully (soft deleted)');
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -133,6 +133,24 @@ export function useComplianceData() {
     }
   };
 
+  // New: restoreTask 
+  const restoreTask = async (taskId: string) => {
+    try {
+      const restoredTask = await ComplianceService.restoreTask(taskId);
+      setTasks(prev => [...prev, restoredTask]);
+      toast.success("Task restored successfully");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to restore task";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
   const refreshTasks = () => {
     fetchTasks();
   };
@@ -144,7 +162,7 @@ export function useComplianceData() {
     toggleTaskStatus,
     addCustomTask,
     deleteTask,
+    restoreTask,
     refreshTasks
   };
 }
-

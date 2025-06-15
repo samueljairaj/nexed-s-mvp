@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentCategory, DocumentStatus } from "@/types/document";
 
@@ -15,6 +16,7 @@ export interface DocumentData {
   status?: DocumentStatus;
   created_at: string;
   updated_at: string;
+  is_deleted?: boolean;
 }
 
 export class DocumentService {
@@ -24,6 +26,7 @@ export class DocumentService {
         .from('documents')
         .select('*')
         .eq('user_id', userId)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -54,7 +57,8 @@ export class DocumentService {
         tags: document.tags,
         status: (document.status || 'pending') as DocumentStatus,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        is_deleted: false,
       };
 
       const { data, error } = await supabase
@@ -107,11 +111,12 @@ export class DocumentService {
     }
   }
 
+  // Soft delete: set is_deleted = true
   static async deleteDocument(id: string): Promise<void> {
     try {
       const { error } = await supabase
         .from('documents')
-        .delete()
+        .update({ is_deleted: true, updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) {
@@ -121,7 +126,25 @@ export class DocumentService {
         throw error;
       }
     } catch (error) {
-      console.error('[RLS] Error deleting document:', error);
+      console.error('[RLS] Error soft-deleting document:', error);
+      throw error;
+    }
+  }
+
+  // Restore a deleted document
+  static async restoreDocument(id: string): Promise<Document> {
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .update({ is_deleted: false, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return this.mapDocumentFromDB(data);
+    } catch (error) {
+      console.error('[RLS] Error restoring document:', error);
       throw error;
     }
   }
@@ -140,7 +163,7 @@ export class DocumentService {
       status: dbDoc.status as DocumentStatus,
       detected_type: dbDoc.detected_type,
       tags: dbDoc.tags,
-      user_id: dbDoc.user_id
+      user_id: dbDoc.user_id,
     };
   }
 }

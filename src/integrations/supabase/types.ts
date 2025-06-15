@@ -156,6 +156,7 @@ export type Database = {
           due_date: string | null
           id: string
           is_completed: boolean | null
+          is_deleted: boolean
           is_recurring: boolean | null
           phase: string | null
           priority: Database["public"]["Enums"]["task_priority_enum"]
@@ -172,6 +173,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_completed?: boolean | null
+          is_deleted?: boolean
           is_recurring?: boolean | null
           phase?: string | null
           priority?: Database["public"]["Enums"]["task_priority_enum"]
@@ -188,6 +190,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           is_completed?: boolean | null
+          is_deleted?: boolean
           is_recurring?: boolean | null
           phase?: string | null
           priority?: Database["public"]["Enums"]["task_priority_enum"]
@@ -261,6 +264,7 @@ export type Database = {
           file_type: string | null
           file_url: string
           id: string
+          is_deleted: boolean
           is_required: boolean | null
           latest_version_id: string | null
           notification_schedule: Json | null
@@ -282,6 +286,7 @@ export type Database = {
           file_type?: string | null
           file_url: string
           id?: string
+          is_deleted?: boolean
           is_required?: boolean | null
           latest_version_id?: string | null
           notification_schedule?: Json | null
@@ -303,6 +308,7 @@ export type Database = {
           file_type?: string | null
           file_url?: string
           id?: string
+          is_deleted?: boolean
           is_required?: boolean | null
           latest_version_id?: string | null
           notification_schedule?: Json | null

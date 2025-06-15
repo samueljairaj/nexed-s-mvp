@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Document, DocumentCategory } from "@/types/document";
@@ -59,6 +58,7 @@ export function useDocumentData() {
         file_type: file.type,
         is_required: false,
         expiry_date: expiryDate,
+        is_deleted: false,
       });
 
       setDocuments(prev => [newDocument, ...prev]);
@@ -114,11 +114,12 @@ export function useDocumentData() {
     }
   };
 
+  // Use soft delete
   const deleteDocument = async (id: string) => {
     try {
       await DocumentService.deleteDocument(id);
       setDocuments(prev => prev.filter(doc => doc.id !== id));
-      toast.success('Document deleted successfully');
+      toast.success('Document deleted successfully (soft deleted)');
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -136,6 +137,24 @@ export function useDocumentData() {
     }
   };
 
+  // New: restoreDocument
+  const restoreDocument = async (id: string) => {
+    try {
+      const restoredDocument = await DocumentService.restoreDocument(id);
+      setDocuments(prev => [restoredDocument, ...prev]);
+      toast.success("Document restored successfully");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to restore document";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
   const refreshDocuments = () => {
     fetchDocuments();
   };
@@ -147,6 +166,7 @@ export function useDocumentData() {
     addDocument,
     updateDocument,
     deleteDocument,
+    restoreDocument,
     refreshDocuments
   };
 }
