@@ -69,7 +69,15 @@ export type Database = {
           id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       compliance_rules: {
         Row: {
@@ -150,7 +158,7 @@ export type Database = {
           is_completed: boolean | null
           is_recurring: boolean | null
           phase: string | null
-          priority: string | null
+          priority: Database["public"]["Enums"]["task_priority_enum"]
           recurring_interval: string | null
           title: string
           updated_at: string | null
@@ -166,7 +174,7 @@ export type Database = {
           is_completed?: boolean | null
           is_recurring?: boolean | null
           phase?: string | null
-          priority?: string | null
+          priority?: Database["public"]["Enums"]["task_priority_enum"]
           recurring_interval?: string | null
           title: string
           updated_at?: string | null
@@ -182,7 +190,7 @@ export type Database = {
           is_completed?: boolean | null
           is_recurring?: boolean | null
           phase?: string | null
-          priority?: string | null
+          priority?: Database["public"]["Enums"]["task_priority_enum"]
           recurring_interval?: string | null
           title?: string
           updated_at?: string | null
@@ -237,7 +245,7 @@ export type Database = {
       }
       documents: {
         Row: {
-          category: string
+          category: Database["public"]["Enums"]["document_category_enum"]
           created_at: string | null
           detected_type: string | null
           expiry_date: string | null
@@ -251,14 +259,14 @@ export type Database = {
           review_comment: string | null
           reviewed_at: string | null
           reviewed_by: string | null
-          status: string | null
+          status: Database["public"]["Enums"]["document_status_enum"] | null
           tags: string[] | null
           title: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          category: string
+          category: Database["public"]["Enums"]["document_category_enum"]
           created_at?: string | null
           detected_type?: string | null
           expiry_date?: string | null
@@ -272,14 +280,14 @@ export type Database = {
           review_comment?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["document_status_enum"] | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          category?: string
+          category?: Database["public"]["Enums"]["document_category_enum"]
           created_at?: string | null
           detected_type?: string | null
           expiry_date?: string | null
@@ -293,7 +301,7 @@ export type Database = {
           review_comment?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["document_status_enum"] | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
@@ -595,6 +603,22 @@ export type Database = {
       }
     }
     Enums: {
+      document_category_enum:
+        | "immigration"
+        | "education"
+        | "employment"
+        | "personal"
+        | "financial"
+        | "other"
+        | "academic"
+      document_status_enum:
+        | "valid"
+        | "expiring"
+        | "expired"
+        | "pending"
+        | "rejected"
+        | "approved"
+      task_priority_enum: "low" | "medium" | "high"
       user_role: "student" | "dso" | "admin"
       visa_type: "F1" | "OPT" | "H1B" | "Other"
     }
@@ -712,6 +736,24 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      document_category_enum: [
+        "immigration",
+        "education",
+        "employment",
+        "personal",
+        "financial",
+        "other",
+        "academic",
+      ],
+      document_status_enum: [
+        "valid",
+        "expiring",
+        "expired",
+        "pending",
+        "rejected",
+        "approved",
+      ],
+      task_priority_enum: ["low", "medium", "high"],
       user_role: ["student", "dso", "admin"],
       visa_type: ["F1", "OPT", "H1B", "Other"],
     },

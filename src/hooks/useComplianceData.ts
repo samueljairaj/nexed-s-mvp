@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Task } from "@/hooks/useComplianceTasks";
@@ -17,13 +16,11 @@ export function useComplianceData() {
       setIsLoading(false);
       return;
     }
-
     fetchTasks();
   }, [currentUser?.id]);
 
   const fetchTasks = async () => {
     if (!currentUser?.id) return;
-
     try {
       setIsLoading(true);
       setError(null);
@@ -45,10 +42,10 @@ export function useComplianceData() {
 
     try {
       const updatedTask = await ComplianceService.updateTask(taskId, {
-        is_completed: !task.completed
+        is_completed: !task.completed,
       });
 
-      setTasks(prev => 
+      setTasks(prev =>
         prev.map(t => t.id === taskId ? updatedTask : t)
       );
 
@@ -69,7 +66,7 @@ export function useComplianceData() {
         user_id: currentUser.id,
         title,
         due_date: dueDate,
-        priority,
+        priority, // now guaranteed to be TaskPriority enum
         category: "personal",
         phase: "general",
         is_completed: false

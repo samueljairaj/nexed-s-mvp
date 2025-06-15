@@ -2,13 +2,16 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/hooks/useComplianceTasks";
 
+// Update to match new enum type
+export type TaskPriority = "low" | "medium" | "high";
+
 export interface ComplianceTask {
   id: string;
   user_id: string;
   title: string;
   description?: string;
   due_date?: string;
-  priority: "low" | "medium" | "high";
+  priority: TaskPriority;
   category: string;
   phase: string;
   is_completed: boolean;
@@ -42,7 +45,7 @@ export class ComplianceService {
         title: task.title!,
         description: task.description || '',
         due_date: task.due_date,
-        priority: task.priority || 'medium',
+        priority: (task.priority || 'medium') as TaskPriority,
         category: task.category || 'personal',
         phase: task.phase || 'general',
         is_completed: task.is_completed || false,
@@ -76,6 +79,10 @@ export class ComplianceService {
       // Ensure visa_type is properly typed if provided
       if (updateData.visa_type) {
         updateData.visa_type = updateData.visa_type as "F1" | "OPT" | "H1B" | "Other";
+      }
+      // Ensure priority updates use the DB enum values
+      if (updateData.priority) {
+        updateData.priority = updateData.priority as TaskPriority;
       }
 
       const { data, error } = await supabase
@@ -114,7 +121,7 @@ export class ComplianceService {
       title: dbTask.title,
       description: dbTask.description || '',
       dueDate: dbTask.due_date || '',
-      priority: dbTask.priority as "low" | "medium" | "high",
+      priority: dbTask.priority as TaskPriority,
       category: dbTask.category,
       phase: dbTask.phase,
       completed: dbTask.is_completed

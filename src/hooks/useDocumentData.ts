@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Document, DocumentCategory } from "@/types/document";
@@ -22,7 +21,6 @@ export function useDocumentData() {
 
   const fetchDocuments = async () => {
     if (!currentUser?.id) return;
-
     try {
       setIsLoading(true);
       setError(null);
@@ -42,17 +40,15 @@ export function useDocumentData() {
     if (!currentUser?.id) return null;
 
     try {
-      // In a real implementation, you'd upload the file to storage first
       const fileUrl = URL.createObjectURL(file);
-      
       const newDocument = await DocumentService.createDocument({
         user_id: currentUser.id,
         title: file.name,
-        category,
+        category, // now matching DB enum
         file_url: fileUrl,
         file_type: file.type,
         is_required: false,
-        expiry_date: expiryDate
+        expiry_date: expiryDate,
       });
 
       setDocuments(prev => [newDocument, ...prev]);
@@ -70,10 +66,12 @@ export function useDocumentData() {
       const updatedDocument = await DocumentService.updateDocument(id, {
         title: updates.name,
         is_required: updates.required,
-        expiry_date: updates.expiryDate
+        expiry_date: updates.expiryDate,
+        ...(updates.category && { category: updates.category }), // ensure enum
+        ...(updates.status && { status: updates.status })
       });
 
-      setDocuments(prev => 
+      setDocuments(prev =>
         prev.map(doc => doc.id === id ? updatedDocument : doc)
       );
 

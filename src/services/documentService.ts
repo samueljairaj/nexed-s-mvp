@@ -1,19 +1,19 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Document, DocumentCategory } from "@/types/document";
+import { Document, DocumentCategory, DocumentStatus } from "@/types/document";
 
 export interface DocumentData {
   id: string;
   user_id: string;
   title: string;
-  category: string;
+  category: DocumentCategory;
   file_url: string;
   file_type?: string;
   is_required: boolean;
   expiry_date?: string;
   detected_type?: string;
   tags?: string[];
-  status?: string;
+  status?: DocumentStatus;
   created_at: string;
   updated_at: string;
 }
@@ -41,14 +41,14 @@ export class DocumentService {
       const documentData = {
         user_id: document.user_id!,
         title: document.title!,
-        category: document.category!,
+        category: document.category! as DocumentCategory,
         file_url: document.file_url!,
         file_type: document.file_type,
-        is_required: document.is_required || false,
+        is_required: !!document.is_required,
         expiry_date: document.expiry_date,
         detected_type: document.detected_type,
         tags: document.tags,
-        status: document.status || 'pending',
+        status: (document.status || 'pending') as DocumentStatus,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -72,7 +72,10 @@ export class DocumentService {
     try {
       const updateData = {
         ...updates,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Ensure that updated category and status use the correct DB enum values
+        ...(updates.category && { category: updates.category as DocumentCategory }),
+        ...(updates.status && { status: updates.status as DocumentStatus }),
       };
 
       const { data, error } = await supabase
@@ -113,10 +116,10 @@ export class DocumentService {
       category: dbDoc.category as DocumentCategory,
       uploadDate: new Date(dbDoc.created_at).toLocaleDateString(),
       size: '0 KB', // This would need to be calculated from the actual file
-      required: dbDoc.is_required,
+      required: !!dbDoc.is_required,
       fileUrl: dbDoc.file_url,
       expiryDate: dbDoc.expiry_date,
-      status: dbDoc.status as any,
+      status: dbDoc.status as DocumentStatus,
       detected_type: dbDoc.detected_type,
       tags: dbDoc.tags,
       user_id: dbDoc.user_id

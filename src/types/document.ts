@@ -1,7 +1,22 @@
 
-export type DocumentCategory = "immigration" | "education" | "employment" | "personal" | "financial" | "other" | "academic";
+// Document category and status enums now reflect Supabase enum values
 
-export type DocumentStatus = "valid" | "expiring" | "expired";
+export type DocumentCategory =
+  | "immigration"
+  | "education"
+  | "employment"
+  | "personal"
+  | "financial"
+  | "other"
+  | "academic"; // (as now enforced by DB)
+
+export type DocumentStatus =
+  | "valid"
+  | "expiring"
+  | "expired"
+  | "pending"
+  | "rejected"
+  | "approved"; // Extended according to DB enum
 
 export interface DocumentVersion {
   id: string;
@@ -27,8 +42,7 @@ export interface Document {
   versions?: DocumentVersion[];
   folderId?: string;
   user_id?: string;
-  
-  // New fields for enhanced features
+
   detected_type?: string;
   tags?: string[];
   latest_version_id?: string;
