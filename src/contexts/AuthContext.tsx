@@ -101,8 +101,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state change:", event, session?.user?.email);
         setSession(session);
+        
         if (session?.user) {
+          // Check email verification status
+          if (!session.user.email_confirmed_at && event !== 'SIGNED_UP') {
+            console.log("Email not verified, redirecting to verification page");
+            navigate("/verify-email", { state: { email: session.user.email } });
+            setIsLoading(false);
+            return;
+          }
+          
           // Fetch user profile data from profiles table
           setTimeout(async () => {
             await fetchUserProfile(session.user);
@@ -121,6 +131,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(data.session);
       
       if (data.session?.user) {
+        // Check email verification for existing session
+        if (!data.session.user.email_confirmed_at) {
+          console.log("Existing session email not verified");
+          navigate("/verify-email", { state: { email: data.session.user.email } });
+          setIsLoading(false);
+          return;
+        }
+        
         await fetchUserProfile(data.session.user);
       } else {
         setIsLoading(false);
@@ -257,9 +275,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("Email and password are required");
       }
       
+      // Set up email redirect URL for verification
+      const redirectUrl = `${window.location.origin}/app/dashboard`;
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
       });
       
       if (authError) throw authError;
@@ -341,6 +365,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       if (error) throw error;
+      
+      // Check email verification
+      if (data.user && !data.user.email_confirmed_at) {
+        toast.error("Please verify your email address before logging in.");
+        navigate("/verify-email", { state: { email: data.user.email } });
+        return;
+      }
       
       // Successfully signed in
       toast.success("Logged in successfully");
