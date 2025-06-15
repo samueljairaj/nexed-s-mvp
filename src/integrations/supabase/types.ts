@@ -197,7 +197,15 @@ export type Database = {
           user_id?: string
           visa_type?: Database["public"]["Enums"]["visa_type"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_compliance_tasks_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       document_versions: {
         Row: {
@@ -313,6 +321,13 @@ export type Database = {
             columns: ["latest_version_id"]
             isOneToOne: false
             referencedRelation: "document_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_documents_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -512,6 +527,20 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_student_notes_author"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_student_notes_student"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "student_notes_student_id_fkey"
             columns: ["student_id"]
