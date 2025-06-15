@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Document, DocumentCategory } from "@/types/document";
@@ -27,10 +28,15 @@ export function useDocumentData() {
       const fetchedDocuments = await DocumentService.fetchDocuments(currentUser.id);
       setDocuments(fetchedDocuments);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch documents';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to fetch documents";
       setError(errorMessage);
       console.error('Error fetching documents:', err);
-      toast.error('Failed to load documents');
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -55,8 +61,14 @@ export function useDocumentData() {
       toast.success('Document uploaded successfully');
       return newDocument;
     } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to upload document";
       console.error('Error adding document:', err);
-      toast.error('Failed to upload document');
+      toast.error(errorMessage);
       return null;
     }
   };
@@ -67,7 +79,7 @@ export function useDocumentData() {
         title: updates.name,
         is_required: updates.required,
         expiry_date: updates.expiryDate,
-        ...(updates.category && { category: updates.category }), // ensure enum
+        ...(updates.category && { category: updates.category }),
         ...(updates.status && { status: updates.status })
       });
 
@@ -77,8 +89,14 @@ export function useDocumentData() {
 
       toast.success('Document updated successfully');
     } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to update document";
       console.error('Error updating document:', err);
-      toast.error('Failed to update document');
+      toast.error(errorMessage);
     }
   };
 
@@ -88,8 +106,14 @@ export function useDocumentData() {
       setDocuments(prev => prev.filter(doc => doc.id !== id));
       toast.success('Document deleted successfully');
     } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to delete document";
       console.error('Error deleting document:', err);
-      toast.error('Failed to delete document');
+      toast.error(errorMessage);
     }
   };
 

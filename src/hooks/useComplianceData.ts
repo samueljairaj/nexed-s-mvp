@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Task } from "@/hooks/useComplianceTasks";
@@ -10,7 +11,6 @@ export function useComplianceData() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch tasks on mount and when user changes
   useEffect(() => {
     if (!currentUser?.id) {
       setIsLoading(false);
@@ -27,10 +27,15 @@ export function useComplianceData() {
       const fetchedTasks = await ComplianceService.fetchTasks(currentUser.id);
       setTasks(fetchedTasks);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to fetch tasks";
       setError(errorMessage);
       console.error('Error fetching tasks:', err);
-      toast.error('Failed to load compliance tasks');
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -53,8 +58,14 @@ export function useComplianceData() {
         updatedTask.completed ? 'Task marked as completed' : 'Task marked as pending'
       );
     } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to update task";
       console.error('Error updating task:', err);
-      toast.error('Failed to update task');
+      toast.error(errorMessage);
     }
   };
 
@@ -75,8 +86,14 @@ export function useComplianceData() {
       setTasks(prev => [...prev, newTask]);
       toast.success('Custom task added successfully');
     } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to add custom task";
       console.error('Error adding custom task:', err);
-      toast.error('Failed to add custom task');
+      toast.error(errorMessage);
     }
   };
 
@@ -86,8 +103,14 @@ export function useComplianceData() {
       setTasks(prev => prev.filter(t => t.id !== taskId));
       toast.success('Task deleted successfully');
     } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Failed to delete task";
       console.error('Error deleting task:', err);
-      toast.error('Failed to delete task');
+      toast.error(errorMessage);
     }
   };
 
@@ -105,3 +128,4 @@ export function useComplianceData() {
     refreshTasks
   };
 }
+

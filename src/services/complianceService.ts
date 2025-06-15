@@ -29,7 +29,12 @@ export class ComplianceService {
         .eq('user_id', userId)
         .order('due_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.toLowerCase().includes('row-level security')) {
+          throw new Error('You do not have access to this data (RLS Policy).');
+        }
+        throw error;
+      }
 
       return (data || []).map(this.mapTaskFromDB);
     } catch (error) {
@@ -60,7 +65,12 @@ export class ComplianceService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.toLowerCase().includes('row-level security')) {
+          throw new Error('You do not have permission to create this task (RLS Policy).');
+        }
+        throw error;
+      }
 
       return this.mapTaskFromDB(data);
     } catch (error) {
@@ -92,7 +102,12 @@ export class ComplianceService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.toLowerCase().includes('row-level security')) {
+          throw new Error('You do not have permission to update this task (RLS Policy).');
+        }
+        throw error;
+      }
 
       return this.mapTaskFromDB(data);
     } catch (error) {
@@ -108,7 +123,12 @@ export class ComplianceService {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.toLowerCase().includes('row-level security')) {
+          throw new Error('You do not have permission to delete this task (RLS Policy).');
+        }
+        throw error;
+      }
     } catch (error) {
       console.error('Error deleting compliance task:', error);
       throw error;

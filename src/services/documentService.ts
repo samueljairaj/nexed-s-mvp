@@ -27,7 +27,13 @@ export class DocumentService {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        // Surface RLS issues, e.g. "new row violates row-level security policy"
+        if (error.message?.toLowerCase().includes('row-level security')) {
+          throw new Error('You do not have access to this data (RLS Policy).');
+        }
+        throw error;
+      }
 
       return (data || []).map(this.mapDocumentFromDB);
     } catch (error) {
@@ -59,7 +65,12 @@ export class DocumentService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.toLowerCase().includes('row-level security')) {
+          throw new Error('You do not have permission to create this document (RLS Policy).');
+        }
+        throw error;
+      }
 
       return this.mapDocumentFromDB(data);
     } catch (error) {
@@ -73,7 +84,6 @@ export class DocumentService {
       const updateData = {
         ...updates,
         updated_at: new Date().toISOString(),
-        // Ensure that updated category and status use the correct DB enum values
         ...(updates.category && { category: updates.category as DocumentCategory }),
         ...(updates.status && { status: updates.status as DocumentStatus }),
       };
@@ -85,7 +95,12 @@ export class DocumentService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.toLowerCase().includes('row-level security')) {
+          throw new Error('You do not have permission to update this document (RLS Policy).');
+        }
+        throw error;
+      }
 
       return this.mapDocumentFromDB(data);
     } catch (error) {
@@ -101,7 +116,12 @@ export class DocumentService {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.toLowerCase().includes('row-level security')) {
+          throw new Error('You do not have permission to delete this document (RLS Policy).');
+        }
+        throw error;
+      }
     } catch (error) {
       console.error('Error deleting document:', error);
       throw error;
@@ -115,7 +135,7 @@ export class DocumentService {
       type: dbDoc.file_type || 'application/octet-stream',
       category: dbDoc.category as DocumentCategory,
       uploadDate: new Date(dbDoc.created_at).toLocaleDateString(),
-      size: '0 KB', // This would need to be calculated from the actual file
+      size: '0 KB', // Needs real file meta ideally
       required: !!dbDoc.is_required,
       fileUrl: dbDoc.file_url,
       expiryDate: dbDoc.expiry_date,
