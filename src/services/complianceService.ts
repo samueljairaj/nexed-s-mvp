@@ -40,20 +40,20 @@ export class ComplianceService {
       const taskData = {
         user_id: task.user_id!,
         title: task.title!,
-        description: task.description,
+        description: task.description || '',
         due_date: task.due_date,
         priority: task.priority || 'medium',
         category: task.category || 'personal',
         phase: task.phase || 'general',
         is_completed: task.is_completed || false,
-        visa_type: task.visa_type,
+        visa_type: task.visa_type as "F1" | "OPT" | "H1B" | "Other" | null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
       const { data, error } = await supabase
         .from('compliance_tasks')
-        .insert([taskData])
+        .insert(taskData)
         .select()
         .single();
 
@@ -68,10 +68,15 @@ export class ComplianceService {
 
   static async updateTask(id: string, updates: Partial<ComplianceTask>): Promise<Task> {
     try {
-      const updateData = {
+      const updateData: any = {
         ...updates,
         updated_at: new Date().toISOString()
       };
+
+      // Ensure visa_type is properly typed if provided
+      if (updateData.visa_type) {
+        updateData.visa_type = updateData.visa_type as "F1" | "OPT" | "H1B" | "Other";
+      }
 
       const { data, error } = await supabase
         .from('compliance_tasks')
