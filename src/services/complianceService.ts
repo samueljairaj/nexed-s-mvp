@@ -117,8 +117,7 @@ export class ComplianceService {
       priority: dbTask.priority as "low" | "medium" | "high",
       category: dbTask.category,
       phase: dbTask.phase,
-      completed: dbTask.is_completed,
-      visaType: dbTask.visa_type
+      completed: dbTask.is_completed
     };
   }
 }
