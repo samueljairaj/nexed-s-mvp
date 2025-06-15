@@ -38,13 +38,24 @@ export class DocumentService {
 
   static async createDocument(document: Partial<DocumentData>): Promise<Document> {
     try {
+      const documentData = {
+        user_id: document.user_id!,
+        title: document.title!,
+        category: document.category!,
+        file_url: document.file_url!,
+        file_type: document.file_type,
+        is_required: document.is_required || false,
+        expiry_date: document.expiry_date,
+        detected_type: document.detected_type,
+        tags: document.tags,
+        status: document.status || 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('documents')
-        .insert([{
-          ...document,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
+        .insert([documentData])
         .select()
         .single();
 
@@ -59,12 +70,14 @@ export class DocumentService {
 
   static async updateDocument(id: string, updates: Partial<DocumentData>): Promise<Document> {
     try {
+      const updateData = {
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('documents')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -92,7 +105,7 @@ export class DocumentService {
     }
   }
 
-  private static mapDocumentFromDB(dbDoc: DocumentData): Document {
+  private static mapDocumentFromDB(dbDoc: any): Document {
     return {
       id: dbDoc.id,
       name: dbDoc.title,

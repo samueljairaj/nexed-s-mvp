@@ -14,8 +14,6 @@ interface ComplianceFiltersProps {
   setSearchQuery: (query: string) => void;
   selectedFilters: string[];
   toggleFilter: (filter: string) => void;
-  isGenerating: boolean;
-  generateTasksWithAI: () => void;
   phaseGroups: {[key: string]: any[]};
   selectedPhase: string;
   setSelectedPhase: (phase: string) => void;
@@ -27,8 +25,6 @@ export function ComplianceFilters({
   setSearchQuery,
   selectedFilters,
   toggleFilter,
-  isGenerating,
-  generateTasksWithAI,
   phaseGroups,
   selectedPhase,
   setSelectedPhase,
@@ -136,24 +132,6 @@ export function ComplianceFilters({
             </div>
           </PopoverContent>
         </Popover>
-
-        <Button 
-          onClick={generateTasksWithAI} 
-          disabled={isGenerating}
-          className="gap-2"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" />
-              Generate with AI
-            </>
-          )}
-        </Button>
       </div>
 
       {selectedFilters.length > 0 && (

@@ -37,14 +37,23 @@ export class ComplianceService {
 
   static async createTask(task: Partial<ComplianceTask>): Promise<Task> {
     try {
+      const taskData = {
+        user_id: task.user_id!,
+        title: task.title!,
+        description: task.description,
+        due_date: task.due_date,
+        priority: task.priority || 'medium',
+        category: task.category || 'personal',
+        phase: task.phase || 'general',
+        is_completed: task.is_completed || false,
+        visa_type: task.visa_type,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('compliance_tasks')
-        .insert([{
-          ...task,
-          user_id: task.user_id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
+        .insert([taskData])
         .select()
         .single();
 
@@ -59,12 +68,14 @@ export class ComplianceService {
 
   static async updateTask(id: string, updates: Partial<ComplianceTask>): Promise<Task> {
     try {
+      const updateData = {
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('compliance_tasks')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -92,13 +103,13 @@ export class ComplianceService {
     }
   }
 
-  private static mapTaskFromDB(dbTask: ComplianceTask): Task {
+  private static mapTaskFromDB(dbTask: any): Task {
     return {
       id: dbTask.id,
       title: dbTask.title,
       description: dbTask.description || '',
       dueDate: dbTask.due_date || '',
-      priority: dbTask.priority,
+      priority: dbTask.priority as "low" | "medium" | "high",
       category: dbTask.category,
       phase: dbTask.phase,
       completed: dbTask.is_completed,
