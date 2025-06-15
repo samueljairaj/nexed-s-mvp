@@ -1,10 +1,19 @@
 
 import { useState } from "react";
-import { Document, DocumentCategory, DocumentFolder, DocumentPacket, DocumentStatus, DocumentVersion } from "@/types/document";
+import { Document, DocumentCategory, DocumentFolder, DocumentPacket } from "@/types/document";
 import { useDocumentSync } from "./useDocumentSync";
 import { generateMockDocuments } from "@/utils/mockDocuments";
 import { getDocumentActions } from "./useDocumentActions";
 import { mockFolders, mockPackets } from "@/utils/mockDocumentsData";
+import { getDocumentStatus } from "@/utils/documentUtils";
+
+// Process documents to add status based on expiry date
+const processDocuments = (docs: Document[]) => {
+  return docs.map(doc => ({
+    ...doc,
+    status: doc.expiryDate ? getDocumentStatus(doc.expiryDate) : undefined
+  }));
+};
 
 // UseDocuments hook is now orchestrating state and actions.
 export function useDocuments() {
@@ -48,14 +57,6 @@ export function useDocuments() {
     setSelectedDocuments,
     processDocuments,
   });
-
-  // Process documents to add status based on expiry date
-  const processDocuments = (docs: Document[]) => {
-    return docs.map(doc => ({
-      ...doc,
-      status: doc.expiryDate ? getDocumentStatus(doc.expiryDate) : undefined
-    }));
-  };
 
   return {
     documents,

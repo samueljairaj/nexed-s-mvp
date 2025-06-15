@@ -24,7 +24,7 @@ export function getDocumentActions({
 
   // Toggle document selection for multi-select
   const toggleDocumentSelection = (doc: Document, selectedDocuments: Document[], setSelectedDocuments: (docs: Document[]) => void) => {
-    setSelectedDocuments(prev => {
+    setSelectedDocuments((prev: Document[]) => {
       const isSelected = prev.some(d => d.id === doc.id);
       if (isSelected) {
         return prev.filter(d => d.id !== doc.id);
@@ -128,16 +128,27 @@ export function getDocumentActions({
 
   // Toggle required
   const handleToggleRequired = async (id: string) => {
-    // Assume doc exists in relevant closure
     setDocuments((prev: Document[]) => 
       prev.map(doc => doc.id === id ? { ...doc, required: !doc.required } : doc)
     );
-    const doc = (prev: Document[]) => prev.find(d => d.id === id);
-    const newRequired = doc ? !doc.required : false;
+    // Find the updated document in the *new state* to get latest `required` value
+    let newRequired = false;
+    let docName = "";
+    setDocuments((prev: Document[]) => {
+      const updatedDocs = prev.map(doc => {
+        if (doc.id === id) {
+          newRequired = !doc.required;
+          docName = doc.name;
+          return { ...doc, required: newRequired };
+        }
+        return doc;
+      });
+      return updatedDocs;
+    });
     const success = await updateDocumentInDatabase(id, { required: newRequired });
     if (success) {
       toast.success(newRequired ? "Marked as Required" : "Marked as Optional", {
-        description: doc ? doc.name : ""
+        description: docName
       });
     } else {
       toast.warning(newRequired ? "Marked as Required locally but sync failed" : "Marked as Optional locally but sync failed");
