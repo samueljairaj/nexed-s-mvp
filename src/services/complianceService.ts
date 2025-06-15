@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/hooks/useComplianceTasks";
 
@@ -31,14 +30,14 @@ export class ComplianceService {
 
       if (error) {
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('You do not have access to this data (RLS Policy).');
+          throw new Error('Permission denied: You do not have access to these compliance tasks.');
         }
         throw error;
       }
 
       return (data || []).map(this.mapTaskFromDB);
     } catch (error) {
-      console.error('Error fetching compliance tasks:', error);
+      console.error('[RLS] Error fetching compliance tasks:', error);
       throw error;
     }
   }
@@ -67,14 +66,14 @@ export class ComplianceService {
 
       if (error) {
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('You do not have permission to create this task (RLS Policy).');
+          throw new Error('Permission denied: You cannot create new compliance tasks.');
         }
         throw error;
       }
 
       return this.mapTaskFromDB(data);
     } catch (error) {
-      console.error('Error creating compliance task:', error);
+      console.error('[RLS] Error creating compliance task:', error);
       throw error;
     }
   }
@@ -104,14 +103,14 @@ export class ComplianceService {
 
       if (error) {
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('You do not have permission to update this task (RLS Policy).');
+          throw new Error('Permission denied: You cannot update this compliance task.');
         }
         throw error;
       }
 
       return this.mapTaskFromDB(data);
     } catch (error) {
-      console.error('Error updating compliance task:', error);
+      console.error('[RLS] Error updating compliance task:', error);
       throw error;
     }
   }
@@ -125,12 +124,12 @@ export class ComplianceService {
 
       if (error) {
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('You do not have permission to delete this task (RLS Policy).');
+          throw new Error('Permission denied: You cannot delete this compliance task.');
         }
         throw error;
       }
     } catch (error) {
-      console.error('Error deleting compliance task:', error);
+      console.error('[RLS] Error deleting compliance task:', error);
       throw error;
     }
   }

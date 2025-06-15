@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentCategory, DocumentStatus } from "@/types/document";
 
@@ -28,16 +27,15 @@ export class DocumentService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        // Surface RLS issues, e.g. "new row violates row-level security policy"
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('You do not have access to this data (RLS Policy).');
+          throw new Error('Permission denied: You do not have access to these documents. Please ensure you are signed in and have the correct permissions.');
         }
         throw error;
       }
 
       return (data || []).map(this.mapDocumentFromDB);
     } catch (error) {
-      console.error('Error fetching documents:', error);
+      console.error('[RLS] Error fetching documents:', error);
       throw error;
     }
   }
@@ -67,14 +65,14 @@ export class DocumentService {
 
       if (error) {
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('You do not have permission to create this document (RLS Policy).');
+          throw new Error('Permission denied: You cannot create documents. Please sign in with the correct user or contact your admin.');
         }
         throw error;
       }
 
       return this.mapDocumentFromDB(data);
     } catch (error) {
-      console.error('Error creating document:', error);
+      console.error('[RLS] Error creating document:', error);
       throw error;
     }
   }
@@ -97,14 +95,14 @@ export class DocumentService {
 
       if (error) {
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('You do not have permission to update this document (RLS Policy).');
+          throw new Error('Permission denied: You cannot update this document.');
         }
         throw error;
       }
 
       return this.mapDocumentFromDB(data);
     } catch (error) {
-      console.error('Error updating document:', error);
+      console.error('[RLS] Error updating document:', error);
       throw error;
     }
   }
@@ -118,12 +116,12 @@ export class DocumentService {
 
       if (error) {
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('You do not have permission to delete this document (RLS Policy).');
+          throw new Error('Permission denied: You cannot delete this document.');
         }
         throw error;
       }
     } catch (error) {
-      console.error('Error deleting document:', error);
+      console.error('[RLS] Error deleting document:', error);
       throw error;
     }
   }

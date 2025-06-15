@@ -33,7 +33,11 @@ export function useComplianceData() {
           : typeof err === "string"
           ? err
           : "Failed to fetch tasks";
-      setError(errorMessage);
+      if (errorMessage.toLowerCase().includes("permission denied")) {
+        setError("You do not have access to view these tasks. Please ensure you are logged in with the correct user.");
+      } else {
+        setError(errorMessage);
+      }
       console.error('Error fetching tasks:', err);
       toast.error(errorMessage);
     } finally {
@@ -64,6 +68,11 @@ export function useComplianceData() {
           : typeof err === "string"
           ? err
           : "Failed to update task";
+      if (errorMessage.toLowerCase().includes("permission denied")) {
+        setError("You do not have permission to change this task.");
+      } else {
+        setError(errorMessage);
+      }
       console.error('Error updating task:', err);
       toast.error(errorMessage);
     }
@@ -77,7 +86,7 @@ export function useComplianceData() {
         user_id: currentUser.id,
         title,
         due_date: dueDate,
-        priority, // now guaranteed to be TaskPriority enum
+        priority,
         category: "personal",
         phase: "general",
         is_completed: false
@@ -92,6 +101,11 @@ export function useComplianceData() {
           : typeof err === "string"
           ? err
           : "Failed to add custom task";
+      if (errorMessage.toLowerCase().includes("permission denied")) {
+        setError("You do not have permission to add a task.");
+      } else {
+        setError(errorMessage);
+      }
       console.error('Error adding custom task:', err);
       toast.error(errorMessage);
     }
@@ -109,6 +123,11 @@ export function useComplianceData() {
           : typeof err === "string"
           ? err
           : "Failed to delete task";
+      if (errorMessage.toLowerCase().includes("permission denied")) {
+        setError("You do not have permission to delete this task.");
+      } else {
+        setError(errorMessage);
+      }
       console.error('Error deleting task:', err);
       toast.error(errorMessage);
     }

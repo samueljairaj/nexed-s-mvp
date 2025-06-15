@@ -16,7 +16,6 @@ export function useDocumentData() {
       setIsLoading(false);
       return;
     }
-
     fetchDocuments();
   }, [currentUser?.id]);
 
@@ -34,7 +33,12 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to fetch documents";
-      setError(errorMessage);
+      // Highlight RLS errors
+      if (errorMessage.toLowerCase().includes("permission denied")) {
+        setError("You do not have access to view these documents. Please ensure you are logged in with the correct user.");
+      } else {
+        setError(errorMessage);
+      }
       console.error('Error fetching documents:', err);
       toast.error(errorMessage);
     } finally {
@@ -50,7 +54,7 @@ export function useDocumentData() {
       const newDocument = await DocumentService.createDocument({
         user_id: currentUser.id,
         title: file.name,
-        category, // now matching DB enum
+        category,
         file_url: fileUrl,
         file_type: file.type,
         is_required: false,
@@ -67,6 +71,11 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to upload document";
+      if (errorMessage.toLowerCase().includes("permission denied")) {
+        setError("You do not have permission to upload documents.");
+      } else {
+        setError(errorMessage);
+      }
       console.error('Error adding document:', err);
       toast.error(errorMessage);
       return null;
@@ -95,6 +104,11 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to update document";
+      if (errorMessage.toLowerCase().includes("permission denied")) {
+        setError("You do not have permission to make changes to this document.");
+      } else {
+        setError(errorMessage);
+      }
       console.error('Error updating document:', err);
       toast.error(errorMessage);
     }
@@ -112,6 +126,11 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to delete document";
+      if (errorMessage.toLowerCase().includes("permission denied")) {
+        setError("You do not have permission to delete this document.");
+      } else {
+        setError(errorMessage);
+      }
       console.error('Error deleting document:', err);
       toast.error(errorMessage);
     }
