@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Document, DocumentCategory } from "@/types/document";
@@ -32,12 +33,9 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to fetch documents";
-      if (errorMessage.toLowerCase().includes("permission denied")) {
-        setError("You do not have access to view these documents. Please ensure you are logged in with the correct user.");
-      } else {
-        setError(errorMessage);
-      }
+      
       console.error('Error fetching documents:', err);
+      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -70,12 +68,9 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to upload document";
-      if (errorMessage.toLowerCase().includes("permission denied")) {
-        setError("You do not have permission to upload documents.");
-      } else {
-        setError(errorMessage);
-      }
+      
       console.error('Error adding document:', err);
+      setError(errorMessage);
       toast.error(errorMessage);
       return null;
     }
@@ -103,12 +98,9 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to update document";
-      if (errorMessage.toLowerCase().includes("permission denied")) {
-        setError("You do not have permission to make changes to this document.");
-      } else {
-        setError(errorMessage);
-      }
+      
       console.error('Error updating document:', err);
+      setError(errorMessage);
       toast.error(errorMessage);
     }
   };
@@ -117,7 +109,7 @@ export function useDocumentData() {
     try {
       await DocumentService.deleteDocument(id);
       setDocuments(prev => prev.filter(doc => doc.id !== id));
-      toast.success('Document deleted successfully (soft deleted)');
+      toast.success('Document deleted successfully');
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -125,12 +117,9 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to delete document";
-      if (errorMessage.toLowerCase().includes("permission denied")) {
-        setError("You do not have permission to delete this document.");
-      } else {
-        setError(errorMessage);
-      }
+      
       console.error('Error deleting document:', err);
+      setError(errorMessage);
       toast.error(errorMessage);
     }
   };
@@ -147,6 +136,8 @@ export function useDocumentData() {
           : typeof err === "string"
           ? err
           : "Failed to restore document";
+      
+      console.error('Error restoring document:', err);
       setError(errorMessage);
       toast.error(errorMessage);
     }

@@ -1,5 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/hooks/useComplianceTasks";
+import { logDsoAccess } from "@/utils/accessControl";
 
 // Update to match new enum type
 export type TaskPriority = "low" | "medium" | "high";
@@ -23,16 +25,23 @@ export interface ComplianceTask {
 export class ComplianceService {
   static async fetchTasks(userId: string): Promise<Task[]> {
     try {
+      // Log DSO access if accessing another user's data
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.id !== userId) {
+        await logDsoAccess('compliance_tasks', userId);
+      }
+
       const { data, error } = await supabase
         .from('compliance_tasks')
         .select('*')
         .eq('user_id', userId)
-        .eq('is_deleted', false) // Ignore soft-deleted
+        .eq('is_deleted', false)
         .order('due_date', { ascending: true });
 
       if (error) {
+        console.error('[RLS] Compliance tasks query error:', error);
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('Permission denied: You do not have access to these compliance tasks.');
+          throw new Error('Access denied: You do not have permission to view these compliance tasks.');
         }
         throw error;
       }
@@ -68,8 +77,9 @@ export class ComplianceService {
         .single();
 
       if (error) {
+        console.error('[RLS] Task creation error:', error);
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('Permission denied: You cannot create new compliance tasks.');
+          throw new Error('Access denied: You cannot create compliance tasks for this user.');
         }
         throw error;
       }
@@ -103,8 +113,9 @@ export class ComplianceService {
         .single();
 
       if (error) {
+        console.error('[RLS] Task update error:', error);
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('Permission denied: You cannot update this compliance task.');
+          throw new Error('Access denied: You cannot update this compliance task.');
         }
         throw error;
       }
@@ -125,8 +136,9 @@ export class ComplianceService {
         .eq('id', id);
 
       if (error) {
+        console.error('[RLS] Task deletion error:', error);
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('Permission denied: You cannot delete this compliance task.');
+          throw new Error('Access denied: You cannot delete this compliance task.');
         }
         throw error;
       }
@@ -146,7 +158,10 @@ export class ComplianceService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[RLS] Task restoration error:', error);
+        throw error;
+      }
       return this.mapTaskFromDB(data);
     } catch (error) {
       console.error('[RLS] Error restoring compliance task:', error);

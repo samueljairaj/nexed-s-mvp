@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Task } from "@/hooks/useComplianceTasks";
@@ -32,12 +33,9 @@ export function useComplianceData() {
           : typeof err === "string"
           ? err
           : "Failed to fetch tasks";
-      if (errorMessage.toLowerCase().includes("permission denied")) {
-        setError("You do not have access to view these tasks. Please ensure you are logged in with the correct user.");
-      } else {
-        setError(errorMessage);
-      }
+      
       console.error('Error fetching tasks:', err);
+      setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -67,12 +65,9 @@ export function useComplianceData() {
           : typeof err === "string"
           ? err
           : "Failed to update task";
-      if (errorMessage.toLowerCase().includes("permission denied")) {
-        setError("You do not have permission to change this task.");
-      } else {
-        setError(errorMessage);
-      }
+      
       console.error('Error updating task:', err);
+      setError(errorMessage);
       toast.error(errorMessage);
     }
   };
@@ -101,12 +96,9 @@ export function useComplianceData() {
           : typeof err === "string"
           ? err
           : "Failed to add custom task";
-      if (errorMessage.toLowerCase().includes("permission denied")) {
-        setError("You do not have permission to add a task.");
-      } else {
-        setError(errorMessage);
-      }
+      
       console.error('Error adding custom task:', err);
+      setError(errorMessage);
       toast.error(errorMessage);
     }
   };
@@ -115,7 +107,7 @@ export function useComplianceData() {
     try {
       await ComplianceService.deleteTask(taskId);
       setTasks(prev => prev.filter(t => t.id !== taskId));
-      toast.success('Task deleted successfully (soft deleted)');
+      toast.success('Task deleted successfully');
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -123,12 +115,9 @@ export function useComplianceData() {
           : typeof err === "string"
           ? err
           : "Failed to delete task";
-      if (errorMessage.toLowerCase().includes("permission denied")) {
-        setError("You do not have permission to delete this task.");
-      } else {
-        setError(errorMessage);
-      }
+      
       console.error('Error deleting task:', err);
+      setError(errorMessage);
       toast.error(errorMessage);
     }
   };
@@ -145,6 +134,8 @@ export function useComplianceData() {
           : typeof err === "string"
           ? err
           : "Failed to restore task";
+      
+      console.error('Error restoring task:', err);
       setError(errorMessage);
       toast.error(errorMessage);
     }

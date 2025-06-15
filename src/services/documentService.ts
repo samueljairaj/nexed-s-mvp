@@ -1,5 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentCategory, DocumentStatus } from "@/types/document";
+import { logDsoAccess } from "@/utils/accessControl";
 
 export interface DocumentData {
   id: string;
@@ -21,16 +23,23 @@ export interface DocumentData {
 export class DocumentService {
   static async fetchDocuments(userId: string): Promise<Document[]> {
     try {
+      // Log DSO access if accessing another user's data
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.id !== userId) {
+        await logDsoAccess('documents', userId);
+      }
+
       const { data, error } = await supabase
         .from('documents')
         .select('*')
         .eq('user_id', userId)
-        .eq('is_deleted', false) // Ignore soft-deleted docs
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error('[RLS] Documents query error:', error);
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('Permission denied: You do not have access to these documents. Please ensure you are signed in and have the correct permissions.');
+          throw new Error('Access denied: You do not have permission to view these documents.');
         }
         throw error;
       }
@@ -67,8 +76,9 @@ export class DocumentService {
         .single();
 
       if (error) {
+        console.error('[RLS] Document creation error:', error);
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('Permission denied: You cannot create documents. Please sign in with the correct user or contact your admin.');
+          throw new Error('Access denied: You cannot create documents for this user.');
         }
         throw error;
       }
@@ -97,8 +107,9 @@ export class DocumentService {
         .single();
 
       if (error) {
+        console.error('[RLS] Document update error:', error);
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('Permission denied: You cannot update this document.');
+          throw new Error('Access denied: You cannot update this document.');
         }
         throw error;
       }
@@ -119,8 +130,9 @@ export class DocumentService {
         .eq('id', id);
 
       if (error) {
+        console.error('[RLS] Document deletion error:', error);
         if (error.message?.toLowerCase().includes('row-level security')) {
-          throw new Error('Permission denied: You cannot delete this document.');
+          throw new Error('Access denied: You cannot delete this document.');
         }
         throw error;
       }
@@ -140,7 +152,10 @@ export class DocumentService {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[RLS] Document restoration error:', error);
+        throw error;
+      }
       return this.mapDocumentFromDB(data);
     } catch (error) {
       console.error('[RLS] Error restoring document:', error);
