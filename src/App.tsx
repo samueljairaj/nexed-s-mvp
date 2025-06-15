@@ -26,8 +26,8 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false, // Prevent refetching data when window regains focus
-      retry: 1, // Limit retry attempts
+      refetchOnWindowFocus: false,
+      retry: 1,
     },
   },
 });
@@ -42,6 +42,10 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/app" element={<AppLayout />}>
                 <Route index element={<Navigate to="/app/dashboard" replace />} />
