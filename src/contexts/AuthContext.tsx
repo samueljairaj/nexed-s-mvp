@@ -100,16 +100,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchInProgressRef = useRef(false);
   const lastFetchedUserIdRef = useRef<string | null>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const profileFetchPromiseRef = useRef<Promise<void> | null>(null);
 
   // Debounced profile fetch to prevent rapid-fire calls
-  const debouncedFetchProfile = (userId: string) => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    
-    debounceTimeoutRef.current = setTimeout(() => {
-      fetchUserProfile(userId);
-    }, 300);
+  const debouncedFetchProfile = (userId: string): Promise<void> => {
+    return new Promise((resolve) => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      
+      debounceTimeoutRef.current = setTimeout(async () => {
+        await fetchUserProfile(userId);
+        resolve();
+      }, 300);
+    });
   };
 
   useEffect(() => {
@@ -421,7 +425,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     login,
     signout,
     logout,
-    refreshUser: () => currentUser ? debouncedFetchProfile(currentUser.id) : Promise.resolve(),
+    refreshUser: async () => {
+      if (currentUser) {
+        await debouncedFetchProfile(currentUser.id);
+      }
+    },
     updateProfile,
     updateDSOProfile,
     completeOnboarding,
