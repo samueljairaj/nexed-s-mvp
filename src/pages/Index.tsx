@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,9 @@ import { FileCheck, FolderArchive, MessageCircle, GraduationCap, Building2, Shie
 const Index = () => {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [hasNavigated, setHasNavigated] = useState(false);
+  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     console.log("Index page effect triggered:", {
@@ -15,12 +18,28 @@ const Index = () => {
       isAuthenticated,
       currentUser: currentUser?.id,
       onboardingComplete: currentUser?.onboardingComplete,
-      userType: currentUser?.user_type
+      userType: currentUser?.user_type,
+      hasNavigated
     });
 
-    // Only handle navigation if auth is fully loaded
-    if (!isLoading && isAuthenticated && currentUser) {
-      console.log("User authenticated, navigating...");
+    // Set up a timeout to prevent infinite loading (10 seconds max)
+    if (isLoading && !loadingTimeoutRef.current) {
+      loadingTimeoutRef.current = setTimeout(() => {
+        console.warn("Loading timeout reached, showing landing page");
+        setHasNavigated(true); // Prevent navigation attempts
+      }, 10000);
+    }
+
+    // Clear loading timeout when not loading
+    if (!isLoading && loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+
+    // Only handle navigation if auth is fully loaded and we haven't navigated yet
+    if (!isLoading && isAuthenticated && currentUser && !hasNavigated) {
+      console.log("User authenticated, preparing navigation...");
+      setHasNavigated(true);
       
       // Determine target path based on onboarding status and user type
       let targetPath = "/onboarding";
@@ -30,12 +49,28 @@ const Index = () => {
       }
       
       console.log(`Navigating to ${targetPath}`);
-      navigate(targetPath, { replace: true });
+      
+      // Use a small delay to ensure state is stable
+      navigationTimeoutRef.current = setTimeout(() => {
+        navigate(targetPath, { replace: true });
+      }, 100);
     }
-  }, [isLoading, isAuthenticated, currentUser, navigate]);
 
-  // Show loading spinner during auth check
-  if (isLoading) {
+    // Cleanup function
+    return () => {
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+        navigationTimeoutRef.current = null;
+      }
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+    };
+  }, [isLoading, isAuthenticated, currentUser, navigate, hasNavigated]);
+
+  // Show loading spinner during auth check (but not if navigation has been attempted)
+  if (isLoading && !hasNavigated) {
     console.log("Showing loading spinner - auth loading");
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -48,7 +83,7 @@ const Index = () => {
   }
 
   // If user is authenticated, they should be redirected (this is a fallback)
-  if (isAuthenticated && currentUser) {
+  if (isAuthenticated && currentUser && !hasNavigated) {
     console.log("Authenticated user detected, should redirect");
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -60,7 +95,7 @@ const Index = () => {
     );
   }
 
-  // Show landing page for non-authenticated users
+  // Show landing page for non-authenticated users or if navigation was blocked
   console.log("Showing landing page for non-authenticated user");
   
   return (

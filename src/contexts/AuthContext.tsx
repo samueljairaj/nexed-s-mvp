@@ -1,5 +1,4 @@
-
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -96,6 +95,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const navigate = useNavigate();
+  
+  // Add refs to prevent unnecessary calls
+  const fetchInProgressRef = useRef(false);
+  const lastFetchedUserIdRef = useRef<string | null>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced profile fetch to prevent rapid-fire calls
+  const debouncedFetchProfile = (userId: string) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    debounceTimeoutRef.current = setTimeout(() => {
+      fetchUserProfile(userId);
+    }, 300);
+  };
 
   useEffect(() => {
     const session = supabase.auth.getSession()
@@ -120,7 +135,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   const fetchUserProfile = async (userId: string) => {
-    setIsLoading(true);
+    // Prevent duplicate fetches
+    if (fetchInProgressRef.current || lastFetchedUserIdRef.current === userId) {
+      console.log("Skipping duplicate profile fetch for user:", userId);
+      return;
+    }
+
+    fetchInProgressRef.current = true;
+    lastFetchedUserIdRef.current = userId;
+
     try {
       let { data: userProfile, error } = await supabase
         .from('profiles')
@@ -131,6 +154,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) {
         console.error("Error fetching user profile:", error);
         toast.error("Failed to fetch user profile.");
+        return;
       }
 
       if (userProfile) {
@@ -183,7 +207,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           eVerifyNumber: userProfile.e_verify_number,
         };
         setCurrentUser(user);
-        console.log("User profile fetched:", user);
+        console.log("User profile fetched successfully:", user.id);
       } else {
         console.warn("User profile not found, redirecting to onboarding");
         navigate('/onboarding');
@@ -192,6 +216,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Error fetching or processing user profile:", error);
       toast.error("Failed to process user profile.");
     } finally {
+      fetchInProgressRef.current = false;
       setIsLoading(false);
     }
   };
@@ -199,7 +224,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const updateProfile = async (updates: Partial<User>) => {
     if (!currentUser) throw new Error("No user logged in");
     
-    setIsLoading(true);
     try {
       // Map camelCase to snake_case for database
       const dbUpdates: Record<string, any> = {};
@@ -253,8 +277,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Profile update error:", error);
       toast.error(`Failed to update profile: ${error.message}`);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -298,7 +320,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
 
       if (user) {
-        await fetchUserProfile(user.id);
+        debouncedFetchProfile(user.id);
       }
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -319,7 +341,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
 
       if (user) {
-        await fetchUserProfile(user.id);
+        debouncedFetchProfile(user.id);
       }
     } catch (error: any) {
       console.error("Signin error:", error);
@@ -333,17 +355,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = signin;
 
   const signout = async () => {
-    setIsLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setCurrentUser(null);
+      lastFetchedUserIdRef.current = null;
+      fetchInProgressRef.current = false;
       navigate('/');
     } catch (error: any) {
       console.error("Signout error:", error);
       toast.error("Failed to sign out.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -360,19 +381,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
         
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        if (event === "SIGNED_IN") {
           if (session?.user) {
-            await fetchUserProfile(session.user.id);
+            debouncedFetchProfile(session.user.id);
+          }
+        } else if (event === "TOKEN_REFRESHED") {
+          // Only fetch profile if user changed or we don't have current user
+          if (session?.user && (!currentUser || session.user.id !== currentUser.id)) {
+            console.log("Token refreshed for different user, fetching profile");
+            debouncedFetchProfile(session.user.id);
+          } else {
+            console.log("Token refreshed for same user, skipping profile fetch");
           }
         } else if (event === "SIGNED_OUT") {
           setCurrentUser(null);
+          lastFetchedUserIdRef.current = null;
+          fetchInProgressRef.current = false;
           setIsLoading(false);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      subscription.unsubscribe();
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [currentUser]);
 
   const value = {
     currentUser,
@@ -385,7 +421,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     login,
     signout,
     logout,
-    refreshUser: () => currentUser ? fetchUserProfile(currentUser.id) : Promise.resolve(),
+    refreshUser: () => currentUser ? debouncedFetchProfile(currentUser.id) : Promise.resolve(),
     updateProfile,
     updateDSOProfile,
     completeOnboarding,
