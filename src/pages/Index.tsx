@@ -8,7 +8,6 @@ import { FileCheck, FolderArchive, MessageCircle, GraduationCap, Building2, Shie
 const Index = () => {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     console.log("Index page effect triggered:", {
@@ -16,53 +15,41 @@ const Index = () => {
       isAuthenticated,
       currentUser: currentUser?.id,
       onboardingComplete: currentUser?.onboardingComplete,
-      userType: currentUser?.user_type,
-      isNavigating
+      userType: currentUser?.user_type
     });
 
-    // Only handle navigation if not currently loading auth state
-    if (isLoading) {
-      console.log("Auth still loading, waiting...");
-      return;
-    }
-
-    // If user is authenticated and we haven't started navigating yet
-    if (isAuthenticated && currentUser && !isNavigating) {
-      console.log("User authenticated, starting navigation...");
-      setIsNavigating(true);
+    // Only handle navigation if auth is fully loaded
+    if (!isLoading && isAuthenticated && currentUser) {
+      console.log("User authenticated, navigating...");
       
-      // Small delay to prevent flash
-      setTimeout(() => {
-        if (currentUser.onboardingComplete) {
-          const targetPath = currentUser.user_type === "dso" ? "/app/dso-dashboard" : "/app/dashboard";
-          console.log(`Navigating to ${targetPath}`);
-          navigate(targetPath, { replace: true });
-        } else {
-          console.log("Navigating to onboarding");
-          navigate("/onboarding", { replace: true });
-        }
-      }, 100);
+      // Determine target path based on onboarding status and user type
+      let targetPath = "/onboarding";
+      
+      if (currentUser.onboardingComplete) {
+        targetPath = currentUser.user_type === "dso" ? "/app/dso-dashboard" : "/app/dashboard";
+      }
+      
+      console.log(`Navigating to ${targetPath}`);
+      navigate(targetPath, { replace: true });
     }
-  }, [isAuthenticated, currentUser, isLoading, navigate, isNavigating]);
+  }, [isLoading, isAuthenticated, currentUser, navigate]);
 
-  // Show loading spinner only during initial auth check or when navigating
-  if (isLoading || (isAuthenticated && isNavigating)) {
-    console.log("Showing loading spinner:", { isLoading, isAuthenticated, isNavigating });
+  // Show loading spinner during auth check
+  if (isLoading) {
+    console.log("Showing loading spinner - auth loading");
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nexed-500"></div>
-          <p className="text-gray-600">
-            {isLoading ? "Loading..." : "Redirecting..."}
-          </p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // If user is authenticated but we're not navigating, show loading (shouldn't happen)
-  if (isAuthenticated) {
-    console.log("Authenticated user in unexpected state, showing fallback loading");
+  // If user is authenticated, they should be redirected (this is a fallback)
+  if (isAuthenticated && currentUser) {
+    console.log("Authenticated user detected, should redirect");
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="flex flex-col items-center space-y-4">
