@@ -150,13 +150,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           passportExpiryDate: userProfile.passport_expiry_date,
           nationality: userProfile.nationality,
           
-          // Visa info - using correct database field names
+          // Visa info - only accessing fields that exist in the database
           visaType: userProfile.visa_type,
-          visaStatus: userProfile.visa_status || undefined,
+          visaStatus: undefined, // Not in database schema
           visa_expiry_date: userProfile.visa_expiry_date,
           usEntryDate: userProfile.us_entry_date,
-          i94Number: userProfile.i94_number || undefined,
-          sevisId: userProfile.sevis_id || undefined,
+          i94Number: undefined, // Not in database schema
+          sevisId: undefined, // Not in database schema
           
           // Academic info
           university: userProfile.university,
@@ -165,7 +165,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           fieldOfStudy: userProfile.field_of_study,
           degreeLevel: userProfile.degree_level,
           courseStartDate: userProfile.course_start_date,
-          graduationDate: userProfile.graduation_date || undefined,
+          graduationDate: undefined, // Not in database schema
           isSTEM: userProfile.is_stem,
           
           // Employment info
@@ -174,7 +174,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           employer: userProfile.employer_name, // Alias for backward compatibility
           jobTitle: userProfile.job_title,
           employmentStartDate: userProfile.employment_start_date,
-          employmentEndDate: userProfile.employment_end_date || undefined,
+          employmentEndDate: undefined, // Not in database schema
           authType: userProfile.auth_type,
           authStartDate: userProfile.auth_start_date,
           authEndDate: userProfile.auth_end_date,
@@ -217,18 +217,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Visa fields
       if (updates.visaType !== undefined) dbUpdates.visa_type = updates.visaType;
-      if (updates.visaStatus !== undefined) dbUpdates.visa_status = updates.visaStatus;
       if (updates.visa_expiry_date !== undefined) dbUpdates.visa_expiry_date = updates.visa_expiry_date;
       if (updates.usEntryDate !== undefined) dbUpdates.us_entry_date = updates.usEntryDate;
-      if (updates.i94Number !== undefined) dbUpdates.i94_number = updates.i94Number;
-      if (updates.sevisId !== undefined) dbUpdates.sevis_id = updates.sevisId;
       
       // Academic fields
       if (updates.university !== undefined) dbUpdates.university = updates.university;
       if (updates.fieldOfStudy !== undefined) dbUpdates.field_of_study = updates.fieldOfStudy;
       if (updates.degreeLevel !== undefined) dbUpdates.degree_level = updates.degreeLevel;
       if (updates.courseStartDate !== undefined) dbUpdates.course_start_date = updates.courseStartDate;
-      if (updates.graduationDate !== undefined) dbUpdates.graduation_date = updates.graduationDate;
       if (updates.isSTEM !== undefined) dbUpdates.is_stem = updates.isSTEM;
       
       // Employment fields
@@ -236,7 +232,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (updates.employerName !== undefined) dbUpdates.employer_name = updates.employerName;
       if (updates.jobTitle !== undefined) dbUpdates.job_title = updates.jobTitle;
       if (updates.employmentStartDate !== undefined) dbUpdates.employment_start_date = updates.employmentStartDate;
-      if (updates.employmentEndDate !== undefined) dbUpdates.employment_end_date = updates.employmentEndDate;
       if (updates.authType !== undefined) dbUpdates.auth_type = updates.authType;
       if (updates.authStartDate !== undefined) dbUpdates.auth_start_date = updates.authStartDate;
       if (updates.authEndDate !== undefined) dbUpdates.auth_end_date = updates.authEndDate;
