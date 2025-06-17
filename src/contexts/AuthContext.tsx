@@ -9,6 +9,7 @@ interface User {
   email: string;
   user_type: "student" | "dso";
   onboardingComplete: boolean;
+  role?: "student" | "dso";
   // Basic profile info
   name?: string;
   firstName?: string;
@@ -32,6 +33,8 @@ interface User {
   
   // Academic information
   university?: string;
+  universityId?: string;
+  university_id?: string;
   universityName?: string;
   universityCountry?: string;
   fieldOfStudy?: string;
@@ -65,13 +68,16 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isDSO: boolean;
-  signup: (email: string, password: string, userType: "student" | "dso", universityInfo?: { universityName: string; universityCountry: string; sevisId: string; }) => Promise<void>;
+  isAdmin: boolean;
+  signup: (email: string, password: string, userType?: "student" | "dso", universityInfo?: { universityName: string; universityCountry: string; sevisId: string; }) => Promise<void>;
   signin: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   signout: () => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
   updateDSOProfile?: (updates: any) => Promise<void>;
+  completeOnboarding: () => Promise<void>;
   dsoProfile?: any;
 }
 
@@ -131,7 +137,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const user: User = {
           id: userId,
           email: userProfile.email,
-          user_type: userProfile.role === 'dso' ? 'dso' : 'student', // Map role to user_type
+          user_type: userProfile.role === 'dso' ? 'dso' : 'student',
+          role: userProfile.role === 'dso' ? 'dso' : 'student',
           onboardingComplete: userProfile.onboarding_complete,
           // Basic info
           name: userProfile.name,
@@ -143,20 +150,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           passportExpiryDate: userProfile.passport_expiry_date,
           nationality: userProfile.nationality,
           
-          // Visa info
+          // Visa info - using correct database field names
           visaType: userProfile.visa_type,
-          visaStatus: userProfile.visa_status,
+          visaStatus: userProfile.visa_status || undefined,
           visa_expiry_date: userProfile.visa_expiry_date,
           usEntryDate: userProfile.us_entry_date,
-          i94Number: userProfile.i94_number,
-          sevisId: userProfile.sevis_id,
+          i94Number: userProfile.i94_number || undefined,
+          sevisId: userProfile.sevis_id || undefined,
           
           // Academic info
           university: userProfile.university,
+          universityId: userProfile.university_id,
+          university_id: userProfile.university_id,
           fieldOfStudy: userProfile.field_of_study,
           degreeLevel: userProfile.degree_level,
           courseStartDate: userProfile.course_start_date,
-          graduationDate: userProfile.graduation_date,
+          graduationDate: userProfile.graduation_date || undefined,
           isSTEM: userProfile.is_stem,
           
           // Employment info
@@ -165,7 +174,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           employer: userProfile.employer_name, // Alias for backward compatibility
           jobTitle: userProfile.job_title,
           employmentStartDate: userProfile.employment_start_date,
-          employmentEndDate: userProfile.employment_end_date,
+          employmentEndDate: userProfile.employment_end_date || undefined,
           authType: userProfile.auth_type,
           authStartDate: userProfile.auth_start_date,
           authEndDate: userProfile.auth_end_date,
@@ -254,7 +263,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signup = async (email: string, password: string, userType: "student" | "dso", universityInfo?: { universityName: string; universityCountry: string; sevisId: string; }) => {
+  const completeOnboarding = async () => {
+    if (!currentUser) throw new Error("No user logged in");
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ onboarding_complete: true })
+        .eq('id', currentUser.id);
+
+      if (error) throw error;
+
+      setCurrentUser(prev => prev ? { ...prev, onboardingComplete: true } : null);
+      toast.success("Onboarding completed!");
+    } catch (error: any) {
+      console.error("Complete onboarding error:", error);
+      toast.error(`Failed to complete onboarding: ${error.message}`);
+      throw error;
+    }
+  };
+
+  const signup = async (email: string, password: string, userType: "student" | "dso" = "student", universityInfo?: { universityName: string; universityCountry: string; sevisId: string; }) => {
     setIsLoading(true);
     try {
       const { data: { user }, error } = await supabase.auth.signUp({
@@ -305,6 +334,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Alias for signin
+  const login = signin;
+
   const signout = async () => {
     setIsLoading(true);
     try {
@@ -352,13 +384,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAuthenticated: !!currentUser,
     isLoading,
     isDSO: currentUser?.user_type === "dso",
+    isAdmin: false, // Placeholder - implement based on your admin logic
     signup,
     signin,
+    login,
     signout,
     logout,
     refreshUser: () => currentUser ? fetchUserProfile(currentUser.id) : Promise.resolve(),
     updateProfile,
     updateDSOProfile,
+    completeOnboarding,
     dsoProfile: null, // Placeholder
   };
 
