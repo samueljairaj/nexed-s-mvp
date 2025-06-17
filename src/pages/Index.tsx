@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -8,42 +9,45 @@ import { FileCheck, FolderArchive, MessageCircle, GraduationCap, Building2, Shie
 const Index = () => {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [hasNavigated, setHasNavigated] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
-    // Only proceed if auth has finished loading and we haven't already navigated
-    if (isLoading || hasNavigated) {
+    // Only handle navigation if not currently loading auth state
+    if (isLoading) {
       return;
     }
 
-    if (isAuthenticated && currentUser) {
-      setHasNavigated(true);
+    // If user is authenticated and we haven't started navigating yet
+    if (isAuthenticated && currentUser && !isNavigating) {
+      setIsNavigating(true);
       
-      // Check if user has completed onboarding
-      if (currentUser.onboardingComplete) {
-        // Navigate based on user type
-        const targetPath = currentUser.user_type === "dso" ? "/app/dso-dashboard" : "/app/dashboard";
-        navigate(targetPath, { replace: true });
-      } else {
-        // User needs to complete onboarding
-        navigate("/onboarding", { replace: true });
-      }
+      // Small delay to prevent flash
+      setTimeout(() => {
+        if (currentUser.onboardingComplete) {
+          const targetPath = currentUser.user_type === "dso" ? "/app/dso-dashboard" : "/app/dashboard";
+          navigate(targetPath, { replace: true });
+        } else {
+          navigate("/onboarding", { replace: true });
+        }
+      }, 100);
     }
-  }, [isAuthenticated, currentUser, isLoading, navigate, hasNavigated]);
+  }, [isAuthenticated, currentUser, isLoading, navigate, isNavigating]);
 
-  // Show loading only while auth is initializing
-  if (isLoading) {
+  // Show loading spinner only during initial auth check or when navigating
+  if (isLoading || (isAuthenticated && isNavigating)) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nexed-500"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">
+            {isLoading ? "Loading..." : "Redirecting..."}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Don't render the landing page if user is authenticated (they should be redirected)
+  // If user is authenticated but we're not navigating, show loading (shouldn't happen)
   if (isAuthenticated) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -55,6 +59,7 @@ const Index = () => {
     );
   }
 
+  // Show landing page for non-authenticated users
   return (
     <div className="min-h-screen flex flex-col">
       {/* Enhanced Header */}
