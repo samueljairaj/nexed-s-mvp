@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { ComplianceChecklistProps } from "@/types/compliance";
 import { format } from "date-fns";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, User, GraduationCap, Briefcase, FileText } from "lucide-react";
 
 export const ComplianceChecklist = ({
   open,
@@ -38,71 +38,106 @@ export const ComplianceChecklist = ({
       return "Invalid date";
     }
   };
+
+  // Get section icon
+  const getSectionIcon = (title: string) => {
+    switch (title) {
+      case "Personal Information":
+        return <User className="h-5 w-5 text-nexed-600" />;
+      case "Visa Information":
+        return <FileText className="h-5 w-5 text-nexed-600" />;
+      case "Academic Information":
+        return <GraduationCap className="h-5 w-5 text-nexed-600" />;
+      case "Employment Information":
+        return <Briefcase className="h-5 w-5 text-nexed-600" />;
+      default:
+        return <FileText className="h-5 w-5 text-nexed-600" />;
+    }
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold mb-2 text-nexed-800">
-            Welcome to neXed Visa Compliance Platform
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
+        <DialogHeader className="pb-4 border-b border-gray-200">
+          <DialogTitle className="text-2xl font-bold text-nexed-800 mb-2">
+            🎉 Welcome to neXed!
           </DialogTitle>
+          <p className="text-gray-600 text-base">
+            Your profile setup is complete. Let's review your information and get you started.
+          </p>
         </DialogHeader>
         
-        <div className="py-4 space-y-6">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h3 className="text-lg font-medium text-nexed-800">Profile Completion</h3>
-              <p className="text-muted-foreground text-sm">
-                {completedItems} of {totalItems} items completed
-              </p>
-            </div>
-            <span className="text-2xl font-bold text-nexed-600">{completionPercentage}%</span>
-          </div>
-          
-          <Progress value={completionPercentage} className="h-2 mb-4" />
-          
-          {/* Profile summary */}
-          <div className="bg-nexed-50 p-5 rounded-lg">
-            <h3 className="text-md font-medium mb-3 text-nexed-800">Profile Summary</h3>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="py-6 space-y-6">
+          {/* Progress Section */}
+          <div className="bg-gradient-to-r from-nexed-50 to-blue-50 p-6 rounded-lg border border-nexed-200">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-muted-foreground">Name</p>
-                <p className="font-medium">{userData.name || "Not provided"}</p>
+                <h3 className="text-lg font-semibold text-nexed-800">Profile Completion</h3>
+                <p className="text-gray-600 text-sm">
+                  {completedItems} of {totalItems} items completed
+                </p>
               </div>
-              <div>
-                <p className="text-muted-foreground">Visa Type</p>
-                <p className="font-medium">{userData.visaType || "Not provided"}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">University</p>
-                <p className="font-medium">{userData.university || "Not provided"}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Field of Study</p>
-                <p className="font-medium">{userData.fieldOfStudy || "Not provided"}</p>
+              <div className="text-right">
+                <span className="text-3xl font-bold text-nexed-600">{completionPercentage}%</span>
+                <p className="text-xs text-gray-500">Complete</p>
               </div>
             </div>
+            
+            <Progress 
+              value={completionPercentage} 
+              className="h-3 bg-white shadow-inner" 
+              indicatorClassName="bg-gradient-to-r from-nexed-500 to-nexed-600"
+            />
           </div>
           
-          {/* Checklist sections */}
+          {/* Profile Quick Summary */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-nexed-800 flex items-center">
+              <User className="h-5 w-5 mr-2 text-nexed-600" />
+              Profile Summary
+            </h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-gray-500 font-medium">Name</p>
+                <p className="text-gray-800">{userData.name || "Not provided"}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-medium">Visa Type</p>
+                <p className="text-gray-800">{userData.visaType || "Not provided"}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-medium">University</p>
+                <p className="text-gray-800">{userData.university || "Not provided"}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-medium">Field of Study</p>
+                <p className="text-gray-800">{userData.fieldOfStudy || "Not provided"}</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Detailed Checklist Sections */}
           <div className="space-y-4">
             {sections.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="border border-gray-200 rounded-lg shadow-sm bg-white">
-                <div className="px-5 py-3 border-b border-gray-200">
-                  <h3 className="text-md font-medium text-nexed-800">{section.title}</h3>
+              <div key={sectionIndex} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-nexed-800 flex items-center">
+                    {getSectionIcon(section.title)}
+                    <span className="ml-2">{section.title}</span>
+                  </h3>
                 </div>
-                <div className="p-5 space-y-3">
+                <div className="p-6 space-y-4">
                   {section.items.map((item, itemIndex) => (
-                    <div key={itemIndex} className="flex items-center justify-between">
+                    <div key={itemIndex} className="flex items-center justify-between py-2">
                       <div className="flex items-center gap-3">
                         {item.complete ? (
-                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
                         ) : (
-                          <XCircle className="h-5 w-5 text-amber-600" />
+                          <XCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
                         )}
-                        <span>{item.label}</span>
+                        <span className="text-gray-800 font-medium">{item.label}</span>
                       </div>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-gray-600 max-w-xs text-right">
                         {item.value instanceof Date || typeof item.value === 'string' 
                           ? formatDate(item.value)
                           : item.value === null || item.value === undefined
@@ -116,16 +151,21 @@ export const ComplianceChecklist = ({
               </div>
             ))}
           </div>
-        </div>
-        
-        <div className="flex justify-end mt-4">
-          <Button 
-            onClick={async () => await onContinue()} 
-            disabled={loading}
-            className="bg-nexed-500 hover:bg-nexed-600 text-white"
-          >
-            {loading ? "Setting up your dashboard..." : "Continue to Dashboard"}
-          </Button>
+
+          {/* Call to Action */}
+          <div className="bg-gradient-to-r from-nexed-500 to-nexed-600 p-6 rounded-lg text-white">
+            <h3 className="text-lg font-semibold mb-2">Ready to get started?</h3>
+            <p className="text-nexed-100 mb-4">
+              We'll now generate personalized compliance tasks based on your profile to help you stay on track with your visa requirements.
+            </p>
+            <Button 
+              onClick={async () => await onContinue()} 
+              disabled={loading}
+              className="bg-white text-nexed-600 hover:bg-gray-100 font-semibold px-6 py-2"
+            >
+              {loading ? "Setting up your dashboard..." : "Continue to Dashboard"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

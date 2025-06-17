@@ -75,9 +75,9 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     sections.push({
       title: "Personal Information",
       items: [
-        { label: "Name", value: userData.name, complete: !!userData.name },
-        { label: "Email", value: currentUser?.email, complete: !!currentUser?.email },
-        { label: "Country of origin", value: userData.country, complete: !!userData.country }
+        { label: "Full Name", value: userData.name, complete: !!userData.name },
+        { label: "Email Address", value: currentUser?.email, complete: !!currentUser?.email },
+        { label: "Country of Origin", value: userData.country, complete: !!userData.country }
       ]
     });
     
@@ -85,8 +85,8 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
     sections.push({
       title: "Visa Information",
       items: [
-        { label: "Visa type", value: userData.visaType, complete: !!userData.visaType },
-        { label: "Entry date", value: userData.usEntryDate, complete: !!userData.usEntryDate },
+        { label: "Visa Type", value: userData.visaType, complete: !!userData.visaType },
+        { label: "US Entry Date", value: userData.usEntryDate, complete: !!userData.usEntryDate },
       ]
     });
     
@@ -96,8 +96,8 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
         title: "Academic Information",
         items: [
           { label: "University", value: userData.university, complete: !!userData.university },
-          { label: "Field of study", value: userData.fieldOfStudy, complete: !!userData.fieldOfStudy },
-          { label: "Start date", value: userData.courseStartDate, complete: !!userData.courseStartDate }
+          { label: "Field of Study", value: userData.fieldOfStudy, complete: !!userData.fieldOfStudy },
+          { label: "Course Start Date", value: userData.courseStartDate, complete: !!userData.courseStartDate }
         ]
       });
     }
@@ -107,9 +107,9 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
       sections.push({
         title: "Employment Information",
         items: [
-          { label: "Employer", value: userData.employer, complete: !!userData.employer },
-          { label: "Employment start", value: userData.employmentStartDate, complete: !!userData.employmentStartDate },
-          { label: "Authorization type", value: userData.optType || "N/A", complete: true }
+          { label: "Current Employer", value: userData.employer, complete: !!userData.employer },
+          { label: "Employment Start Date", value: userData.employmentStartDate, complete: !!userData.employmentStartDate },
+          { label: "Work Authorization", value: userData.optType || "N/A", complete: true }
         ]
       });
     }
