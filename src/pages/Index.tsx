@@ -1,9 +1,10 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileCheck, FolderArchive, MessageCircle, GraduationCap, Building2, Shield, Clock, Users, CheckCircle, Star, ArrowRight } from "lucide-react";
+import { FileCheck, FolderArchive, MessageCircle, GraduationCap, Shield, Clock, CheckCircle, Star, ArrowRight } from "lucide-react";
 
 const Index = () => {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
@@ -41,11 +42,11 @@ const Index = () => {
       console.log("User authenticated, preparing navigation...");
       setHasNavigated(true);
       
-      // Determine target path based on onboarding status and user type
+      // Determine target path based on onboarding status
       let targetPath = "/onboarding";
       
       if (currentUser.onboardingComplete) {
-        targetPath = currentUser.user_type === "dso" ? "/app/dso-dashboard" : "/app/dashboard";
+        targetPath = "/app/dashboard";
       }
       
       console.log(`Navigating to ${targetPath}`);
@@ -101,11 +102,11 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Enhanced Header */}
-      <header className="nexed-gradient sticky top-0 z-50">
+      <header className="bg-gradient-to-r from-nexed-500 to-nexed-600 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center">
             <div className="h-10 w-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
-              <div className="h-6 w-6 rounded-sm nexed-gradient" />
+              <div className="h-6 w-6 rounded-sm bg-gradient-to-r from-nexed-500 to-nexed-600" />
             </div>
             <span className="ml-3 text-2xl font-bold text-white">neXed</span>
           </div>
@@ -134,7 +135,7 @@ const Index = () => {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="nexed-gradient text-white py-20 md:py-32 relative overflow-hidden">
+        <section className="bg-gradient-to-r from-nexed-500 to-nexed-600 text-white py-20 md:py-32 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -146,10 +147,10 @@ const Index = () => {
                   </div>
                   <h1 className="text-5xl md:text-6xl font-bold leading-tight animate-fade-in">
                     Your Visa Compliance
-                    <span className="block text-gradient bg-white bg-clip-text">Made Simple</span>
+                    <span className="block bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">Made Simple</span>
                   </h1>
                   <p className="text-xl md:text-2xl text-blue-50 leading-relaxed animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                    Stay compliant, organized, and stress-free with neXed's intelligent visa management platform designed for international students and DSOs.
+                    Stay compliant, organized, and stress-free with neXed's intelligent visa management platform designed for international students.
                   </p>
                 </div>
                 
@@ -188,26 +189,16 @@ const Index = () => {
                 <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
                   <CardContent className="p-8">
                     <div className="text-center space-y-6">
-                      <h3 className="text-2xl font-bold text-gray-900">Choose Your Experience</h3>
-                      <div className="grid grid-cols-1 gap-4">
+                      <h3 className="text-2xl font-bold text-gray-900">Get Started as a Student</h3>
+                      <div className="space-y-4">
                         <Button
                           onClick={() => navigate("/signup")}
-                          className="bg-nexed-500 hover:bg-nexed-600 text-white p-8 h-auto flex flex-col items-center space-y-3 transition-all duration-300 hover:shadow-lg"
+                          className="bg-nexed-500 hover:bg-nexed-600 text-white p-8 h-auto flex flex-col items-center space-y-3 transition-all duration-300 hover:shadow-lg w-full"
                         >
                           <GraduationCap size={40} />
                           <div>
                             <span className="font-semibold text-lg block">International Student</span>
                             <span className="text-sm opacity-90">Manage your visa compliance journey</span>
-                          </div>
-                        </Button>
-                        <Button
-                          onClick={() => navigate("/signup")}
-                          className="bg-nexed-700 hover:bg-nexed-800 text-white p-8 h-auto flex flex-col items-center space-y-3 transition-all duration-300 hover:shadow-lg"
-                        >
-                          <Building2 size={40} />
-                          <div>
-                            <span className="font-semibold text-lg block">DSO / Administrator</span>
-                            <span className="text-sm opacity-90">Monitor and support your students</span>
                           </div>
                         </Button>
                       </div>
@@ -289,22 +280,21 @@ const Index = () => {
                 Everything You Need for Visa Compliance
               </h2>
               <p className="text-xl text-gray-600">
-                Powerful tools designed specifically for international students and the DSOs who support them
+                Powerful tools designed specifically for international students
               </p>
             </div>
             
-            <div className="grid lg:grid-cols-2 gap-16 mb-20">
-              {/* Student Features */}
+            <div className="max-w-4xl mx-auto">
               <div className="space-y-8">
-                <div className="text-center lg:text-left">
-                  <h3 className="text-3xl font-bold text-nexed-700 mb-4 flex items-center justify-center lg:justify-start">
+                <div className="text-center mb-12">
+                  <h3 className="text-3xl font-bold text-nexed-700 mb-4 flex items-center justify-center">
                     <GraduationCap className="mr-3 h-8 w-8" />
-                    For Students
+                    For International Students
                   </h3>
                   <p className="text-gray-600 text-lg">Stay on top of your visa requirements with intelligent automation</p>
                 </div>
                 
-                <div className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-8">
                   <FeatureCard
                     icon={<FileCheck size={32} className="text-nexed-600" />}
                     title="Smart Compliance Tracking"
@@ -320,34 +310,10 @@ const Index = () => {
                     title="24/7 AI Immigration Assistant"
                     description="Get instant, accurate answers to complex visa questions from our specialized AI trained on immigration law."
                   />
-                </div>
-              </div>
-
-              {/* DSO Features */}
-              <div className="space-y-8">
-                <div className="text-center lg:text-left">
-                  <h3 className="text-3xl font-bold text-nexed-700 mb-4 flex items-center justify-center lg:justify-start">
-                    <Building2 className="mr-3 h-8 w-8" />
-                    For DSOs
-                  </h3>
-                  <p className="text-gray-600 text-lg">Streamline student oversight with comprehensive management tools</p>
-                </div>
-                
-                <div className="space-y-6">
-                  <FeatureCard
-                    icon={<Users size={32} className="text-nexed-600" />}
-                    title="Centralized Student Dashboard"
-                    description="Monitor hundreds of students in one place with advanced filtering, risk assessment, and bulk communication tools."
-                  />
-                  <FeatureCard
-                    icon={<Shield size={32} className="text-nexed-600" />}
-                    title="Automated Compliance Monitoring"
-                    description="Real-time alerts for compliance issues, automated SEVIS reporting preparation, and proactive risk identification."
-                  />
                   <FeatureCard
                     icon={<Clock size={32} className="text-nexed-600" />}
-                    title="Efficient Document Processing"
-                    description="Streamlined document collection, verification workflows, and digital signature capabilities for faster processing."
+                    title="Smart Deadline Management"
+                    description="Never miss important dates with automated reminders, calendar integration, and proactive deadline tracking."
                   />
                 </div>
               </div>
@@ -360,7 +326,7 @@ const Index = () => {
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                Loved by Students and DSOs Worldwide
+                Loved by Students Worldwide
               </h2>
               <p className="text-xl text-gray-600">
                 See what our community says about their neXed experience
@@ -369,16 +335,10 @@ const Index = () => {
             
             <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               <TestimonialCard
-                quote="neXed saved me from missing my OPT application deadline. The AI assistant answered questions my DSO couldn't get to for weeks!"
+                quote="neXed saved me from missing my OPT application deadline. The AI assistant answered questions my advisor couldn't get to for weeks!"
                 author="Maria Santos"
                 role="Computer Science Student"
                 university="Stanford University"
-              />
-              <TestimonialCard
-                quote="Managing 800+ international students became manageable with neXed. The compliance dashboard is a game-changer for our office."
-                author="Dr. James Chen"
-                role="International Student Services Director"
-                university="UC Berkeley"
               />
               <TestimonialCard
                 quote="The document vault is incredible. I can access my I-20, transcript, and work authorization from anywhere, anytime. So convenient!"
@@ -386,18 +346,24 @@ const Index = () => {
                 role="Engineering Graduate Student"
                 university="MIT"
               />
+              <TestimonialCard
+                quote="Finally, a platform that understands international students. The compliance tracking has made my life so much easier!"
+                author="Ahmed Hassan"
+                role="MBA Student"
+                university="UC Berkeley"
+              />
             </div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 nexed-gradient text-white relative overflow-hidden">
+        <section className="py-20 bg-gradient-to-r from-nexed-500 to-nexed-600 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="container mx-auto px-4 text-center relative z-10">
             <div className="max-w-4xl mx-auto space-y-8">
               <h2 className="text-4xl md:text-5xl font-bold">Ready to Simplify Your Visa Journey?</h2>
               <p className="text-xl md:text-2xl text-blue-50 max-w-3xl mx-auto">
-                Join thousands of international students and DSOs who trust neXed for seamless visa compliance management.
+                Join thousands of international students who trust neXed for seamless visa compliance management.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-6 pt-8">
                 <Button 
@@ -443,12 +409,12 @@ const Index = () => {
             <div className="space-y-4">
               <div className="flex items-center">
                 <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center">
-                  <div className="h-5 w-5 rounded-sm nexed-gradient" />
+                  <div className="h-5 w-5 rounded-sm bg-gradient-to-r from-nexed-500 to-nexed-600" />
                 </div>
                 <span className="ml-2 text-xl font-bold">neXed</span>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Simplifying visa compliance for international students and the institutions that support them.
+                Simplifying visa compliance for international students.
               </p>
             </div>
             <div>
