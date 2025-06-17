@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -12,21 +11,34 @@ const Index = () => {
   const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
+    console.log("Index page effect triggered:", {
+      isLoading,
+      isAuthenticated,
+      currentUser: currentUser?.id,
+      onboardingComplete: currentUser?.onboardingComplete,
+      userType: currentUser?.user_type,
+      isNavigating
+    });
+
     // Only handle navigation if not currently loading auth state
     if (isLoading) {
+      console.log("Auth still loading, waiting...");
       return;
     }
 
     // If user is authenticated and we haven't started navigating yet
     if (isAuthenticated && currentUser && !isNavigating) {
+      console.log("User authenticated, starting navigation...");
       setIsNavigating(true);
       
       // Small delay to prevent flash
       setTimeout(() => {
         if (currentUser.onboardingComplete) {
           const targetPath = currentUser.user_type === "dso" ? "/app/dso-dashboard" : "/app/dashboard";
+          console.log(`Navigating to ${targetPath}`);
           navigate(targetPath, { replace: true });
         } else {
+          console.log("Navigating to onboarding");
           navigate("/onboarding", { replace: true });
         }
       }, 100);
@@ -35,6 +47,7 @@ const Index = () => {
 
   // Show loading spinner only during initial auth check or when navigating
   if (isLoading || (isAuthenticated && isNavigating)) {
+    console.log("Showing loading spinner:", { isLoading, isAuthenticated, isNavigating });
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="flex flex-col items-center space-y-4">
@@ -49,6 +62,7 @@ const Index = () => {
 
   // If user is authenticated but we're not navigating, show loading (shouldn't happen)
   if (isAuthenticated) {
+    console.log("Authenticated user in unexpected state, showing fallback loading");
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="flex flex-col items-center space-y-4">
@@ -60,6 +74,8 @@ const Index = () => {
   }
 
   // Show landing page for non-authenticated users
+  console.log("Showing landing page for non-authenticated user");
+  
   return (
     <div className="min-h-screen flex flex-col">
       {/* Enhanced Header */}

@@ -29,8 +29,15 @@ const Dashboard = () => {
   const [deadlines, setDeadlines] = useState([]);
   const [showChecklist, setShowChecklist] = useState(false);
 
+  console.log("Dashboard component rendered:", {
+    currentUser: currentUser?.id,
+    isLoading,
+    location: location.pathname
+  });
+
   // Check if we should show the onboarding checklist
   useEffect(() => {
+    console.log("Dashboard: Checking for onboarding checklist");
     // Check for flag in localStorage
     const shouldShowChecklist = localStorage.getItem('show_onboarding_checklist') === 'true';
 
@@ -46,6 +53,7 @@ const Dashboard = () => {
   }, [location]);
 
   useEffect(() => {
+    console.log("Dashboard: Starting data fetch");
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -62,6 +70,11 @@ const Dashboard = () => {
           error: tasksError
         } = await supabase.from('compliance_tasks').select('*').eq('user_id', currentUser?.id);
         if (tasksError) throw tasksError;
+
+        console.log("Dashboard: Data fetched successfully", {
+          documentsCount: documents?.length,
+          tasksCount: tasks?.length
+        });
 
         // Calculate document stats
         if (documents) {
@@ -93,8 +106,9 @@ const Dashboard = () => {
           setDeadlines(upcomingDeadlines);
         }
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error("Dashboard: Error fetching data:", error);
       } finally {
+        console.log("Dashboard: Data fetch completed");
         setIsLoading(false);
       }
     };
@@ -102,6 +116,7 @@ const Dashboard = () => {
     if (currentUser?.id) {
       fetchData();
     } else {
+      console.log("Dashboard: No current user, skipping data fetch");
       setIsLoading(false);
     }
   }, [currentUser]);
@@ -183,12 +198,15 @@ const Dashboard = () => {
   }, [currentUser?.id]);
 
   if (isLoading) {
+    console.log("Dashboard: Showing loading spinner");
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nexed-500"></div>
       </div>
     );
   }
+
+  console.log("Dashboard: Rendering main content");
 
   return (
     <div className="animate-fade-in space-y-6">
