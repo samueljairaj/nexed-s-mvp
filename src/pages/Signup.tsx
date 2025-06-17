@@ -401,7 +401,7 @@ const Signup = () => {
 
               <Button
                 type="submit"
-                className="w-full nexed-gradient"
+                className="w-full bg-gradient-to-r from-nexed-500 to-nexed-600 hover:from-nexed-600 hover:to-nexed-700 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-sm hover:shadow-md"
                 disabled={isSubmitting || isLoading}
               >
                 {isSubmitting ? (
