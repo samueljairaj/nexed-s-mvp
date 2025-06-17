@@ -1,28 +1,56 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { FileCheck, FolderArchive, MessageCircle, ChevronRight, User, Building2, GraduationCap } from "lucide-react";
+import { FileCheck, FolderArchive, MessageCircle, GraduationCap, Building2 } from "lucide-react";
 
 const Index = () => {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      if (currentUser?.onboardingComplete) {
-        navigate("/app/dashboard");
+    // Only proceed if auth has finished loading and we haven't already navigated
+    if (isLoading || hasNavigated) {
+      return;
+    }
+
+    if (isAuthenticated && currentUser) {
+      setHasNavigated(true);
+      
+      // Check if user has completed onboarding
+      if (currentUser.onboardingComplete) {
+        // Navigate based on user type
+        const targetPath = currentUser.user_type === "dso" ? "/app/dso-dashboard" : "/app/dashboard";
+        navigate(targetPath, { replace: true });
       } else {
-        navigate("/onboarding");
+        // User needs to complete onboarding
+        navigate("/onboarding", { replace: true });
       }
     }
-  }, [isAuthenticated, currentUser, navigate]);
+  }, [isAuthenticated, currentUser, isLoading, navigate, hasNavigated]);
 
+  // Show loading only while auth is initializing
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nexed-500"></div>
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nexed-500"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the landing page if user is authenticated (they should be redirected)
+  if (isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nexed-500"></div>
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
       </div>
     );
   }
@@ -149,7 +177,7 @@ const Index = () => {
               <div className="space-y-8">
                 <h3 className="text-2xl font-bold text-center text-nexed-700 mb-8">For DSOs</h3>
                 <FeatureCard
-                  icon={<User size={32} className="text-nexed-600" />}
+                  icon={<GraduationCap size={32} className="text-nexed-600" />}
                   title="Student Management Dashboard"
                   description="Efficiently track and manage all your international students in one centralized dashboard."
                 />
