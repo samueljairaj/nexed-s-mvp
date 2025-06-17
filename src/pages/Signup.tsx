@@ -7,16 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle, GraduationCap, Building2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 
 const Signup = () => {
   const { signup, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [userType, setUserType] = useState<"student" | "dso">("student");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -24,10 +22,6 @@ const Signup = () => {
     password: "",
     confirmPassword: "",
     acceptTerms: false,
-    // DSO fields
-    universityName: "",
-    universityCountry: "United States",
-    sevisId: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -50,13 +44,6 @@ const Signup = () => {
     if (strength < 50) return "Weak";
     if (strength < 75) return "Good";
     return "Strong";
-  };
-
-  const getPasswordStrengthColor = (strength: number) => {
-    if (strength < 25) return "bg-red-500";
-    if (strength < 50) return "bg-orange-500";
-    if (strength < 75) return "bg-yellow-500";
-    return "bg-green-500";
   };
 
   const validateForm = () => {
@@ -92,19 +79,6 @@ const Signup = () => {
       newErrors.acceptTerms = "You must accept the terms and conditions";
     }
     
-    // DSO-specific validation
-    if (userType === "dso") {
-      if (!formData.universityName.trim()) {
-        newErrors.universityName = "University name is required";
-      }
-      if (!formData.universityCountry.trim()) {
-        newErrors.universityCountry = "University country is required";
-      }
-      if (!formData.sevisId.trim()) {
-        newErrors.sevisId = "SEVIS School Code is required";
-      }
-    }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -118,13 +92,7 @@ const Signup = () => {
     setErrors({});
     
     try {
-      const universityInfo = userType === "dso" ? {
-        universityName: formData.universityName,
-        universityCountry: formData.universityCountry,
-        sevisId: formData.sevisId
-      } : undefined;
-
-      await signup(formData.email, formData.password, userType, universityInfo);
+      await signup(formData.email, formData.password, "student");
       toast.success("Account created successfully! Please check your email for verification.");
       navigate("/verify-email", { state: { email: formData.email } });
     } catch (error: any) {
@@ -178,7 +146,12 @@ const Signup = () => {
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-nexed-100 rounded-full">
+                <GraduationCap className="h-8 w-8 text-nexed-600" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold">Create your student account</CardTitle>
             <CardDescription>
               Join neXed to manage your visa compliance journey
             </CardDescription>
@@ -191,20 +164,6 @@ const Signup = () => {
                   <AlertDescription>{errors.submit}</AlertDescription>
                 </Alert>
               )}
-
-              {/* User Type Selection */}
-              <Tabs value={userType} onValueChange={(value) => setUserType(value as "student" | "dso")}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="student" className="flex items-center gap-2">
-                    <GraduationCap size={16} />
-                    <span>Student</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="dso" className="flex items-center gap-2">
-                    <Building2 size={16} />
-                    <span>DSO</span>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
 
               {/* Personal Info */}
               <div className="grid grid-cols-2 gap-4">
@@ -237,55 +196,6 @@ const Signup = () => {
                   )}
                 </div>
               </div>
-
-              {/* DSO University Info */}
-              {userType === "dso" && (
-                <div className="space-y-4 border rounded-md p-4 bg-blue-50">
-                  <h3 className="font-medium text-nexed-700">University Information</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="universityName">University Name</Label>
-                    <Input
-                      id="universityName"
-                      value={formData.universityName}
-                      onChange={(e) => handleInputChange("universityName", e.target.value)}
-                      placeholder="University of California"
-                      className={errors.universityName ? "border-red-500" : ""}
-                      disabled={isSubmitting}
-                    />
-                    {errors.universityName && (
-                      <p className="text-sm text-red-600">{errors.universityName}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="universityCountry">Country</Label>
-                    <Input
-                      id="universityCountry"
-                      value={formData.universityCountry}
-                      onChange={(e) => handleInputChange("universityCountry", e.target.value)}
-                      placeholder="United States"
-                      className={errors.universityCountry ? "border-red-500" : ""}
-                      disabled={isSubmitting}
-                    />
-                    {errors.universityCountry && (
-                      <p className="text-sm text-red-600">{errors.universityCountry}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sevisId">SEVIS School Code</Label>
-                    <Input
-                      id="sevisId"
-                      value={formData.sevisId}
-                      onChange={(e) => handleInputChange("sevisId", e.target.value)}
-                      placeholder="e.g. ABC123456789"
-                      className={errors.sevisId ? "border-red-500" : ""}
-                      disabled={isSubmitting}
-                    />
-                    {errors.sevisId && (
-                      <p className="text-sm text-red-600">{errors.sevisId}</p>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* Email */}
               <div className="space-y-2">
@@ -410,7 +320,7 @@ const Signup = () => {
                     Creating account...
                   </>
                 ) : (
-                  `Create ${userType === "dso" ? "DSO" : "Student"} Account`
+                  "Create Student Account"
                 )}
               </Button>
             </form>
