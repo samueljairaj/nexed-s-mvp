@@ -1,8 +1,7 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
 import { 
-  Calendar, ArrowRight, Clock, AlertTriangle, 
+  Calendar, Clock, AlertTriangle, 
   FileCheck, CheckCircle, Calendar as CalendarIcon,
   Shield
 } from "lucide-react";
@@ -98,11 +97,6 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
             Compliance Center
           </CardTitle>
         </div>
-        <Button asChild variant="ghost" size="icon" className="rounded-full text-nexed-700 hover:bg-nexed-50 hover:text-nexed-800">
-          <Link to="/app/compliance">
-            <ArrowRight size={16} />
-          </Link>
-        </Button>
       </CardHeader>
       
       <CardContent className="p-4">
@@ -214,10 +208,10 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
         </Tabs>
         
         <Button asChild variant="default" size="sm" className="w-full mt-4 bg-nexed-600 hover:bg-nexed-700">
-          <Link to="/app/compliance" className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 cursor-not-allowed opacity-50">
             <CheckCircle size={16} />
-            View Full Compliance Hub
-          </Link>
+            <span>More Compliance Features Coming Soon</span>
+          </div>
         </Button>
       </CardContent>
     </Card>

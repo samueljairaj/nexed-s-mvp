@@ -17,6 +17,7 @@ import {
   Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FeatureFlag } from "@/components/common/FeatureFlag";
 
 export const AppLayout = () => {
   const { currentUser, logout, isAuthenticated, isDSO, isAdmin } = useAuth();
@@ -31,28 +32,42 @@ export const AppLayout = () => {
     // Items common to all users
     const commonItems = [
       { to: "/app/profile", label: "Profile", icon: <User size={20} /> },
-      { to: "/app/settings", label: "Settings", icon: <Settings size={20} /> },
     ];
 
-    // DSO-specific items
+    // Add settings only if basic settings are enabled
+    if (true) { // Keep basic settings for now
+      commonItems.push({ to: "/app/settings", label: "Settings", icon: <Settings size={20} /> });
+    }
+
+    // DSO-specific items (disabled for MVP)
     if (isDSO) {
       return [
         { to: "/app/dso-dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
         { to: "/app/dso-profile", label: "DSO Profile", icon: <Building2 size={20} /> },
-        { to: "/app/compliance", label: "Compliance", icon: <FileCheck size={20} /> },
         { to: "/app/documents", label: "Documents", icon: <FolderArchive size={20} /> },
         ...commonItems
       ];
     }
 
-    // Student-specific items
-    return [
+    // Student-specific items with feature flags
+    const studentItems = [
       { to: "/app/dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
-      { to: "/app/compliance", label: "Compliance", icon: <FileCheck size={20} /> },
       { to: "/app/documents", label: "Documents", icon: <FolderArchive size={20} /> },
-      { to: "/app/assistant", label: "Assistant", icon: <MessageCircle size={20} /> },
-      ...commonItems
     ];
+
+    // Add compliance only if feature is enabled
+    // Temporarily commented out for MVP
+    // if (isFeatureEnabled('COMPLIANCE_HUB')) {
+    //   studentItems.push({ to: "/app/compliance", label: "Compliance", icon: <FileCheck size={20} /> });
+    // }
+
+    // Add assistant only if feature is enabled  
+    // Temporarily commented out for MVP
+    // if (isFeatureEnabled('AI_ASSISTANT')) {
+    //   studentItems.push({ to: "/app/assistant", label: "Assistant", icon: <MessageCircle size={20} /> });
+    // }
+
+    return [...studentItems, ...commonItems];
   };
 
   const navItems = getNavItems();
