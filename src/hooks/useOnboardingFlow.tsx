@@ -17,7 +17,7 @@ import type {
 type DatabaseVisaType = "F1" | "OPT" | "H1B" | "Other";
 
 export function useOnboardingFlow() {
-  const { currentUser, updateProfile, completeOnboarding, isDSO } = useAuth();
+  const { currentUser, updateProfile, completeOnboarding, isDSO, signup } = useAuth();
   const navigate = useNavigate();
   
   // State for onboarding
@@ -73,10 +73,34 @@ export function useOnboardingFlow() {
   // Form submission handlers
   const handleAccountCreation = useCallback(async (data: AccountCreationFormValues) => {
     console.log("Handling account creation", data);
-    setFormData(prev => ({ ...prev, account: data }));
-    goToNextStep();
-    return true;
-  }, [goToNextStep]);
+    setIsSubmitting(true);
+    
+    try {
+      // Actually sign up the user  
+      await signup(data.email, data.password);
+      
+      // Store form data
+      setFormData(prev => ({ ...prev, account: data }));
+      
+      // Navigate to email verification page
+      navigate('/verify-email', { 
+        replace: true,
+        state: { 
+          email: data.email,
+          continueOnboarding: true 
+        }
+      });
+      
+      toast.success("Account created! Please check your email to verify your account.");
+      return true;
+    } catch (error: any) {
+      console.error("Account creation error:", error);
+      toast.error(`Failed to create account: ${error.message}`);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [navigate, setIsSubmitting, signup]);
 
   const handlePersonalFormSubmit = useCallback(async (data: PersonalInfoFormValues) => {
     setIsSubmitting(true);

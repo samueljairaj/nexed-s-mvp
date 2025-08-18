@@ -226,15 +226,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const updateProfile = async (updates: Partial<User>) => {
-    if (!currentUser) throw new Error("No user logged in");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("No user authenticated");
     
     try {
       // Map camelCase to snake_case for database
-      const dbUpdates: Record<string, any> = {};
+      const dbUpdates: Record<string, any> = {
+        id: user.id, // Always include id for upsert
+        email: user.email // Include email from auth
+      };
       
       // Map common fields
       if (updates.name !== undefined) dbUpdates.name = updates.name;
-      if (updates.email !== undefined) dbUpdates.email = updates.email;
       if (updates.country !== undefined) dbUpdates.country = updates.country;
       if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
       if (updates.address !== undefined) dbUpdates.address = updates.address;
@@ -267,16 +270,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (updates.unemploymentDays !== undefined) dbUpdates.unemployment_days = updates.unemploymentDays;
       if (updates.eVerifyNumber !== undefined) dbUpdates.e_verify_number = updates.eVerifyNumber;
 
+      // Use upsert instead of update to handle profile creation
       const { error } = await supabase
         .from('profiles')
-        .update(dbUpdates)
-        .eq('id', currentUser.id);
+        .upsert(dbUpdates as any, { 
+          onConflict: 'id' 
+        });
 
       if (error) throw error;
 
       // Update local state
       setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
-      toast.success("Profile updated successfully");
+      console.log("Profile updated successfully");
     } catch (error: any) {
       console.error("Profile update error:", error);
       toast.error(`Failed to update profile: ${error.message}`);

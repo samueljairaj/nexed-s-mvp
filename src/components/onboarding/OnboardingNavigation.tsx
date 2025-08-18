@@ -44,7 +44,7 @@ export function OnboardingNavigation({
         onClick={isLastStep ? handleNextClick : undefined}
         disabled={isSubmitting}
         className="flex items-center gap-2 bg-nexed-500 hover:bg-nexed-600 text-white"
-        form={!isLastStep ? formId : undefined}
+        form={isLastStep ? undefined : formId}
       >
         {isSubmitting ? (
           <>

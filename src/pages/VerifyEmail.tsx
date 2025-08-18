@@ -1,188 +1,105 @@
-
-import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Mail, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { Mail, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const VerifyEmail = () => {
-  const { currentUser } = useAuth();
-  const location = useLocation();
+  const { currentUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isResending, setIsResending] = useState(false);
-  const [resendCount, setResendCount] = useState(0);
-  const [cooldownTime, setCooldownTime] = useState(0);
-  const [isVerified, setIsVerified] = useState(false);
   
-  const email = location.state?.email || currentUser?.email || "";
+  const email = location.state?.email || currentUser?.email;
+  const continueOnboarding = location.state?.continueOnboarding;
 
   useEffect(() => {
-    // Check if user is already verified
-    if (currentUser && !isVerified) {
-      checkVerificationStatus();
-    }
-  }, [currentUser]);
-
-  useEffect(() => {
-    // Cooldown timer
-    if (cooldownTime > 0) {
-      const timer = setTimeout(() => setCooldownTime(cooldownTime - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [cooldownTime]);
-
-  const checkVerificationStatus = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email_confirmed_at) {
-        setIsVerified(true);
-        toast.success("Email verified successfully!");
-        setTimeout(() => {
-          navigate("/app/dashboard");
-        }, 2000);
+    // If user is already verified and authenticated, redirect appropriately
+    if (isAuthenticated && currentUser) {
+      if (continueOnboarding) {
+        // Continue onboarding flow
+        navigate('/onboarding', { replace: true });
+      } else if (currentUser.onboardingComplete) {
+        // Go to dashboard
+        const targetDashboard = currentUser.role === 'dso' ? '/app/dso-dashboard' : '/app/dashboard';
+        navigate(targetDashboard, { replace: true });
+      } else {
+        // Resume onboarding
+        navigate('/onboarding', { replace: true });
       }
-    } catch (error) {
-      console.error("Error checking verification status:", error);
     }
-  };
+  }, [isAuthenticated, currentUser, continueOnboarding, navigate]);
 
-  const handleResendVerification = async () => {
-    if (!email || cooldownTime > 0) return;
+  const handleResendEmail = async () => {
+    if (!email) return;
     
     setIsResending(true);
-    
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/app/dashboard`
+          emailRedirectTo: `${window.location.origin}/verify-email`
         }
       });
-      
+
       if (error) throw error;
-      
-      setResendCount(prev => prev + 1);
-      setCooldownTime(60); // 60 second cooldown
-      toast.success("Verification email sent! Please check your inbox.");
+      toast.success("Verification email sent!");
     } catch (error: any) {
-      console.error("Error resending verification:", error);
-      toast.error("Failed to resend verification email. Please try again.");
+      console.error("Error resending email:", error);
+      toast.error(`Failed to resend email: ${error.message}`);
     } finally {
       setIsResending(false);
     }
   };
 
-  if (isVerified) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <header className="bg-white shadow-sm">
-          <div className="container mx-auto px-4 py-4 flex justify-center items-center">
-            <Link to="/" className="flex items-center">
-              <div className="h-8 w-8 bg-nexed-500 rounded-md flex items-center justify-center">
-                <div className="h-5 w-5 rounded-sm bg-white" />
-              </div>
-              <span className="ml-2 text-xl font-bold text-gray-900">neXed</span>
-            </Link>
-          </div>
-        </header>
-
-        <main className="flex-1 flex items-center justify-center px-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-green-700">Email Verified!</CardTitle>
-              <CardDescription>
-                Your email has been successfully verified. Redirecting you to your dashboard...
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </main>
-      </div>
-    );
-  }
+  const handleBackToLogin = () => {
+    navigate('/', { replace: true });
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-center items-center">
-          <Link to="/" className="flex items-center">
-            <div className="h-8 w-8 bg-nexed-500 rounded-md flex items-center justify-center">
-              <div className="h-5 w-5 rounded-sm bg-white" />
-            </div>
-            <span className="ml-2 text-xl font-bold text-gray-900">neXed</span>
-          </Link>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-              <Mail className="h-8 w-8 text-nexed-600" />
-            </div>
-            <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
-            <CardDescription>
-              We've sent a verification link to{" "}
-              <span className="font-medium text-gray-900">{email}</span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Click the verification link in your email to activate your account.
-                If you don't see the email, check your spam folder.
-              </AlertDescription>
-            </Alert>
-
-            <div className="space-y-4">
-              <Button
-                onClick={handleResendVerification}
-                variant="outline"
-                className="w-full"
-                disabled={isResending || cooldownTime > 0}
-              >
-                {isResending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : cooldownTime > 0 ? (
-                  `Resend in ${cooldownTime}s`
-                ) : (
-                  `Resend verification email${resendCount > 0 ? ` (${resendCount})` : ""}`
-                )}
-              </Button>
-
-              <Button
-                onClick={checkVerificationStatus}
-                variant="ghost"
-                className="w-full"
-              >
-                I've verified my email
-              </Button>
-            </div>
-
-            <div className="text-center pt-4 border-t">
-              <p className="text-sm text-gray-600">
-                Wrong email address?{" "}
-                <Link to="/signup" className="text-nexed-600 hover:text-nexed-700">
-                  Sign up again
-                </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+            <Mail className="h-6 w-6 text-primary" />
+          </div>
+          <CardTitle className="text-2xl">Check your email</CardTitle>
+          <CardDescription>
+            We've sent a verification link to {email || "your email address"}
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          <div className="text-center text-sm text-muted-foreground">
+            <p>Click the link in the email to verify your account and continue with onboarding.</p>
+            <p className="mt-2">Didn't receive the email? Check your spam folder.</p>
+          </div>
+          
+          <div className="space-y-2">
+            <Button 
+              onClick={handleResendEmail}
+              disabled={isResending || !email}
+              className="w-full"
+              variant="outline"
+            >
+              {isResending ? "Sending..." : "Resend verification email"}
+            </Button>
+            
+            <Button 
+              onClick={handleBackToLogin}
+              variant="ghost"
+              className="w-full"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to login
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,8 +1,12 @@
 import { z } from "zod";
 
 export interface AccountCreationFormValues {
+  firstName: string;
+  lastName: string;
   email: string;
-  name: string;
+  password: string;
+  confirmPassword: string;
+  acceptTerms: boolean;
 }
 
 export interface PersonalInfoFormValues {
