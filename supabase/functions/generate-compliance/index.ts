@@ -167,7 +167,7 @@ async function enhanceChecklistWithAI(baselineTasks: AITask[], userData: UserDat
     }
     
     // Ensure every task has the required properties
-    return enhancedTasks.map((task: any, index: number) => {
+    return enhancedTasks.map((task: Partial<AITask>, index: number) => {
       // Find matching baseline task if it exists
       const baselineTask = baselineTasks.find(b => b.id === task.id) || 
                            (index < baselineTasks.length ? baselineTasks[index] : null);

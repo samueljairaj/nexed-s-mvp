@@ -24,12 +24,12 @@ import {
 interface EducationalInfoStepProps {
   defaultValues: {
     university: string;
-    programDegree: any;
+    programDegree: string;
     fieldOfStudy: string;
     programStartDate: Date | null;
     programEndDate: Date | null;
   };
-  onSubmit: (data: any) => void;
+  onSubmit: (data: { university: string; programDegree: string; fieldOfStudy: string; programStartDate: Date | null; programEndDate: Date | null }) => void;
   isF1OrJ1: boolean;
 }
 

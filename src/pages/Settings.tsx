@@ -39,7 +39,7 @@ const Settings = () => {
     confirmPassword: "",
   });
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = (key: string, value: string | boolean | number) => {
     setSettings((prev) => ({
       ...prev,
       [key]: value,
@@ -72,8 +72,8 @@ const Settings = () => {
         newPassword: "",
         confirmPassword: "",
       });
-    } catch (error: any) {
-      toast.error(`Failed to update password: ${error.message}`);
+    } catch (error: Error | unknown) {
+      toast.error(`Failed to update password: ${(error as Error).message}`);
     } finally {
       setIsLoading(false);
     }

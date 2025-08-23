@@ -93,9 +93,9 @@ export function useOnboardingFlow() {
       
       toast.success("Account created! Please check your email to verify your account.");
       return true;
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error("Account creation error:", error);
-      toast.error(`Failed to create account: ${error.message}`);
+      toast.error(`Failed to create account: ${(error as Error).message}`);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -106,7 +106,7 @@ export function useOnboardingFlow() {
     setIsSubmitting(true);
     try {
       // Format dates for database
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | boolean | undefined> = {
         country: data.country,
         phone: data.phoneNumber,
         passportNumber: data.passportNumber,
@@ -140,7 +140,7 @@ export function useOnboardingFlow() {
     setIsSubmitting(true);
     try {
       // Prepare date fields for database
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | boolean | undefined> = {
         visaType: data.visaType,
       };
       
@@ -171,7 +171,7 @@ export function useOnboardingFlow() {
     setIsSubmitting(true);
     try {
       // Prepare date fields for database
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | boolean | undefined> = {
         university: data.university,
         degreeLevel: data.degreeLevel,
         fieldOfStudy: data.fieldOfStudy,
@@ -200,7 +200,7 @@ export function useOnboardingFlow() {
   const handleEmploymentFormSubmit = useCallback(async (data: EmploymentInfoFormValues) => {
     setIsSubmitting(true);
     try {
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | boolean | undefined> = {
         employment_status: data.employmentStatus,
       };
       
@@ -372,7 +372,7 @@ export function useOnboardingFlow() {
   const isOptOrCpt = false;
   const isStemOpt = false;
 
-  const handleVisaTypeChange = useCallback((type: any) => {
+  const handleVisaTypeChange = useCallback((type: "F1" | "J1" | "H1B" | "Other") => {
     setFormData(prev => ({
       ...prev,
       visa: {

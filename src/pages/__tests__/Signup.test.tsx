@@ -30,8 +30,8 @@ const toastSuccess = vi.fn();
 const toastError = vi.fn();
 vi.mock("sonner", () => ({
   toast: {
-    success: (...args: any[]) => toastSuccess(...args),
-    error: (...args: any[]) => toastError(...args),
+    success: (...args: unknown[]) => toastSuccess(...args),
+    error: (...args: unknown[]) => toastError(...args),
   },
 }));
 
@@ -39,7 +39,7 @@ const signInWithOAuthMock = vi.fn();
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: {
-      signInWithOAuth: (...args: any[]) => signInWithOAuthMock(...args),
+      signInWithOAuth: (...args: unknown[]) => signInWithOAuthMock(...args),
     },
   },
 }));

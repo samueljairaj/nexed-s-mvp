@@ -6,22 +6,29 @@ import { AcademicInfoStep, AcademicInfoStepRef } from "./AcademicInfoStep";
 import { EmploymentStep } from "./EmploymentStep";
 import { CompletionStep } from "./CompletionStep";
 import { useAuth } from "@/contexts/AuthContext";
+import { 
+  AccountCreationFormValues, 
+  PersonalInfoFormValues, 
+  VisaStatusFormValues, 
+  AcademicInfoFormValues, 
+  EmploymentInfoFormValues 
+} from "@/types/onboarding";
 
 interface OnboardingStepContentProps {
   currentStep: number;
-  accountData: any;
-  personalData: any;
-  visaData: any;
-  academicData: any;
-  employmentData: any;
+  accountData: AccountCreationFormValues | null;
+  personalData: PersonalInfoFormValues | null;
+  visaData: VisaStatusFormValues | null;
+  academicData: AcademicInfoFormValues | null;
+  employmentData: EmploymentInfoFormValues | null;
   isSubmitting: boolean;
-  currentUser: any;
-  handleAccountCreation: (data: any) => Promise<boolean>;
-  handlePersonalInfo: (data: any) => Promise<boolean>;
-  handleVisaStatus: (data: any) => Promise<boolean>;
-  handleVisaTypeChange: (type: any) => void;
-  handleAcademicInfo: (data: any) => Promise<boolean>;
-  handleEmploymentInfo: (data: any) => Promise<boolean>;
+  currentUser: ReturnType<typeof useAuth>['currentUser'];
+  handleAccountCreation: (data: AccountCreationFormValues) => Promise<boolean>;
+  handlePersonalInfo: (data: PersonalInfoFormValues) => Promise<boolean>;
+  handleVisaStatus: (data: VisaStatusFormValues) => Promise<boolean>;
+  handleVisaTypeChange: (type: string) => void;
+  handleAcademicInfo: (data: AcademicInfoFormValues) => Promise<boolean>;
+  handleEmploymentInfo: (data: EmploymentInfoFormValues) => Promise<boolean>;
   handleEmploymentStatusChange: (status: string) => void;
   isF1OrJ1: boolean;
   isEmployed: boolean;
