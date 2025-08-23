@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -102,43 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const profileFetchPromiseRef = useRef<Promise<void> | null>(null);
 
-  // Debounced profile fetch to prevent rapid-fire calls
-  const debouncedFetchProfile = (userId: string): Promise<void> => {
-    return new Promise((resolve) => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-      
-      debounceTimeoutRef.current = setTimeout(async () => {
-        await fetchUserProfile(userId);
-        resolve();
-      }, 300);
-    });
-  };
-
-  useEffect(() => {
-    const session = supabase.auth.getSession()
-    console.log("Initial session:", session);
-
-    const initializeAuth = async () => {
-      setIsLoading(true);
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await fetchUserProfile(user.id);
-        }
-      } catch (error) {
-        console.error("Authentication initialization error:", error);
-      } finally {
-        setIsInitialized(true);
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-  }, [navigate]);
-
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = useCallback(async (userId: string) => {
     // Prevent duplicate fetches
     if (fetchInProgressRef.current || lastFetchedUserIdRef.current === userId) {
       console.log("Skipping duplicate profile fetch for user:", userId);
@@ -223,7 +187,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       fetchInProgressRef.current = false;
       setIsLoading(false);
     }
-  };
+  }, [navigate]);
+
+  // Debounced profile fetch to prevent rapid-fire calls
+  const debouncedFetchProfile = useCallback((userId: string): Promise<void> => {
+    return new Promise((resolve) => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      
+      debounceTimeoutRef.current = setTimeout(async () => {
+        await fetchUserProfile(userId);
+        resolve();
+      }, 300);
+    });
+  }, [fetchUserProfile]);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await fetchUserProfile(user.id);
+        }
+      } catch (error) {
+        console.error("Authentication initialization error:", error);
+      } finally {
+        setIsInitialized(true);
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, [navigate, fetchUserProfile]);
 
   const updateProfile = async (updates: Partial<User>) => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -417,7 +413,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [currentUser]);
+  }, [currentUser, debouncedFetchProfile]);
 
   const value = {
     currentUser,

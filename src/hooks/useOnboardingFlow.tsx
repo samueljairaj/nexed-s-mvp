@@ -269,7 +269,7 @@ export function useOnboardingFlow() {
   };
 
   // Create personalized tasks based on visa type
-  const createPersonalizedTasks = async (userId: string, visaType: string) => {
+  const createPersonalizedTasks = useCallback(async (userId: string, visaType: string) => {
     try {
       const tasks = generateMockTasks(visaType);
       const normalizedVisaType = normalizeVisaType(visaType);
@@ -314,7 +314,7 @@ export function useOnboardingFlow() {
       console.error('Failed to create tasks:', error);
       return false;
     }
-  };
+  }, []);
 
   // Final onboarding completion
   const finishOnboarding = useCallback(async () => {
@@ -357,7 +357,7 @@ export function useOnboardingFlow() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [completeOnboarding, currentUser, isDSO, navigate]);
+  }, [completeOnboarding, currentUser, isDSO, navigate, createPersonalizedTasks]);
 
   const calculateProgress = useCallback(() => {
     const totalSteps = 5;

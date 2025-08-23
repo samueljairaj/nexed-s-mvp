@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -128,10 +128,10 @@ export function useAIAssistant() {
     };
     
     loadMessages();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.name, currentUser?.visaType, saveMessageToDatabase]);
 
   // Save message to Supabase
-  const saveMessageToDatabase = async (message: Message) => {
+  const saveMessageToDatabase = useCallback(async (message: Message) => {
     if (!currentUser?.id) return;
     
     try {
@@ -151,7 +151,7 @@ export function useAIAssistant() {
     } catch (error) {
       console.error('Error saving message to database:', error);
     }
-  };
+  }, [currentUser?.id]);
 
   const sendMessage = async (prompt: string, messageHistory: Message[] = []) => {
     setIsLoading(true);

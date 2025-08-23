@@ -1,5 +1,5 @@
 
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, Dispatch, SetStateAction, useCallback } from "react";
 import { Document, DocumentCategory, DocumentFolder, DocumentVersion } from "@/types/document";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -183,7 +183,7 @@ export function useDocumentSync(
   }, [currentUser?.id, setDocuments]);
 
   // Load documents from Supabase
-  const syncDocuments = async () => {
+  const syncDocuments = useCallback(async () => {
     if (!currentUser?.id) {
       setIsLoading(false);
       return;
@@ -268,7 +268,7 @@ export function useDocumentSync(
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser?.id, setDocuments, setFolders]);
 
   // Process mock documents to add status based on expiry date
   const processMockDocuments = (docs: Document[]) => {
@@ -289,7 +289,7 @@ export function useDocumentSync(
   // Load documents on component mount
   useEffect(() => {
     syncDocuments();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, syncDocuments]);
 
   // Save document to Supabase
   const saveDocumentToDatabase = async (doc: Document) => {
