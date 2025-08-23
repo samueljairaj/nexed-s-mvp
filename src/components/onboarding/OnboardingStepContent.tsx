@@ -70,7 +70,7 @@ export const OnboardingStepContent = ({
   handleFinish,
   handleBackToLogin
 }: OnboardingStepContentProps) => {
-  if (process.env.NODE_ENV !== "production") {
+  if (import.meta.env.DEV) {
     // Use debug to reduce noise
     console.debug("OnboardingStepContent - currentStep:", currentStep);
     console.debug("OnboardingStepContent - isF1OrJ1:", isF1OrJ1);
@@ -90,7 +90,7 @@ export const OnboardingStepContent = ({
     employer: employmentData?.employerName || currentUser?.employerName || currentUser?.employer || "", 
   };
   
-  if (process.env.NODE_ENV !== "production") {
+  if (import.meta.env.DEV) {
     console.debug("User data prepared for completion checklist:", userData);
   }
 
