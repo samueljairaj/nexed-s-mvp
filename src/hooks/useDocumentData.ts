@@ -11,15 +11,7 @@ export function useDocumentData() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!currentUser?.id) {
-      setIsLoading(false);
-      return;
-    }
-    fetchDocuments();
-  }, [currentUser?.id]);
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     if (!currentUser?.id) return;
     try {
       setIsLoading(true);
@@ -40,7 +32,15 @@ export function useDocumentData() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (!currentUser?.id) {
+      setIsLoading(false);
+      return;
+    }
+    fetchDocuments();
+  }, [currentUser?.id, fetchDocuments]);
 
   const addDocument = async (file: File, category: DocumentCategory, expiryDate?: string) => {
     if (!currentUser?.id) return null;

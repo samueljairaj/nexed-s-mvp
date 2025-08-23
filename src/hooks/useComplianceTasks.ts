@@ -154,7 +154,7 @@ export const useComplianceTasks = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser?.id, subscriptionSetup]);
+  }, [currentUser?.id, subscriptionSetup, realtimeSubscription]);
 
   // Cache tasks to localStorage
   const cacheTasksToLocalStorage = useCallback((tasksToCache: Task[]) => {
@@ -243,7 +243,7 @@ export const useComplianceTasks = () => {
   }, [currentUser?.id, currentUser?.visaType, loadTasksFromDatabase, saveTasksToDatabase, cacheTasksToLocalStorage]);
 
   // New function to save tasks to the database with proper date handling
-  const saveTasksToDatabase = async (tasksToSave: Task[]) => {
+  const saveTasksToDatabase = useCallback(async (tasksToSave: Task[]) => {
     if (!currentUser?.id) return;
     
     try {
@@ -290,10 +290,10 @@ export const useComplianceTasks = () => {
       console.error('Failed to save tasks to database:', error);
       // Continue with local storage as fallback
     }
-  };
+  }, [currentUser]);
 
   // Function to load tasks from the database
-  const loadTasksFromDatabase = async () => {
+  const loadTasksFromDatabase = useCallback(async () => {
     if (!currentUser?.id) return null;
     
     try {
@@ -331,7 +331,7 @@ export const useComplianceTasks = () => {
       console.error('Failed to load tasks from database:', error);
       return null;
     }
-  };
+  }, [currentUser?.id]);
 
   // Generate AI tasks with proper date handling
   const generateTasksWithAI = async () => {
@@ -379,7 +379,7 @@ export const useComplianceTasks = () => {
   };
 
   // Update task in database when toggled
-  const updateTaskInDatabase = async (taskId: string, isCompleted: boolean) => {
+  const updateTaskInDatabase = useCallback(async (taskId: string, isCompleted: boolean) => {
     if (!currentUser?.id) return;
     
     try {
@@ -395,7 +395,7 @@ export const useComplianceTasks = () => {
     } catch (error) {
       console.error('Failed to update task in database:', error);
     }
-  };
+  }, [currentUser?.id]);
 
   // Toggle task status (completed/incomplete)
   const toggleTaskStatus = useCallback((taskId: string) => {
@@ -416,10 +416,10 @@ export const useComplianceTasks = () => {
       
       return updatedTasks;
     });
-  }, [currentUser?.id]);
+  }, [cacheTasksToLocalStorage, updateTaskInDatabase]);
 
   // Add a custom task to database and local state
-  const addCustomTaskToDatabase = async (task: Task) => {
+  const addCustomTaskToDatabase = useCallback(async (task: Task) => {
     if (!currentUser?.id) return;
     
     try {
@@ -458,7 +458,7 @@ export const useComplianceTasks = () => {
       console.error('Failed to add custom task to database:', error);
       return task;
     }
-  };
+  }, [currentUser]);
 
   // Add a custom task or reminder
   const addCustomTask = useCallback(async (taskInput: CustomTaskInput) => {
@@ -499,7 +499,7 @@ export const useComplianceTasks = () => {
       toast.success("Added new reminder");
       return newTask;
     }
-  }, [currentUser?.id, addCustomTaskToDatabase, cacheTasksToLocalStorage]);
+  }, [addCustomTaskToDatabase, cacheTasksToLocalStorage]);
 
   // Toggle category filter
   const toggleFilter = useCallback((category: DocumentCategory) => {

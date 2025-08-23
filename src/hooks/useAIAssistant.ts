@@ -78,7 +78,7 @@ export function useAIAssistant() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [currentUser?.id]);
+  }, [currentUser?.id, realtimeSubscription]);
 
   // Load message history from Supabase
   useEffect(() => {
@@ -128,7 +128,7 @@ export function useAIAssistant() {
     };
     
     loadMessages();
-  }, [currentUser?.id, currentUser?.name, currentUser?.visaType, saveMessageToDatabase]);
+  }, [currentUser?.id, currentUser?.name, currentUser?.visaType, saveMessageToDatabase, messages.length]);
 
   // Save message to Supabase
   const saveMessageToDatabase = useCallback(async (message: Message) => {

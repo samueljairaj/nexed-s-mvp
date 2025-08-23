@@ -181,7 +181,7 @@ export function useDocumentSync(
       documentChannel.unsubscribe();
       versionChannel.unsubscribe();
     };
-  }, [currentUser?.id, setDocuments]);
+  }, [currentUser?.id, setDocuments, realtimeSubscription]);
 
   // Load documents from Supabase
   const syncDocuments = useCallback(async () => {
@@ -269,7 +269,7 @@ export function useDocumentSync(
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser?.id, setDocuments, setFolders]);
+  }, [currentUser?.id, setDocuments, setFolders, setIsLoading]);
 
   // Process mock documents to add status based on expiry date
   const processMockDocuments = (docs: Document[]) => {

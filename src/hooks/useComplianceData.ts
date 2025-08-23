@@ -11,15 +11,7 @@ export function useComplianceData() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!currentUser?.id) {
-      setIsLoading(false);
-      return;
-    }
-    fetchTasks();
-  }, [currentUser?.id]);
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     if (!currentUser?.id) return;
     try {
       setIsLoading(true);
@@ -40,7 +32,15 @@ export function useComplianceData() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (!currentUser?.id) {
+      setIsLoading(false);
+      return;
+    }
+    fetchTasks();
+  }, [currentUser?.id, fetchTasks]);
 
   const toggleTaskStatus = async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
