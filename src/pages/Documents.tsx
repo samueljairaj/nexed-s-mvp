@@ -186,11 +186,15 @@ const Documents = () => {
       case "name":
         return a.name.localeCompare(b.name);
       case "status": {
-        // Sort by status priority: expired, expiring, valid, null
-        const statusA = a.status || "valid";
-        const statusB = b.status || "valid";
-        const statusOrder = { "expired": 0, "expiring": 1, "valid": 2 };
-        return (statusOrder[statusA] || 3) - (statusOrder[statusB] || 3);
+        // Sort by status priority: expired, expiring, valid, unknown
+        const statusA = a.status ?? "valid";
+        const statusB = b.status ?? "valid";
+        const statusOrder = { expired: 0, expiring: 1, valid: 2 } as const;
+        const weightA =
+          statusOrder[statusA as keyof typeof statusOrder] ?? 3;
+        const weightB =
+          statusOrder[statusB as keyof typeof statusOrder] ?? 3;
+        return weightA - weightB;
       }
       case "date":
       default:

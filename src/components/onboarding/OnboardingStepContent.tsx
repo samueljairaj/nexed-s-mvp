@@ -5,7 +5,7 @@ import { VisaStatusStep } from "./VisaStatusStep";
 import { AcademicInfoStep, AcademicInfoStepRef } from "./AcademicInfoStep";
 import { EmploymentStep } from "./EmploymentStep";
 import { CompletionStep } from "./CompletionStep";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-hooks";
 import { 
   AccountCreationFormValues, 
   PersonalInfoFormValues, 
@@ -13,6 +13,59 @@ import {
   AcademicInfoFormValues, 
   EmploymentInfoFormValues 
 } from "@/types/onboarding";
+
+// Define User type to avoid circular dependency
+interface User {
+  id: string;
+  email: string;
+  user_type: "student" | "dso";
+  onboardingComplete: boolean;
+  role?: "student" | "dso";
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  country?: string;
+  currentCountry?: string;
+  phone?: string;
+  address?: string;
+  dateOfBirth?: string;
+  passportNumber?: string;
+  passportExpiryDate?: string;
+  nationality?: string;
+  visaType?: string;
+  visaStatus?: string;
+  visa_expiry_date?: string;
+  usEntryDate?: string;
+  i94Number?: string;
+  sevisId?: string;
+  university?: string;
+  universityId?: string;
+  university_id?: string;
+  universityName?: string;
+  universityCountry?: string;
+  fieldOfStudy?: string;
+  degreeLevel?: string;
+  courseStartDate?: string;
+  graduationDate?: string;
+  isSTEM?: boolean;
+  dsoContact?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
+  employmentStatus?: string;
+  employerName?: string;
+  employer?: string;
+  jobTitle?: string;
+  employmentStartDate?: string;
+  employmentEndDate?: string;
+  authType?: string;
+  authStartDate?: string;
+  authEndDate?: string;
+  eadNumber?: string;
+  unemploymentDays?: string;
+  eVerifyNumber?: string;
+}
 
 interface OnboardingStepContentProps {
   currentStep: number;
@@ -22,7 +75,7 @@ interface OnboardingStepContentProps {
   academicData: AcademicInfoFormValues | null;
   employmentData: EmploymentInfoFormValues | null;
   isSubmitting: boolean;
-  currentUser: ReturnType<typeof useAuth>['currentUser'];
+  currentUser: User | null;
   handleAccountCreation: (data: AccountCreationFormValues) => Promise<boolean>;
   handlePersonalInfo: (data: PersonalInfoFormValues) => Promise<boolean>;
   handleVisaStatus: (data: VisaStatusFormValues) => Promise<boolean>;

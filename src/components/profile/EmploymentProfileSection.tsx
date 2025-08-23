@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-hooks";
 import { toast } from "sonner";
 import { useEmploymentInfo } from "@/hooks/onboarding/useEmploymentInfo";
+import type { EmploymentInfoFormValues } from "@/types/onboarding";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format, parseISO } from "date-fns";
@@ -46,7 +47,23 @@ export function EmploymentProfileSection() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await handleEmploymentInfo(employmentData as { employmentStatus: string; employerName: string; jobTitle: string; employmentStartDate: Date | null; employmentEndDate: Date | null; isFieldRelated: boolean; optCptStartDate: Date | null; optCptEndDate: Date | null; eadNumber: string; stemEVerify: string; stemI983Date: Date | null });
+    const payload: EmploymentInfoFormValues = {
+      employmentStatus: employmentData.employmentStatus,
+      employerName: employmentData.employerName || "",
+      jobTitle: employmentData.jobTitle || "",
+      employmentStartDate: employmentData.employmentStartDate ?? null,
+      employmentEndDate: employmentData.employmentEndDate ?? null,
+      isFieldRelated: employmentData.isFieldRelated === "Yes",
+      // Map auth* -> optCpt* for compatibility with the form type
+      optCptStartDate: employmentData.authStartDate ?? null,
+      optCptEndDate: employmentData.authEndDate ?? null,
+      eadNumber: employmentData.eadNumber || "",
+      // Map eVerifyNumber -> stemEVerify
+      stemEVerify: employmentData.eVerifyNumber || "",
+      // Not collected here; set null or wire it up if available
+      stemI983Date: null,
+    };
+    const success = await handleEmploymentInfo(payload);
     if (success) {
       setIsEditing(false);
       toast.success("Employment information updated successfully");
