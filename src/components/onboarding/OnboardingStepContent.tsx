@@ -146,15 +146,3 @@ export const OnboardingStepContent = ({
 
   return renderStep();
 }
-
-// Add a method to get the ref for the current step
-export const getActiveStepRef = (currentStep: number, refs: {
-  academicStepRef: React.RefObject<AcademicInfoStepRef>
-}) => {
-  switch (currentStep) {
-    case 3:
-      return refs.academicStepRef;
-    default:
-      return null;
-  }
-};
