@@ -12,12 +12,12 @@ type FormItemContextValue = {
   id: string
 }
 
-const FormFieldContext = React.createContext<FormFieldContextValue>(
-  {} as FormFieldContextValue
+const FormFieldContext = React.createContext<FormFieldContextValue | undefined>(
+  undefined
 )
 
-const FormItemContext = React.createContext<FormItemContextValue>(
-  {} as FormItemContextValue
+const FormItemContext = React.createContext<FormItemContextValue | undefined>(
+  undefined
 )
 
 export const useFormField = () => {
@@ -25,20 +25,18 @@ export const useFormField = () => {
   const itemContext = React.useContext(FormItemContext)
   const { getFieldState, formState } = useFormContext()
 
-  const fieldState = getFieldState(fieldContext.name, formState)
-
-  if (!fieldContext) {
+  if (!fieldContext || !("name" in fieldContext) || !fieldContext.name) {
     throw new Error("useFormField should be used within <FormField>")
   }
-
-  const { id } = itemContext
+  const fieldState = getFieldState(fieldContext.name, formState)
+  const baseId = itemContext?.id ?? React.useId()
 
   return {
-    id,
+    id: baseId,
     name: fieldContext.name,
-    formItemId: `${id}-form-item`,
-    formDescriptionId: `${id}-form-item-description`,
-    formMessageId: `${id}-form-item-message`,
+    formItemId: `${baseId}-form-item`,
+    formDescriptionId: `${baseId}-form-item-description`,
+    formMessageId: `${baseId}-form-item-message`,
     ...fieldState,
   }
 }

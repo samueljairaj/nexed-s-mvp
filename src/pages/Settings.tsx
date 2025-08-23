@@ -72,8 +72,9 @@ const Settings = () => {
         newPassword: "",
         confirmPassword: "",
       });
-    } catch (error: Error | unknown) {
-      toast.error(`Failed to update password: ${(error as Error).message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to update password: ${message}`);
     } finally {
       setIsLoading(false);
     }

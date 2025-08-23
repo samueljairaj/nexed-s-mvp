@@ -93,9 +93,10 @@ export function useOnboardingFlow() {
       
       toast.success("Account created! Please check your email to verify your account.");
       return true;
-    } catch (error: Error | unknown) {
+    } catch (error: unknown) {
       console.error("Account creation error:", error);
-      toast.error(`Failed to create account: ${(error as Error).message}`);
+      const message = error instanceof Error ? error.message : "An unexpected error occurred";
+      toast.error(`Failed to create account: ${message}`);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -127,9 +128,10 @@ export function useOnboardingFlow() {
       setFormData(prev => ({ ...prev, personal: data }));
       goToNextStep();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error saving personal info:", error);
-      toast.error("Failed to save personal information");
+      const message = error instanceof Error ? error.message : "Failed to save personal information";
+      toast.error(message);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -158,9 +160,10 @@ export function useOnboardingFlow() {
       setFormData(prev => ({ ...prev, visa: data }));
       goToNextStep();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error saving visa info:", error);
-      toast.error("Failed to save visa information");
+      const message = error instanceof Error ? error.message : "Failed to save visa information";
+      toast.error(message);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -188,9 +191,10 @@ export function useOnboardingFlow() {
       setFormData(prev => ({ ...prev, academic: data }));
       goToNextStep();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error saving academic info:", error);
-      toast.error("Failed to save academic information");
+      const message = error instanceof Error ? error.message : "Failed to save academic information";
+      toast.error(message);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -251,9 +255,10 @@ export function useOnboardingFlow() {
       }));
       goToNextStep();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error saving employment info:", error);
-      toast.error("Failed to save employment information");
+      const message = error instanceof Error ? error.message : "Failed to save employment information";
+      toast.error(message);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -310,7 +315,7 @@ export function useOnboardingFlow() {
       }
       
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to create tasks:', error);
       return false;
     }
@@ -348,9 +353,10 @@ export function useOnboardingFlow() {
       });
       
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error completing onboarding:", error);
-      toast.error("Failed to complete onboarding");
+      const message = error instanceof Error ? error.message : "Failed to complete onboarding";
+      toast.error(message);
       
       localStorage.removeItem('onboarding_completion_in_progress');
       return false;

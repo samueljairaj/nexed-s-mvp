@@ -29,8 +29,9 @@ export function useAccountCreation() {
         });
         toast.success("Account created successfully!");
         return true;
-      } catch (error: Error | unknown) {
-        toast.error(`Account creation failed: ${(error as Error).message}`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "An unexpected error occurred";
+        toast.error(`Account creation failed: ${message}`);
         return false;
       } finally {
         setIsSubmitting(false);
@@ -43,8 +44,9 @@ export function useAccountCreation() {
           name: `${data.firstName} ${data.lastName}` 
         });
         return true;
-      } catch (error) {
-        toast.error("Failed to update profile");
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Failed to update profile";
+        toast.error(message);
         return false;
       } finally {
         setIsSubmitting(false);

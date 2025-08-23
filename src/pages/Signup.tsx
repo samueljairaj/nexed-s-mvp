@@ -117,16 +117,18 @@ const Signup = () => {
       await signup(formData.email, formData.password, "student");
       toast.success("Account created successfully! Please check your email for verification.");
       navigate("/verify-email", { state: { email: formData.email } });
-    } catch (error: Error | unknown) {
+    } catch (error: unknown) {
       console.error("Signup error:", error);
       
       let errorMessage = "Account creation failed. Please try again.";
-      if (error.message?.includes("User already registered")) {
-        errorMessage = "An account with this email already exists. Please try logging in instead.";
-      } else if (error.message?.includes("Password")) {
-        errorMessage = "Password does not meet security requirements.";
-      } else if (error.message?.includes("rate limit")) {
-        errorMessage = "Too many requests. Please wait a moment and try again.";
+      if (error instanceof Error) {
+        if (error.message?.includes("User already registered")) {
+          errorMessage = "An account with this email already exists. Please try logging in instead.";
+        } else if (error.message?.includes("Password")) {
+          errorMessage = "Password does not meet security requirements.";
+        } else if (error.message?.includes("rate limit")) {
+          errorMessage = "Too many requests. Please wait a moment and try again.";
+        }
       }
       
       setErrors({ submit: errorMessage });

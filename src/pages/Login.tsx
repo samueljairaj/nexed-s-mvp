@@ -52,17 +52,19 @@ const Login = () => {
       await login(formData.email, formData.password);
       toast.success("Successfully logged in!");
       navigate("/app/dashboard");
-    } catch (error: Error | unknown) {
+    } catch (error: unknown) {
       console.error("Login error:", error);
       
       // User-friendly error messages
       let errorMessage = "Login failed. Please try again.";
-      if (error.message?.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. Please check your credentials and try again.";
-      } else if (error.message?.includes("Email not confirmed")) {
-        errorMessage = "Please verify your email address before logging in.";
-      } else if (error.message?.includes("Too many requests")) {
-        errorMessage = "Too many login attempts. Please wait a moment and try again.";
+      if (error instanceof Error) {
+        if (error.message?.includes("Invalid login credentials")) {
+          errorMessage = "Invalid email or password. Please check your credentials and try again.";
+        } else if (error.message?.includes("Email not confirmed")) {
+          errorMessage = "Please verify your email address before logging in.";
+        } else if (error.message?.includes("Too many requests")) {
+          errorMessage = "Too many login attempts. Please wait a moment and try again.";
+        }
       }
       
       setErrors({ submit: errorMessage });

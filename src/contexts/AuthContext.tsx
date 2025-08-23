@@ -270,9 +270,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Update local state
       setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
       console.log("Profile updated successfully");
-    } catch (error: Error | unknown) {
+    } catch (error: unknown) {
       console.error("Profile update error:", error);
-      toast.error(`Failed to update profile: ${(error as Error).message}`);
+      const message = error instanceof Error ? error.message : "Failed to update profile";
+      toast.error(message);
       throw error;
     }
   };
@@ -290,9 +291,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setCurrentUser(prev => prev ? { ...prev, onboardingComplete: true } : null);
       toast.success("Onboarding completed!");
-    } catch (error: Error | unknown) {
+    } catch (error: unknown) {
       console.error("Complete onboarding error:", error);
-      toast.error(`Failed to complete onboarding: ${(error as Error).message}`);
+      const message = error instanceof Error ? error.message : "Failed to complete onboarding";
+      toast.error(message);
       throw error;
     }
   };

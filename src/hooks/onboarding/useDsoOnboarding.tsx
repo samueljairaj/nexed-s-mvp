@@ -33,9 +33,10 @@ export function useDsoOnboarding() {
       
       toast.success("DSO profile updated successfully");
       return true;
-    } catch (error: Error | unknown) {
+    } catch (error: unknown) {
       console.error("Failed to update DSO profile:", error);
-      toast.error(`Failed to update profile: ${(error as Error).message}`);
+      const message = error instanceof Error ? error.message : "Failed to update profile";
+      toast.error(message);
       return false;
     } finally {
       setIsSubmitting(false);

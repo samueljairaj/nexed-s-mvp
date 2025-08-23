@@ -46,14 +46,16 @@ const ResetPassword = () => {
       
       setIsSubmitted(true);
       toast.success("Password reset email sent!");
-    } catch (error: Error | unknown) {
+    } catch (error: unknown) {
       console.error("Password reset error:", error);
       
       let errorMessage = "Failed to send password reset email. Please try again.";
-      if (error.message?.includes("Email not confirmed")) {
-        errorMessage = "Please verify your email address first before resetting your password.";
-      } else if (error.message?.includes("rate limit")) {
-        errorMessage = "Too many requests. Please wait a moment before trying again.";
+      if (error instanceof Error) {
+        if (error.message?.includes("Email not confirmed")) {
+          errorMessage = "Please verify your email address first before resetting your password.";
+        } else if (error.message?.includes("rate limit")) {
+          errorMessage = "Too many requests. Please wait a moment before trying again.";
+        }
       }
       
       setError(errorMessage);

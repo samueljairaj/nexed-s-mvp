@@ -189,8 +189,11 @@ const Documents = () => {
         // Sort by status priority: expired, expiring, valid, null
         const statusA = a.status || "valid";
         const statusB = b.status || "valid";
-        const statusOrder = { "expired": 0, "expiring": 1, "valid": 2 };
-        return (statusOrder[statusA] || 3) - (statusOrder[statusB] || 3);
+        const statusOrder = { expired: 0, expiring: 1, valid: 2 } as const;
+        return (
+          (statusOrder[statusA as keyof typeof statusOrder] ?? 3) -
+          (statusOrder[statusB as keyof typeof statusOrder] ?? 3)
+        );
       }
       case "date":
       default:
