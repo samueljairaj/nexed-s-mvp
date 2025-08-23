@@ -70,7 +70,7 @@ export function VisaStatusSection() {
   const onSubmit = async (data: z.infer<typeof visaStatusSchema>) => {
     setIsSubmitting(true);
     try {
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | undefined> = {
         visaType: data.visaType,
         visaStatus: data.visaStatus,
         sevisId: data.sevisId,

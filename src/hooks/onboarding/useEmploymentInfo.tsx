@@ -31,7 +31,7 @@ export function useEmploymentInfo() {
     
     try {
       // Create a plain object with string values only - no Date objects
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | boolean | undefined> = {
         // Basic employment data
         employment_status: data.employmentStatus, // Use correct column name with underscore
       };

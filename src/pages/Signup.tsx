@@ -117,7 +117,7 @@ const Signup = () => {
       await signup(formData.email, formData.password, "student");
       toast.success("Account created successfully! Please check your email for verification.");
       navigate("/verify-email", { state: { email: formData.email } });
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error("Signup error:", error);
       
       let errorMessage = "Account creation failed. Please try again.";

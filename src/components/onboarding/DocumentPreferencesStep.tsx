@@ -28,7 +28,7 @@ interface DocumentPreferencesStepProps {
     communicationFrequency: string;
   };
   documentChecklist: string[];
-  onSubmit: (data: any) => void;
+  onSubmit: (data: { documentChecklist: string[]; notificationPreferences: string[]; communicationFrequency: string }) => void;
 }
 
 export function DocumentPreferencesStep({ 

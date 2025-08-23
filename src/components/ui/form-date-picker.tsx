@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { dateUtils } from "@/lib/date-utils";
+import { Control } from "react-hook-form";
 
 export interface FormDatePickerProps {
   name: string;
@@ -28,7 +29,7 @@ export interface FormDatePickerProps {
   className?: string;
   buttonClassName?: string;
   required?: boolean;
-  control?: any; // Allow control prop for compatibility
+  control?: Control<Record<string, unknown>>; // Allow control prop for compatibility
 }
 
 export function FormDatePicker({

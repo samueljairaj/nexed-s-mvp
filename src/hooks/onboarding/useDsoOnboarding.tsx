@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-hooks";
 import { toast } from "sonner";
 import { DsoProfileFormData } from "@/components/onboarding/DsoProfileStep";
 
@@ -33,9 +33,9 @@ export function useDsoOnboarding() {
       
       toast.success("DSO profile updated successfully");
       return true;
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error("Failed to update DSO profile:", error);
-      toast.error(`Failed to update profile: ${error.message}`);
+      toast.error(`Failed to update profile: ${(error as Error).message}`);
       return false;
     } finally {
       setIsSubmitting(false);

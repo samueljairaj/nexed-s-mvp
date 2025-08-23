@@ -48,9 +48,10 @@ const VerifyEmail = () => {
 
       if (error) throw error;
       toast.success("Verification email sent!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error resending email:", error);
-      toast.error(`Failed to resend email: ${error.message}`);
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to resend email: ${message}`);
     } finally {
       setIsResending(false);
     }

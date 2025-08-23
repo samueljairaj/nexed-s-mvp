@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -180,23 +180,30 @@ const Documents = () => {
     setIsPacketDialogOpen(true);
   };
 
-  // Sort documents
-  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
-    switch (sortOption) {
-      case "name":
-        return a.name.localeCompare(b.name);
-      case "status":
-        // Sort by status priority: expired, expiring, valid, null
-        const statusA = a.status || "valid";
-        const statusB = b.status || "valid";
-        const statusOrder = { "expired": 0, "expiring": 1, "valid": 2 };
-        return (statusOrder[statusA] || 3) - (statusOrder[statusB] || 3);
-      case "date":
-      default:
-        // Sort by upload date (newest first)
-        return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
-    }
-  });
+  // Sort documents with memoization for performance
+  const sortedDocuments = React.useMemo(() => {
+    return [...filteredDocuments].sort((a, b) => {
+      switch (sortOption) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "status": {
+          // Sort by status priority: expired, expiring, valid, unknown
+          const statusA = a.status ?? "valid";
+          const statusB = b.status ?? "valid";
+          const statusOrder = { expired: 0, expiring: 1, valid: 2 } as const;
+          const weightA =
+            statusOrder[statusA as keyof typeof statusOrder] ?? 3;
+          const weightB =
+            statusOrder[statusB as keyof typeof statusOrder] ?? 3;
+          return weightA - weightB;
+        }
+        case "date":
+        default:
+          // Sort by upload date (newest first)
+          return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+      }
+    });
+  }, [filteredDocuments, sortOption]);
 
   // Generate compliance report
   const updateComplianceChecklist = async () => {
