@@ -75,9 +75,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
-  updateDSOProfile?: (updates: any) => Promise<void>;
+  updateDSOProfile?: (updates: Record<string, unknown>) => Promise<void>;
   completeOnboarding: () => Promise<void>;
-  dsoProfile?: any;
+  dsoProfile?: Record<string, unknown> | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -219,7 +219,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     try {
       // Map camelCase to snake_case for database
-      const dbUpdates: Record<string, any> = {
+      const dbUpdates: Record<string, string | boolean | undefined> = {
         id: user.id, // Always include id for upsert
         email: user.email // Include email from auth
       };
@@ -261,7 +261,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Use upsert instead of update to handle profile creation
       const { error } = await supabase
         .from('profiles')
-        .upsert(dbUpdates as any, { 
+        .upsert(dbUpdates as Record<string, unknown>, { 
           onConflict: 'id' 
         });
 
@@ -270,9 +270,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Update local state
       setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
       console.log("Profile updated successfully");
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error("Profile update error:", error);
-      toast.error(`Failed to update profile: ${error.message}`);
+      toast.error(`Failed to update profile: ${(error as Error).message}`);
       throw error;
     }
   };
@@ -290,9 +290,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setCurrentUser(prev => prev ? { ...prev, onboardingComplete: true } : null);
       toast.success("Onboarding completed!");
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error("Complete onboarding error:", error);
-      toast.error(`Failed to complete onboarding: ${error.message}`);
+      toast.error(`Failed to complete onboarding: ${(error as Error).message}`);
       throw error;
     }
   };
@@ -319,7 +319,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (user) {
         debouncedFetchProfile(user.id);
       }
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error("Signup error:", error);
       throw error;
     } finally {
@@ -340,7 +340,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (user) {
         debouncedFetchProfile(user.id);
       }
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error("Signin error:", error);
       throw error;
     } finally {
@@ -359,7 +359,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       lastFetchedUserIdRef.current = null;
       fetchInProgressRef.current = false;
       navigate('/');
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error("Signout error:", error);
       toast.error("Failed to sign out.");
     }
@@ -368,7 +368,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Alias for logout
   const logout = signout;
 
-  const updateDSOProfile = async (updates: any) => {
+  const updateDSOProfile = async (updates: Record<string, unknown>) => {
     // Placeholder for DSO profile updates
     console.log("DSO profile update not implemented:", updates);
   };

@@ -2,7 +2,7 @@
 import { useState, useEffect, Dispatch, SetStateAction, useCallback } from "react";
 import { Document, DocumentCategory, DocumentFolder, DocumentVersion } from "@/types/document";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-hooks";
 import { getDocumentStatus, detectDocumentType, suggestDocumentTags } from "@/utils/documentUtils";
 
 // Define the database document type to match what Supabase returns
@@ -44,7 +44,7 @@ export function useDocumentSync(
   setFolders: Dispatch<SetStateAction<DocumentFolder[]>>,
   setIsLoading: Dispatch<SetStateAction<boolean>>
 ) {
-  const [realtimeSubscription, setRealtimeSubscription] = useState<any>(null);
+  const [realtimeSubscription, setRealtimeSubscription] = useState<{ documentChannel: { unsubscribe: () => void }; versionChannel: { unsubscribe: () => void } } | null>(null);
   const { currentUser } = useAuth();
 
   // Set up Supabase realtime subscription
@@ -53,7 +53,8 @@ export function useDocumentSync(
 
     // Clean up any existing subscription
     if (realtimeSubscription) {
-      realtimeSubscription.unsubscribe();
+      realtimeSubscription.documentChannel.unsubscribe();
+      realtimeSubscription.versionChannel.unsubscribe();
     }
 
     // Set up a new subscription for documents
@@ -353,7 +354,7 @@ export function useDocumentSync(
     
     try {
       // Convert Document fields to database column names
-      const dbUpdates: any = {};
+      const dbUpdates: Record<string, string | boolean | undefined> = {};
       
       if (updates.name !== undefined) dbUpdates.title = updates.name;
       if (updates.type !== undefined) dbUpdates.file_type = updates.type;

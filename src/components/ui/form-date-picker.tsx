@@ -29,7 +29,7 @@ export interface FormDatePickerProps {
   className?: string;
   buttonClassName?: string;
   required?: boolean;
-  control?: Control<any>; // Allow control prop for compatibility
+  control?: Control<Record<string, unknown>>; // Allow control prop for compatibility
 }
 
 export function FormDatePicker({

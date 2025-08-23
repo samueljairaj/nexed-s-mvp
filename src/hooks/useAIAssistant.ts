@@ -22,7 +22,7 @@ export function useAIAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastCreatedReminder, setLastCreatedReminder] = useState<ReminderDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [realtimeSubscription, setRealtimeSubscription] = useState<any>(null);
+  const [realtimeSubscription, setRealtimeSubscription] = useState<{ unsubscribe: () => void } | null>(null);
   const { currentUser } = useAuth();
 
   // Set up Supabase realtime subscription for messages

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth-hooks';
 import { DocumentCategory } from '@/types/document';
 import { getBaselineChecklist, baselineItemsToAITasks } from '@/utils/baselineChecklists';
 import { toast } from 'sonner';
@@ -46,7 +46,7 @@ export const useComplianceTasks = () => {
   const [selectedFilters, setSelectedFilters] = useState<DocumentCategory[]>([]);
   const [selectedPhase, setSelectedPhase] = useState<string>('all_phases');
   const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
-  const [realtimeSubscription, setRealtimeSubscription] = useState<any>(null);
+  const [realtimeSubscription, setRealtimeSubscription] = useState<{ removeChannel: (channel: { topic: string }) => void } | null>(null);
   const [subscriptionSetup, setSubscriptionSetup] = useState<boolean>(false);
 
   // Helper function to format dates or provide defaults
@@ -204,7 +204,7 @@ export const useComplianceTasks = () => {
         
         if (cachedTasks) {
           // Parse dates since JSON.stringify doesn't preserve Date objects
-          const parsedTasks = cachedTasks.tasks.map((task: any) => ({
+          const parsedTasks = cachedTasks.tasks.map((task: { deadline?: string; createdAt?: string; updatedAt?: string; [key: string]: unknown }) => ({
             ...task,
             deadline: task.deadline ? new Date(task.deadline) : null,
             createdAt: task.createdAt ? new Date(task.createdAt) : new Date(),
@@ -309,7 +309,7 @@ export const useComplianceTasks = () => {
       
       if (data && data.length > 0) {
         // Transform database format to our Task format
-        return data.map((dbTask: any) => ({
+        return data.map((dbTask: { id: string; title: string; description?: string; due_date?: string; is_completed?: boolean; category: string; phase?: string; priority?: string; created_at?: string; updated_at?: string; is_recurring?: boolean; recurring_interval?: string }) => ({
           id: dbTask.id,
           title: dbTask.title,
           description: dbTask.description || '',
