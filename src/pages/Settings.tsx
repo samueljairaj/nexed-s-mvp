@@ -13,15 +13,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
 import { LogOut, Info, Bell, Shield, FolderClosed, Globe } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
+
+// Type-safe settings state
+type ReminderWindow = "7" | "14" | "30";
+type DefaultCategory = "Personal" | "Academic" | "Immigration" | "Employment" | "Financial";
+type Language = "English" | "Spanish" | "Chinese";
+
+interface SettingsState {
+  emailReminders: boolean;
+  pushNotifications: boolean;
+  reminderWindow: ReminderWindow;
+  documentVersionTracking: boolean;
+  expirationReminders: boolean;
+  defaultCategory: DefaultCategory;
+  language: Language;
+  timezone: string;
+  twoFactor: boolean;
+}
+
+type SettingsStateKey = keyof SettingsState;
 
 const Settings = () => {
   const { currentUser, logout } = useAuth();
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
   // User preferences state
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<SettingsState>({
     emailReminders: true,
     pushNotifications: false,
     reminderWindow: "14",
@@ -30,6 +47,7 @@ const Settings = () => {
     defaultCategory: "Personal",
     language: "English",
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    twoFactor: false,
   });
   
   // Password change state
@@ -39,7 +57,7 @@ const Settings = () => {
     confirmPassword: "",
   });
 
-  const handleSettingChange = (key: string, value: string | boolean | number) => {
+  const handleSettingChange = <K extends SettingsStateKey>(key: K, value: SettingsState[K]) => {
     setSettings((prev) => ({
       ...prev,
       [key]: value,
@@ -58,8 +76,32 @@ const Settings = () => {
       return;
     }
     
+    // Basic client-side validation
+    if (passwordForm.newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+    
     setIsLoading(true);
     try {
+      // Re-authenticate user before changing password
+      const email = currentUser?.email;
+      if (!email) {
+        toast.error("You must be signed in to change your password");
+        return;
+      }
+
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email,
+        password: passwordForm.currentPassword,
+      });
+      
+      if (reauthError) {
+        toast.error("Current password is incorrect");
+        return;
+      }
+
+      // Proceed with password update
       const { error } = await supabase.auth.updateUser({
         password: passwordForm.newPassword,
       });
@@ -149,7 +191,7 @@ const Settings = () => {
                 <p className="text-sm text-gray-500">How many days before a deadline to send reminders</p>
                 <Select
                   value={settings.reminderWindow}
-                  onValueChange={(value) => handleSettingChange("reminderWindow", value)}
+                  onValueChange={(value) => handleSettingChange("reminderWindow", value as ReminderWindow)}
                 >
                   <SelectTrigger id="reminder-window" className="w-full max-w-xs">
                     <SelectValue placeholder="Select days" />
@@ -220,6 +262,7 @@ const Settings = () => {
                   </div>
                   <Switch
                     id="two-factor"
+                    checked={settings.twoFactor}
                     disabled
                     onCheckedChange={(checked) => handleSettingChange("twoFactor", checked)}
                   />
@@ -290,7 +333,7 @@ const Settings = () => {
                 <p className="text-sm text-gray-500">Category assigned to new uploads</p>
                 <Select
                   value={settings.defaultCategory}
-                  onValueChange={(value) => handleSettingChange("defaultCategory", value)}
+                  onValueChange={(value) => handleSettingChange("defaultCategory", value as DefaultCategory)}
                 >
                   <SelectTrigger id="default-category" className="w-full max-w-xs">
                     <SelectValue placeholder="Select category" />
@@ -318,7 +361,7 @@ const Settings = () => {
                 <Label htmlFor="app-language" className="font-medium">App Language</Label>
                 <Select 
                   value={settings.language}
-                  onValueChange={(value) => handleSettingChange("language", value)}
+                  onValueChange={(value) => handleSettingChange("language", value as Language)}
                 >
                   <SelectTrigger id="app-language" className="w-full max-w-xs">
                     <SelectValue placeholder="Select language" />
