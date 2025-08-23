@@ -185,12 +185,13 @@ const Documents = () => {
     switch (sortOption) {
       case "name":
         return a.name.localeCompare(b.name);
-      case "status":
+      case "status": {
         // Sort by status priority: expired, expiring, valid, null
         const statusA = a.status || "valid";
         const statusB = b.status || "valid";
         const statusOrder = { "expired": 0, "expiring": 1, "valid": 2 };
         return (statusOrder[statusA] || 3) - (statusOrder[statusB] || 3);
+      }
       case "date":
       default:
         // Sort by upload date (newest first)

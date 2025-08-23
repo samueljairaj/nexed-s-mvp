@@ -149,7 +149,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     lastFetchedUserIdRef.current = userId;
 
     try {
-      let { data: userProfile, error } = await supabase
+      const { data: userProfile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
