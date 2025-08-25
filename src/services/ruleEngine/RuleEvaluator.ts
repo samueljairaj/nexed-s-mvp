@@ -366,6 +366,16 @@ export class RuleEvaluator {
     }
     
     try {
+      // Basic safety guardrails to reduce ReDoS risk without new deps
+      // 1) limit pattern length
+      if (pattern.length > 200) {
+        throw new RuleEngineError(`Regex pattern too long`, 'CONDITION_EVALUATION_FAILED');
+      }
+      // 2) reject some common catastrophic constructs: nested quantifiers like (a+)+ or (.*)+
+      const dangerous = /(\([^)]*[+*][^)]*\)\s*[+*])|(\.\*\+)|(\+\+)|(\*\*)/;
+      if (dangerous.test(pattern)) {
+        throw new RuleEngineError(`Potentially unsafe regex pattern`, 'CONDITION_EVALUATION_FAILED');
+      }
       const regex = new RegExp(pattern);
       return regex.test(value);
     } catch (error) {

@@ -135,10 +135,19 @@ export class RuleEngine {
         }
       }
 
-      // Resolve task dependencies
-      const resolvedTasks = this.config.enableDependencies 
-        ? await this.dependencyResolver.resolveDependencies(generatedTasks)
-        : generatedTasks;
+      // Resolve task dependencies with graceful degradation
+      let resolvedTasks = generatedTasks;
+      if (this.config.enableDependencies) {
+        try {
+          resolvedTasks = await this.dependencyResolver.resolveDependencies(generatedTasks);
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          errors.push(`Dependency resolution failed: ${msg}`);
+          if (this.config.debugMode) {
+            console.error('⚠️ Dependency resolution failed — returning unsorted tasks:', msg);
+          }
+        }
+      }
 
       // Limit tasks if configured
       const finalTasks = resolvedTasks.slice(0, this.config.maxTasksPerEvaluation);

@@ -357,12 +357,15 @@ export interface TemplateContext {
 export class RuleEngineError extends Error {
   constructor(
     message: string,
-    public code: string,
+    public code: RuleEngineErrorCode,
     public ruleId?: string,
     public userId?: string,
-    public context?: any
+    public context?: any,
+    options?: { cause?: unknown }
   ) {
-    super(message);
+    // If your TS target supports it; otherwise: super(message)
+    // @ts-ignore
+    super(message, options);
     this.name = 'RuleEngineError';
   }
 }
@@ -374,4 +377,9 @@ export type RuleEngineErrorCode =
   | 'TEMPLATE_RENDERING_FAILED'
   | 'USER_CONTEXT_INVALID'
   | 'DEPENDENCY_CYCLE_DETECTED'
+  | 'DEPENDENCY_VALIDATION_FAILED'
+  | 'DEPENDENCY_RESOLUTION_FAILED'
+  | 'RULE_LOADING_FAILED'
+  | 'TASK_GENERATION_FAILED'
+  | 'RULE_EVALUATION_FAILED'
   | 'RULE_EXECUTION_TIMEOUT';

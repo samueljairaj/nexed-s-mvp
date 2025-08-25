@@ -68,12 +68,6 @@ export class TemplateRenderer {
   private replacePlaceholders(template: string, context: TemplateContext): string {
     let result = template;
     
-    // Replace simple placeholders: {fieldName}
-    result = result.replace(/\{([^}]+)\}/g, (match, path) => {
-      const value = this.getValueByPath(context, path.trim());
-      return this.formatValue(value);
-    });
-    
     // Replace conditional placeholders: {?condition:trueValue:falseValue}
     result = result.replace(/\{\?([^}]+)\}/g, (match, expression) => {
       return this.evaluateConditionalExpression(expression, context);
@@ -84,6 +78,12 @@ export class TemplateRenderer {
       return this.evaluateCalculation(calculation, context);
     });
     
+    // Replace simple placeholders: {fieldName} (exclude {?...} and {#...})
+    result = result.replace(/\{(?![?#])([^}]+)\}/g, (match, path) => {
+      const value = this.getValueByPath(context, path.trim());
+      return this.formatValue(value);
+    });
+
     return result;
   }
 

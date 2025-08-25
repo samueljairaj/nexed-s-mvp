@@ -84,7 +84,11 @@ export class ContextBuilder {
           authorizationType: profile.auth_type || '',
           eadNumber: profile.ead_number || '',
           unemploymentDaysUsed: profile.unemployment_days ? parseInt(profile.unemployment_days, 10) : 0,
-          maxUnemploymentDays: this.calculateMaxUnemploymentDays(profile.visa_type, profile.is_stem),
+          maxUnemploymentDays: this.calculateMaxUnemploymentDays(
+            profile.visa_type,
+            profile.opt_type,
+            Boolean(profile.is_stem_opt)
+          ),
           eVerifyCompliant: profile.e_verify_compliant || false
         },
         
@@ -245,15 +249,21 @@ export class ContextBuilder {
 
     // OPT phases
     if (profile.employment_status === 'OPT' || optStartDate) {
-      if (profile.opt_type === 'STEM' || profile.is_stem_opt) {
+      // If OPT start is in the future, they are in the application window
+      if (optStartDate && now < optStartDate) {
+        return 'opt_application';
+      }
+
+      // STEM OPT paths
+      const isStemOpt = profile.opt_type === 'STEM' || profile.is_stem_opt;
+      if (isStemOpt) {
+        // If near the STEM end date window but not yet active, treat as application
+        if (optEndDate && this.daysBetween(now, optEndDate) <= 90 && now < optEndDate) {
+          return 'stem_application';
+        }
         return 'stem_active';
       }
-      
-      // Check if applying for STEM extension
-      if (optEndDate && this.daysBetween(now, optEndDate) <= 90 && profile.is_stem) {
-        return 'stem_application';
-      }
-      
+
       return 'opt_active';
     }
 
@@ -297,31 +307,36 @@ export class ContextBuilder {
    * Build document status map
    */
   private buildDocumentStatus(documents: any[]): { [key: string]: boolean } {
-    const status: { [key: string]: boolean } = {};
-    
-    // Check for common document types
-    const documentTypes = ['passport', 'visa', 'i20', 'ead', 'i983', 'i797'];
-    
-    for (const docType of documentTypes) {
-      const hasValidDoc = documents.some(doc => 
-        doc.category?.toLowerCase().includes(docType) && 
-        doc.status !== 'expired' && 
-        doc.status !== 'rejected'
-      );
-      status[`${docType}Valid`] = hasValidDoc;
-    }
-    
-    return status;
+    const has = (pred: (d: any) => boolean) => documents.some(pred);
+    const byType = (type: string) =>
+      (d: any) => d.category?.toLowerCase().includes(type);
+
+    // Helper: treat anything not explicitly expired/rejected as "current/valid/submitted"
+    const isCurrent = (d: any) => d.status !== 'expired' && d.status !== 'rejected';
+
+    return {
+      passportValid: has(d => byType('passport')(d) && isCurrent(d)),
+      visaValid:     has(d => byType('visa')(d) && isCurrent(d)),
+      i20Current:    has(d => (byType('i20')(d) || byType('form i-20')(d)) && isCurrent(d)),
+      eadValid:      has(d => (byType('ead')(d) || byType('employment authorization')(d)) && isCurrent(d)),
+      i983Submitted: has(d => byType('i983')(d) && d.status !== 'draft' && d.status !== 'rejected'),
+      // Keep extra keys if you need them; schema allows index signature:
+      i797Valid:     has(d => byType('i797')(d) && isCurrent(d)),
+    };
   }
 
   /**
    * Calculate maximum unemployment days allowed
    */
-  private calculateMaxUnemploymentDays(visaType: string | null, isSTEM: boolean | null): number {
-    if (visaType === 'OPT') {
-      return isSTEM ? 150 : 90; // STEM OPT allows 150 days, regular OPT allows 90
-    }
-    return 0;
+  private calculateMaxUnemploymentDays(
+    visaType: string | null,
+    optType: string | null,
+    isStemOptActive: boolean
+  ): number {
+    if (visaType !== 'OPT') return 0;
+    // If on STEM OPT (either flagged active or explicitly typed), total allowance is 150.
+    if (isStemOptActive || (optType && optType.toUpperCase() === 'STEM')) return 150;
+    return 90;
   }
 
   /**
