@@ -1,0 +1,325 @@
+{
+  "ruleSet": {
+    "name": "F1 Student Compliance Rules",
+    "description": "Intelligent compliance rules for F1 students with contextual, personalized guidance",
+    "version": "1.0",
+    "lastUpdated": "2025-01-25"
+  },
+  "rules": [
+    {
+      "id": "f1-passport-renewal-urgent",
+      "name": "Passport Renewal - Urgent F1 Status Risk",
+      "description": "Passport expiring soon threatens F1 status maintenance",
+      "ruleGroup": "documents",
+      "phase": ["during_program", "pre_graduation", "general"],
+      "visaTypes": ["F1"],
+      "priority": 90,
+      "conditions": [
+        {
+          "field": "dates.passportExpiryDate",
+          "operator": "lessThan",
+          "timeValue": "6months",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "visaType",
+          "operator": "equals",
+          "value": "F1"
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "🚨 Renew Passport - F1 Status at Risk",
+        "descriptionTemplate": "Your passport expires on {dates.passportExpiryDate} ({#days_until_passport_expiry} days). Renew immediately to maintain F1 status.\n\n⚠️ **Critical**: Passports must be valid for 6+ months for:\n• Travel authorization\n• I-20 renewals\n• Status maintenance\n• Future visa applications\n\n📋 **Next Steps**:\n1. Apply for passport renewal at your country's consulate\n2. Allow 4-8 weeks processing time\n3. Update passport info in SEVIS once received",
+        "category": "immigration",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "calculated",
+          "calculation": "passport_renewal_urgent"
+        }
+      },
+      "isActive": true,
+      "tags": ["passport", "urgent", "f1-status"],
+      "version": "1.0"
+    },
+    {
+      "id": "f1-i20-travel-signature",
+      "name": "I-20 Travel Signature Required",
+      "description": "I-20 needs fresh travel signature for international travel",
+      "ruleGroup": "travel",
+      "phase": ["during_program", "pre_graduation"],
+      "visaTypes": ["F1"],
+      "priority": 70,
+      "conditions": [
+        {
+          "field": "flags.planningToTravel",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "documents.i20TravelSignatureDate",
+          "operator": "lessThan",
+          "timeValue": "12months"
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "Get I-20 Travel Signature Before Trip",
+        "descriptionTemplate": "Your I-20 travel signature is {?documents.i20TravelSignatureDate:expired:missing}. Get a fresh signature from your DSO before traveling.\n\n✈️ **Travel Requirements**:\n• I-20 signed within last 12 months\n• Valid F1 visa stamp\n• Enrollment verification\n• Financial documentation\n\n📍 **DSO Contact**: {user.academic.dsoContact.name} - {user.academic.dsoContact.email}\n\n⏰ **Timeline**: Allow 5-10 business days for processing",
+        "category": "travel",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.plannedTravelDate",
+          "offset": "-14days"
+        }
+      },
+      "isActive": true,
+      "tags": ["i20", "travel", "signature"],
+      "version": "1.0"
+    },
+    {
+      "id": "f1-address-change-sevis",
+      "name": "Report Address Change to SEVIS",
+      "description": "New address must be reported to SEVIS within 10 days",
+      "ruleGroup": "reporting",
+      "phase": ["during_program", "opt_active", "stem_active"],
+      "visaTypes": ["F1"],
+      "priority": 85,
+      "conditions": [
+        {
+          "field": "flags.addressChangeRecent",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "location.addressReportedToSevis",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "⚡ Report Address Change to SEVIS (Due: {#address_update_deadline})",
+        "descriptionTemplate": "You moved to {location.currentAddress} on {dates.lastMoved}. Federal law requires reporting this within 10 days.\n\n📍 **New Address**: {location.currentAddress}\n{location.state} {location.zipCode}\n\n🏛️ **Legal Requirement**: 8 CFR 214.3(g)\n• Must report within 10 days of moving\n• Failure to report can affect status\n• $1,000+ penalties possible\n\n📋 **How to Report**:\n1. Log into your university's international student portal\n2. Update address in SEVIS system\n3. Save confirmation receipt\n\n⏰ **Deadline**: {#address_update_deadline}",
+        "category": "reporting",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "calculated",
+          "calculation": "address_update_deadline"
+        }
+      },
+      "isActive": true,
+      "tags": ["address", "sevis", "reporting", "urgent"],
+      "version": "1.0"
+    },
+    {
+      "id": "f1-course-load-minimum",
+      "name": "Maintain Full-Time Course Load",
+      "description": "F1 students must maintain minimum credit hours for status",
+      "ruleGroup": "academic",
+      "phase": ["during_program"],
+      "visaTypes": ["F1"],
+      "priority": 80,
+      "conditions": [
+        {
+          "field": "academic.creditsCompleted",
+          "operator": "exists",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "academic.creditsThisSemester",
+          "operator": "lessThan",
+          "value": 12
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "⚠️ Enroll in Full-Time Course Load",
+        "descriptionTemplate": "You're enrolled in {academic.creditsThisSemester} credits. F1 status requires minimum 12 credits/semester.\n\n📚 **F1 Requirements**:\n• Undergraduate: 12+ credits/semester\n• Graduate: 9+ credits/semester (or full-time as defined by school)\n• Summer: Reduced load allowed with DSO approval\n\n🎓 **Your Program**: {academic.degreeLevel} in {academic.fieldOfStudy}\n📍 **University**: {academic.university}\n\n📞 **Next Steps**:\n1. Contact academic advisor immediately\n2. Register for additional courses\n3. If unable to enroll, see DSO for reduced course load authorization\n\n👤 **DSO Contact**: {user.academic.dsoContact.name}",
+        "category": "academic",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.semesterStartDate",
+          "offset": "+14days"
+        }
+      },
+      "isActive": true,
+      "tags": ["course-load", "enrollment", "academic"],
+      "version": "1.0"
+    },
+    {
+      "id": "f1-graduation-opt-window",
+      "name": "OPT Application Window Opens",
+      "description": "OPT application window opens 90 days before graduation",
+      "ruleGroup": "employment",
+      "phase": ["pre_graduation"],
+      "visaTypes": ["F1"],
+      "priority": 75,
+      "conditions": [
+        {
+          "field": "dates.graduationDate",
+          "operator": "exists",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "dates.graduationDate",
+          "operator": "lessThan",
+          "timeValue": "90days",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.optApplicationSubmitted",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "🎓 OPT Application Window Now Open",
+        "descriptionTemplate": "You graduate on {dates.graduationDate} ({#days_until_graduation} days). Your OPT application window is now open!\n\n📅 **Application Window**:\n• **Opens**: 90 days before graduation\n• **Closes**: 60 days after graduation\n• **Recommended**: Apply ASAP for maximum work time\n\n💼 **OPT Benefits**:\n• 12 months of work authorization\n• {?academic.isSTEM:Additional 24 months if STEM:Standard 12 months}\n• Gain valuable US work experience\n• Potential pathway to H1B\n\n📋 **Required Documents**:\n• Form I-765 (Application)\n• I-20 with OPT recommendation\n• $410 filing fee\n• Passport-style photos\n\n🏃‍♂️ **Next Steps**:\n1. Meet with DSO for OPT recommendation\n2. Gather required documents\n3. Submit I-765 to USCIS\n\n⏰ **Optimal Timeline**: Submit within next 2 weeks",
+        "category": "employment",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "calculated",
+          "calculation": "opt_application_window"
+        },
+        "dependsOn": ["f1-meet-dso-opt"]
+      },
+      "isActive": true,
+      "tags": ["opt", "graduation", "employment", "application"],
+      "version": "1.0"
+    },
+    {
+      "id": "f1-meet-dso-opt",
+      "name": "Schedule OPT Meeting with DSO",
+      "description": "Meet with DSO to get OPT recommendation on I-20",
+      "ruleGroup": "employment",
+      "phase": ["pre_graduation"],
+      "visaTypes": ["F1"],
+      "priority": 80,
+      "conditions": [
+        {
+          "field": "dates.graduationDate",
+          "operator": "lessThan",
+          "timeValue": "120days",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.dsoOptMeetingScheduled",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "📅 Schedule OPT Meeting with DSO",
+        "descriptionTemplate": "Schedule your OPT consultation with your DSO. This meeting is required before applying for OPT.\n\n👤 **Your DSO**: {user.academic.dsoContact.name}\n📧 **Email**: {user.academic.dsoContact.email}\n📞 **Phone**: {user.academic.dsoContact.phone}\n🏢 **Office**: {user.academic.dsoContact.office}\n\n📋 **Meeting Purpose**:\n• Review OPT eligibility\n• Get I-20 recommendation\n• Discuss application timeline\n• Review employment requirements\n\n📄 **Bring to Meeting**:\n• Current I-20\n• Transcript (unofficial OK)\n• Graduation verification\n• Employment plans (if any)\n\n⏰ **Schedule ASAP**: DSO meetings book up quickly near graduation",
+        "category": "employment",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.graduationDate",
+          "offset": "-100days"
+        }
+      },
+      "isActive": true,
+      "tags": ["dso", "opt", "meeting", "consultation"],
+      "version": "1.0"
+    },
+    {
+      "id": "f1-stem-eligibility-check",
+      "name": "Check STEM OPT Eligibility",
+      "description": "Verify if your degree qualifies for STEM OPT extension",
+      "ruleGroup": "employment",
+      "phase": ["pre_graduation", "opt_active"],
+      "visaTypes": ["F1"],
+      "priority": 60,
+      "conditions": [
+        {
+          "field": "academic.fieldOfStudy",
+          "operator": "exists",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.stemEligibilityChecked",
+          "operator": "equals",
+          "value": false,
+          "logicOperator": "AND"
+        },
+        {
+          "nested": [
+            {
+              "field": "academic.fieldOfStudy",
+              "operator": "contains",
+              "value": "Computer"
+            },
+            {
+              "field": "academic.fieldOfStudy",
+              "operator": "contains",
+              "value": "Engineering"
+            },
+            {
+              "field": "academic.fieldOfStudy",
+              "operator": "contains",
+              "value": "Mathematics"
+            },
+            {
+              "field": "academic.fieldOfStudy",
+              "operator": "contains",
+              "value": "Science"
+            }
+          ],
+          "logicOperator": "OR"
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "🔬 Verify STEM OPT Eligibility",
+        "descriptionTemplate": "Your degree in {academic.fieldOfStudy} might qualify for STEM OPT extension. Verify eligibility now!\n\n🎓 **Your Program**: {academic.fieldOfStudy}\n🏫 **University**: {academic.university}\n\n🔍 **STEM OPT Benefits**:\n• Additional 24 months of work authorization\n• Total of 36 months (12 regular + 24 STEM)\n• More H1B lottery opportunities\n• Enhanced career development\n\n📋 **Verification Steps**:\n1. Check if your degree is on STEM Designated Degree Program List\n2. Confirm CIP code matches STEM list\n3. Verify with academic department\n4. Consult with DSO\n\n🌐 **STEM List**: Check official DHS STEM Designated Degree Program List\n\n✅ **If Eligible**: Plan for STEM OPT application 90 days before regular OPT expires",
+        "category": "employment",
+        "priority": "medium",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.graduationDate",
+          "offset": "-60days"
+        }
+      },
+      "isActive": true,
+      "tags": ["stem", "eligibility", "opt-extension"],
+      "version": "1.0"
+    },
+    {
+      "id": "f1-financial-aid-compliance",
+      "name": "Report Financial Aid Changes",
+      "description": "Changes in funding sources must be reported to international office",
+      "ruleGroup": "reporting",
+      "phase": ["during_program"],
+      "visaTypes": ["F1"],
+      "priority": 50,
+      "conditions": [
+        {
+          "field": "financial.fundingSourceChanged",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "financial.changeReportedToISO",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "💰 Report Funding Source Changes",
+        "descriptionTemplate": "Your funding situation has changed. Update your international student office within 30 days.\n\n💼 **Funding Changes Requiring Report**:\n• New scholarships or grants\n• Changes in family support\n• New assistantship positions\n• Loan modifications\n• Work-study programs\n\n📋 **Required Information**:\n• New funding source details\n• Amount and duration\n• Supporting documentation\n• Updated financial statements\n\n🏢 **Contact**: International Student Services\n📧 **Email**: {user.academic.isoEmail}\n📞 **Phone**: {user.academic.isoPhone}\n\n⏰ **Deadline**: Within 30 days of funding change",
+        "category": "reporting",
+        "priority": "medium",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "financial.fundingChangeDate",
+          "offset": "+30days"
+        }
+      },
+      "isActive": true,
+      "tags": ["financial", "funding", "reporting"],
+      "version": "1.0"
+    }
+  ]
+}
