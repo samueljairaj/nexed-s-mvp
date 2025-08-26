@@ -9,7 +9,7 @@ import Signup from "../Signup";
 
 // Mocks
 const mockSignup = vi.fn();
-vi.mock("@/contexts/AuthContext", () => {
+vi.mock("@/contexts", () => {
   return {
     useAuth: () => ({
       signup: mockSignup,
