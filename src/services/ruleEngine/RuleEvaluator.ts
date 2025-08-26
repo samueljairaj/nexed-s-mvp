@@ -152,6 +152,12 @@ export class RuleEvaluator {
     }
     
     if (actualValue === null || actualValue === undefined) {
+      if (operator === 'equals') {
+        return expectedValue === null || expectedValue === undefined;
+      }
+      if (operator === 'notEquals') {
+        return !(expectedValue === null || expectedValue === undefined);
+      }
       return false;
     }
 
@@ -196,6 +202,9 @@ export class RuleEvaluator {
         return this.isBetween(actualValue, expectedValue);
         
       case 'regex':
+        if (typeof expectedValue !== 'string') {
+          throw new RuleEngineError('Regex operator requires a string pattern', 'CONDITION_EVALUATION_FAILED');
+        }
         return this.matchesRegex(actualValue, expectedValue);
         
       default:

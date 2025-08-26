@@ -105,15 +105,24 @@ describe("Signup Page", () => {
   it("validates email format", async () => {
     setup();
 
-    await userEvent.type(screen.getByLabelText(/Email/i), "invalid-email");
-    await userEvent.type(screen.getByLabelText(/^Password$/i), "Strong123"); // to bypass password required
+    const emailInput = screen.getByLabelText(/Email/i);
+    const submitButton = screen.getByRole("button", { name: /Create Student Account/i });
+
+    // Fill in all required fields except email (with invalid email)
+    await userEvent.type(screen.getByLabelText(/First Name/i), "John");
+    await userEvent.type(screen.getByLabelText(/Last Name/i), "Doe");
+    await userEvent.type(emailInput, "invalid-email");
+    await userEvent.type(screen.getByLabelText(/^Password$/i), "Strong123");
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "Strong123");
-    await userEvent.type(screen.getByLabelText(/First Name/i), "A");
-    await userEvent.type(screen.getByLabelText(/Last Name/i), "B");
     await userEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
 
-    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
-    expect(await screen.findByText(/Please enter a valid email address/i)).toBeInTheDocument();
+    // Submit and wait for validation
+    await userEvent.click(submitButton);
+    
+    // Use waitFor with longer timeout for async validation
+    await waitFor(() => {
+      expect(screen.getByText(/Please enter a valid email address/i)).toBeInTheDocument();
+    }, { timeout: 3000 });
   });
 
   it("shows password strength info and updates classes", async () => {
