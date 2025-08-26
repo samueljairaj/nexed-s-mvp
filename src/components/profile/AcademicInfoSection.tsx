@@ -70,7 +70,7 @@ export function AcademicInfoSection() {
   const onSubmit = async (data: z.infer<typeof academicInfoSchema>) => {
     setIsSubmitting(true);
     try {
-      const updateData: Record<string, any> = {
+      const updateData: Record<string, string | boolean | { name: string; email: string }> = {
         university: data.university,
         fieldOfStudy: data.fieldOfStudy,
         degreeLevel: data.degreeLevel,

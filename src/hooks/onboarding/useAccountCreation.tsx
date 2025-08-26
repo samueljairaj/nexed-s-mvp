@@ -29,8 +29,8 @@ export function useAccountCreation() {
         });
         toast.success("Account created successfully!");
         return true;
-      } catch (error: any) {
-        toast.error(`Account creation failed: ${error.message}`);
+      } catch (error: Error | unknown) {
+        toast.error(`Account creation failed: ${(error as Error).message}`);
         return false;
       } finally {
         setIsSubmitting(false);

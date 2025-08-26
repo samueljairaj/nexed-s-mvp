@@ -26,7 +26,7 @@ export interface ComplianceChecklistProps {
     title: string;
     items: Array<{
       label: string;
-      value: any;
+      value: string | number | boolean | Date | null;
       complete: boolean;
     }>;
   }>;

@@ -52,7 +52,7 @@ const Login = () => {
       await login(formData.email, formData.password);
       toast.success("Successfully logged in!");
       navigate("/app/dashboard");
-    } catch (error: any) {
+    } catch (error: Error | unknown) {
       console.error("Login error:", error);
       
       // User-friendly error messages

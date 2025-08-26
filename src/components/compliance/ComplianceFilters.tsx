@@ -14,7 +14,7 @@ interface ComplianceFiltersProps {
   setSearchQuery: (query: string) => void;
   selectedFilters: string[];
   toggleFilter: (filter: string) => void;
-  phaseGroups: {[key: string]: any[]};
+  phaseGroups: {[key: string]: Array<{ id: string; title: string; description: string; dueDate: string; category: string; completed: boolean; priority: string; phase?: string }>};
   selectedPhase: string;
   setSelectedPhase: (phase: string) => void;
   setSelectedFilters: (filters: string[]) => void;

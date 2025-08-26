@@ -93,7 +93,7 @@ export class ComplianceService {
 
   static async updateTask(id: string, updates: Partial<ComplianceTask>): Promise<Task> {
     try {
-      const updateData: any = {
+      const updateData: Partial<ComplianceTask> & { updated_at: string } = {
         ...updates,
         updated_at: new Date().toISOString()
       };
@@ -169,7 +169,7 @@ export class ComplianceService {
     }
   }
 
-  private static mapTaskFromDB(dbTask: any): Task {
+  private static mapTaskFromDB(dbTask: ComplianceTask): Task {
     return {
       id: dbTask.id,
       title: dbTask.title,

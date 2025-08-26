@@ -15,7 +15,7 @@ interface Activity {
 }
 
 interface RecentActivitiesProps {
-  currentUser: any;
+  currentUser: { id: string; name?: string; email?: string; user_type?: string } | null;
 }
 
 const RecentActivities: React.FC<RecentActivitiesProps> = ({ currentUser }) => {
