@@ -298,6 +298,18 @@ export class RuleEvaluator {
   }
 
   /**
+   * Convert value to number if possible
+   */
+  private toNumber(value: any): number | null {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string' && value.trim() !== '') {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  }
+
+  /**
    * Deep equality comparison
    */
   private isEqual(a: any, b: any): boolean {
@@ -328,14 +340,18 @@ export class RuleEvaluator {
    * Compare primitive values
    */
   private comparePrimitive(a: any, b: any): number {
-    // Handle dates
-    if (a instanceof Date && b instanceof Date) {
-      return a.getTime() - b.getTime();
+    // Handle dates (including date-like inputs)
+    const aDate = a instanceof Date ? a : this.parseDate(a);
+    const bDate = b instanceof Date ? b : this.parseDate(b);
+    if (aDate && bDate) {
+      return aDate.getTime() - bDate.getTime();
     }
     
-    // Handle numbers
-    if (typeof a === 'number' && typeof b === 'number') {
-      return a - b;
+    // Handle numbers (including number-like strings)
+    const aNum = this.toNumber(a);
+    const bNum = this.toNumber(b);
+    if (aNum !== null && bNum !== null) {
+      return aNum - bNum;
     }
     
     // Handle strings
@@ -382,8 +398,11 @@ export class RuleEvaluator {
    * Check if value matches regex pattern
    */
   private matchesRegex(value: unknown, pattern: string): boolean {
+    let stringValue: string;
     if (typeof value !== 'string') {
-      value = String(value);
+      stringValue = String(value);
+    } else {
+      stringValue = value;
     }
     
     try {
@@ -398,7 +417,7 @@ export class RuleEvaluator {
         throw new RuleEngineError(`Potentially unsafe regex pattern`, 'CONDITION_EVALUATION_FAILED');
       }
       const regex = new RegExp(pattern);
-      return regex.test(value);
+      return regex.test(stringValue);
     } catch (error) {
       if (error instanceof RuleEngineError) {
         // Preserve original diagnostic
