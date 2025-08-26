@@ -96,6 +96,11 @@ export class RuleEvaluator {
       throw new RuleEngineError(`Unsupported logic operator: ${logicOperator}`, 'CONDITION_EVALUATION_FAILED');
     }
     
+    // Apply group-level negation (NOT)
+    if (condition.negate) {
+      passed = !passed;
+    }
+    
     return {
       condition,
       passed,

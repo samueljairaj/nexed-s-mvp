@@ -52,7 +52,8 @@ export interface RuleCondition {
   operator: RuleOperator;
   value: any;                      // Value to compare against
   timeValue?: TimeValue;           // For time-based comparisons
-  logicOperator?: 'AND' | 'OR';    // For chaining conditions
+  logicOperator?: 'AND' | 'OR';    // Aggregation across nested conditions
+  negate?: boolean;                // Invert the aggregated result (NOT)
   nested?: RuleCondition[];        // For complex nested logic
 }
 

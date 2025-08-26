@@ -87,7 +87,8 @@ export class RuleLoader {
     const loadPromises: Promise<RuleLoadResult>[] = [];
 
     // Load from all enabled sources
-    for (const source of this.sources.filter(s => s.enabled !== false)) {
+    const enabledSources = this.sources.filter(s => s.enabled !== false);
+    for (const source of enabledSources) {
       loadPromises.push(this.loadFromSource(source));
     }
 
@@ -99,8 +100,8 @@ export class RuleLoader {
           const loadResult = result.value;
           allRules.push(...loadResult.rules);
           
-          // Cache the results
-          this.cacheRules(this.sources[index], loadResult.rules);
+          // Cache the results (use the actual source returned)
+          this.cacheRules(loadResult.source, loadResult.rules);
         } else {
           console.error(`Failed to load rules from source ${index}:`, result.reason);
         }
@@ -394,7 +395,7 @@ export class RuleLoader {
 📊 **Your Status**:
 • Days Used: {employment.unemploymentDaysUsed}/90
 • Days Remaining: {#unemployment_days_remaining}
-• Current Status: Unemployed since {dates.lastEmploymentEndDate}
+• Current Status: Unemployed since {dates.employmentEndDate}
 
 🚨 **Immediate Action Required**:
 • Find employment within {#unemployment_days_remaining} days
@@ -587,7 +588,7 @@ export class RuleLoader {
             logicOperator: "AND"
           },
           {
-            field: "employment.employerEVerifyVerified",
+            field: "employment.eVerifyCompliant",
             operator: "equals",
             value: false
           }
