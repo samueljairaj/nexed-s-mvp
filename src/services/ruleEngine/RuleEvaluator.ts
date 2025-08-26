@@ -216,9 +216,9 @@ export class RuleEvaluator {
    * Compare time-based values (e.g., dates with offsets)
    */
   private compareTimeValues(
-    actualValue: any, 
+    actualValue: unknown, 
     operator: RuleOperator, 
-    expectedValue: any, 
+    expectedValue: unknown, 
     timeValue: string
   ): boolean {
     
@@ -226,7 +226,9 @@ export class RuleEvaluator {
     if (!actualDate) return false;
     
     const offsetMs = this.parseTimeValue(timeValue);
-    const comparisonDate = new Date(Date.now() + offsetMs);
+    // If expectedValue is a valid date, use it as the base; else, use now
+    const baseDate = this.parseDate(expectedValue) || new Date();
+    const comparisonDate = new Date(baseDate.getTime() + offsetMs);
     
     switch (operator) {
       case 'lessThan':
@@ -398,7 +400,19 @@ export class RuleEvaluator {
       const regex = new RegExp(pattern);
       return regex.test(value);
     } catch (error) {
-      throw new RuleEngineError(`Invalid regex pattern: ${pattern}`, 'CONDITION_EVALUATION_FAILED');
+      if (error instanceof RuleEngineError) {
+        // Preserve original diagnostic
+        throw error;
+      }
+      // Likely a SyntaxError from RegExp constructor; wrap with context
+      throw new RuleEngineError(
+        `Invalid regex pattern: ${pattern}`,
+        'CONDITION_EVALUATION_FAILED',
+        undefined,
+        undefined,
+        undefined,
+        { cause: error as unknown }
+      );
     }
   }
 
