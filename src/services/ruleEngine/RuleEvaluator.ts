@@ -113,7 +113,7 @@ export class RuleEvaluator {
   /**
    * Get value from user context using dot notation
    */
-  private getValueFromContext(fieldPath: string, userContext: UserContext): any {
+  private getValueFromContext(fieldPath: string, userContext: UserContext): unknown {
     const paths = fieldPath.split('.');
     let value: any = userContext;
     
@@ -131,9 +131,9 @@ export class RuleEvaluator {
    * Compare actual value with expected value using operator
    */
   private compareValues(
-    actualValue: any, 
+    actualValue: unknown, 
     operator: RuleOperator, 
-    expectedValue: any, 
+    expectedValue: unknown, 
     timeValue?: string
   ): boolean {
     
@@ -365,7 +365,7 @@ export class RuleEvaluator {
   /**
    * Check if value matches regex pattern
    */
-  private matchesRegex(value: any, pattern: string): boolean {
+  private matchesRegex(value: unknown, pattern: string): boolean {
     if (typeof value !== 'string') {
       value = String(value);
     }

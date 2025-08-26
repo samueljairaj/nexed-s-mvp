@@ -50,7 +50,7 @@ export type DateCalculationType =
 export interface RuleCondition {
   field: string;                    // User data field to check
   operator: RuleOperator;
-  value: any;                      // Value to compare against
+  value: unknown;                  // Value to compare against
   timeValue?: TimeValue;           // For time-based comparisons
   logicOperator?: 'AND' | 'OR';    // Aggregation across nested conditions
   negate?: boolean;                // Invert the aggregated result (NOT)
@@ -265,8 +265,8 @@ export interface UserContext {
 export interface ConditionEvaluationResult {
   condition: RuleCondition;
   passed: boolean;
-  actualValue: any;
-  expectedValue: any;
+  actualValue: unknown;
+  expectedValue: unknown;
   reason?: string;
 }
 
@@ -292,7 +292,7 @@ export interface GeneratedTask extends Omit<Task, 'id' | 'createdAt' | 'updatedA
     userPhase: VisaPhase;
     triggerConditions: string[];
     smartDateCalculation: string;
-    placeholderValues: { [key: string]: any };
+    placeholderValues: { [key: string]: unknown };
   };
   dependencies: string[];
   autoCompleteWhen?: RuleCondition[];
@@ -344,7 +344,7 @@ export interface TemplateContext {
     daysUntilExpiry?: number;
     timeRemaining?: string;
     urgencyLevel?: 'low' | 'medium' | 'high' | 'critical';
-    [key: string]: any;
+    [key: string]: unknown;
   };
   dates: {
     [key: string]: string; // Formatted dates
@@ -361,7 +361,7 @@ export class RuleEngineError extends Error {
     public code: RuleEngineErrorCode,
     public ruleId?: string,
     public userId?: string,
-    public context?: any,
+    public context?: unknown,
     options?: { cause?: unknown }
   ) {
     // If your TS target supports it; otherwise: super(message)
