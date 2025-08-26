@@ -237,10 +237,11 @@ export class TemplateRenderer {
       case 'urgency_indicator':
         return this.getUrgencyIndicator(context.calculated.urgencyLevel);
         
-      default:
+      default: {
         // Allow upstream (RuleEngine/DateCalculator) to supply arbitrary computed values
         const v = (context.calculated as any)?.[calculation];
         return v !== undefined && v !== null ? String(v) : `{Unknown calculation: ${calculation}}`;
+      }
     }
   }
 
