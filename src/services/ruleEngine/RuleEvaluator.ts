@@ -59,7 +59,12 @@ export class RuleEvaluator {
     const actualValue = this.getValueFromContext(condition.field, userContext);
     
     // Perform comparison
-    const passed = this.compareValues(actualValue, condition.operator, condition.value, condition.timeValue);
+    let passed = this.compareValues(actualValue, condition.operator, condition.value, condition.timeValue);
+
+    // Apply leaf-level negation (NOT)
+    if (condition.negate) {
+      passed = !passed;
+    }
     
     return {
       condition,
@@ -182,10 +187,10 @@ export class RuleEvaluator {
         return !this.contains(actualValue, expectedValue);
         
       case 'in':
-        return Array.isArray(expectedValue) && expectedValue.includes(actualValue);
+        return Array.isArray(expectedValue) && expectedValue.some(item => this.isEqual(item, actualValue));
         
       case 'notIn':
-        return Array.isArray(expectedValue) && !expectedValue.includes(actualValue);
+        return Array.isArray(expectedValue) && !expectedValue.some(item => this.isEqual(item, actualValue));
         
       case 'between':
         return this.isBetween(actualValue, expectedValue);

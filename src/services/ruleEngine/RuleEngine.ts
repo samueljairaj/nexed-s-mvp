@@ -83,6 +83,8 @@ export class RuleEngine {
       if (this.config.debugMode) {
         console.log(`✅ Loaded ${rules.length} rules into engine`);
       }
+      // Invalidate evaluation cache as rules changed
+      this.clearCache();
     } catch (error) {
       throw new RuleEngineError(
         `Failed to load rules: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -262,12 +264,10 @@ export class RuleEngine {
         ? await this.dateCalculator.calculateDueDate(rule.taskTemplate.dueDateConfig, userContext)
         : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default: 7 days from now
 
-      // Render title and description from templates
-      const renderedTitle = await this.templateRenderer.render(rule.taskTemplate.titleTemplate, userContext);
-      const renderedDescription = await this.templateRenderer.render(rule.taskTemplate.descriptionTemplate, userContext);
-
-      // Apply university overrides if applicable
+      // Apply university overrides first, then render from the effective template
       const finalTemplate = this.applyUniversityOverrides(rule.taskTemplate, userContext);
+      const renderedTitle = await this.templateRenderer.render(finalTemplate.titleTemplate, userContext);
+      const renderedDescription = await this.templateRenderer.render(finalTemplate.descriptionTemplate, userContext);
 
       const task: GeneratedTask = {
         ruleId: rule.id,
@@ -393,6 +393,7 @@ export class RuleEngine {
    */
   public updateConfig(newConfig: Partial<RuleEngineConfig>): void {
     this.config = { ...this.config, ...newConfig };
+    this.clearCache();
   }
 
   /**
