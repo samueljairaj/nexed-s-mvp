@@ -179,7 +179,11 @@ export interface UserContext {
     employmentEndDate?: Date;
     optStartDate?: Date;
     optEndDate?: Date;
+    stemOptStartDate?: Date;
     stemOptEndDate?: Date;
+    i20TravelSignatureDate?: Date;
+    plannedTravelDate?: Date;
+    lastMoved?: Date;
     i20ExpiryDate?: Date;
     lastAddressUpdate?: Date;
   };
@@ -189,13 +193,25 @@ export interface UserContext {
     university?: string;
     universityId?: string;
     fieldOfStudy?: string;
+    cipCode?: string;                 // used in STEM templates
     degreeLevel?: string;
     isSTEM?: boolean;
     gpa?: number;
     creditsCompleted?: number;
+    creditsThisSemester?: number;     // used in full-time course-load rule
     totalCredits?: number;
     isTransferStudent?: boolean;
     previousUniversities?: string[];
+    dsoContact?: {                    // placeholders for DSO templates
+      name?: string;
+      email?: string;
+      phone?: string;
+      office?: string;
+    };
+    isoEmail?: string;                // used in funding-reporting rule
+    isoPhone?: string;                // used in funding-reporting rule
+    careerCenter?: string;            // used in STEM unemployment warning
+    alumniServices?: string;          // used in STEM unemployment warning
   };
   
   // Employment Information
@@ -209,6 +225,18 @@ export interface UserContext {
     unemploymentDaysUsed?: number;
     maxUnemploymentDays?: number;
     eVerifyCompliant?: boolean;
+    employerEVerifyVerified?: boolean;
+    stemOptApplicationSubmitted?: boolean;
+    i983Completed?: boolean;
+    supervisorName?: string;
+    supervisorTitle?: string;
+    supervisorEmail?: string;
+    hrContact?: string;
+    department?: string;
+    workLocation?: string;
+    twelveMonthEvaluationCompleted?: boolean;
+    finalEvaluationCompleted?: boolean;
+    lastEmployerEvaluation?: Date;
   };
   
   // Document Status

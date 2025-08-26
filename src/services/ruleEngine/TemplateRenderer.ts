@@ -198,9 +198,9 @@ export class TemplateRenderer {
   private compareValues(left: any, operator: string, right: any): boolean {
     switch (operator) {
       case '==':
-        return left == right;
+        return left === right;
       case '!=':
-        return left != right;
+        return left !== right;
       case '>':
         return left > right;
       case '<':
@@ -217,30 +217,31 @@ export class TemplateRenderer {
   /**
    * Evaluate calculation expression
    */
-  private evaluateCalculation(calculation: string, context: TemplateContext): string {
+    private evaluateCalculation(calculation: string, context: TemplateContext): string {
     switch (calculation.toLowerCase()) {
       case 'days_until_graduation':
-        return String(context.calculated.daysUntilGraduation || 'N/A');
-        
+        return String(context.calculated.daysUntilGraduation ?? 'N/A');
+
       case 'days_until_opt_expiry':
-        return String(context.calculated.daysUntilOptExpiry || 'N/A');
-        
+        return String(context.calculated.daysUntilOptExpiry ?? 'N/A');
+
       case 'days_until_passport_expiry':
-        return String(context.calculated.daysUntilPassportExpiry || 'N/A');
-        
+        return String(context.calculated.daysUntilPassportExpiry ?? 'N/A');
+
       case 'unemployment_days_remaining':
-        return String(context.calculated.unemploymentDaysRemaining || 'N/A');
-        
+        return String(context.calculated.unemploymentDaysRemaining ?? 'N/A');
+
       case 'time_remaining_friendly':
-        return context.calculated.timeRemaining || 'Unknown';
-        
+        return context.calculated.timeRemaining ?? 'Unknown';
+
       case 'urgency_indicator':
         return this.getUrgencyIndicator(context.calculated.urgencyLevel);
-        
-      default:
+
+      default: {
         // Allow upstream (RuleEngine/DateCalculator) to supply arbitrary computed values
         const v = (context.calculated as any)?.[calculation];
         return v !== undefined && v !== null ? String(v) : `{Unknown calculation: ${calculation}}`;
+      }
     }
   }
 

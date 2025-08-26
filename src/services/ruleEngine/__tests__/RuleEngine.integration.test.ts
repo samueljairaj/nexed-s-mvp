@@ -163,7 +163,7 @@ describe('Rule Engine Integration Tests', () => {
         currentPhase: 'opt_active' as VisaPhase,
         dates: {
           optEndDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000), // 6 months from now
-          lastEmploymentEndDate: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000), // 65 days ago
+          employmentEndDate: new Date(Date.now() - 65 * 24 * 60 * 60 * 1000), // 65 days ago
         },
         academic: {
           university: 'Test University',
@@ -241,7 +241,7 @@ describe('Rule Engine Integration Tests', () => {
           unemploymentDaysUsed: 20,
           maxUnemploymentDays: 90,
           stemOptApplicationSubmitted: false,
-          employerEVerifyVerified: false
+          eVerifyCompliant: false
         },
         documents: {
           eadValid: true
@@ -322,19 +322,19 @@ describe('Rule Engine Integration Tests', () => {
       console.log(`✅ Service layer: Generated ${result.tasks.length} tasks from ${result.source}`);
     });
 
-    it('should handle fallback gracefully', async () => {
-      // Create a service instance with rule engine disabled
-      const fallbackService = SmartComplianceService.getInstance({
-        enableRuleEngine: false,
-        enableFallback: true,
-        debugMode: true
-      });
-
-      const result = await fallbackService.generateSmartTasks('test-user-fallback');
+        it('should handle fallback gracefully', async () => {
+      // Temporarily disable engine on the existing singleton
+      const oldConfig = smartService.getServiceStats().config;
+      smartService.updateConfig({ enableRuleEngine: false, enableFallback: true, debugMode: true });
       
+      const result = await smartService.generateSmartTasks('test-user-fallback');
+      
+      // Restore original config
+      smartService.updateConfig(oldConfig);
+
       expect(result.source).toBe('fallback');
       expect(result.tasks).toBeDefined();
-      
+
       console.log(`✅ Fallback test: Generated ${result.tasks.length} tasks from fallback system`);
     });
   });

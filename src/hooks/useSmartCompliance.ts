@@ -115,6 +115,7 @@ export const useSmartCompliance = (options: UseSmartComplianceOptions = {}): Use
       if (config.debugMode) {
         console.log('👤 No current user, skipping task generation');
       }
+      setIsLoading(false);
       return;
     }
 
@@ -228,11 +229,10 @@ export const useSmartCompliance = (options: UseSmartComplianceOptions = {}): Use
 
   const getOverdueTasks = useCallback((): Task[] => {
     const now = new Date();
-    return tasks.filter(task => 
-      task.deadline && 
-      task.deadline < now && 
-      !task.completed
-    );
+    return tasks.filter(task => {
+      const dl = task.deadline ?? (task.dueDate ? new Date(task.dueDate) : null);
+      return dl && dl < now && !task.completed;
+    });
   }, [tasks]);
 
   const getCompletedTasks = useCallback((): Task[] => {
