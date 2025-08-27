@@ -144,7 +144,7 @@ function addDaysToDate(date: Date, days: number): Date {
 }
 
 // Helper function to create a task from reminder details
-async function createReminder(userId: string, reminderDetails: { title: string; dueDate: string; priority: string }, supabaseUrl: string, serviceKey: string) {
+async function createReminder(userId: string, reminderDetails: any, supabaseUrl: string, serviceKey: string) {
   const { title, dueDate, priority } = reminderDetails;
   
   try {

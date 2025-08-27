@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 
 interface EmploymentInfoStepProps {
   defaultValues: {
-    employmentStatus: string;
+    employmentStatus: any;
     employerName: string;
     jobTitle: string;
     employmentStartDate: Date | null;
@@ -44,7 +44,7 @@ interface EmploymentInfoStepProps {
     stemEVerify: string;
     stemI983Date: Date | null;
   };
-  onSubmit: (data: { employmentStatus: string; employerName: string; jobTitle: string; employmentStartDate: Date | null; employmentEndDate: Date | null; isFieldRelated: boolean; optCptStartDate: Date | null; optCptEndDate: Date | null; eadNumber: string; stemEVerify: string; stemI983Date: Date | null }) => void;
+  onSubmit: (data: any) => void;
   visaType: string;
   onEmploymentStatusChange: (value: string) => void;
   isF1OrJ1: () => boolean;

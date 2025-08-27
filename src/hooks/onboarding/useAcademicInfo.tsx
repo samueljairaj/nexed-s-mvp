@@ -18,7 +18,7 @@ export function useAcademicInfo() {
     
     try {
       // Format data using camelCase for the userProfile object
-      const formattedData: Record<string, string | boolean | string[] | Record<string, string> | undefined> = {
+      const formattedData: Record<string, any> = {
         university: data.university,
         fieldOfStudy: data.fieldOfStudy,
         degreeLevel: data.degreeLevel,

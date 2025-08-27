@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/auth-hooks";
+import { useAuth } from "@/contexts/AuthContext";
 import { DocumentCategory } from "@/types/document";
 import { getBaselineChecklist, baselineItemsToAITasks } from "@/utils/baselineChecklists";
 import { Task } from "@/hooks/useComplianceTasks";
@@ -161,17 +161,17 @@ export function useAICompliance() {
     }
   };
 
-  function mapEmploymentStatus(userProfile: Record<string, unknown> | null): string {
+  function mapEmploymentStatus(userProfile: any): string {
     if (!userProfile) return "Unknown";
     
-    const visaType = (userProfile.visaType as string)?.toLowerCase();
-    const employmentStatus = (userProfile.employmentStatus as string)?.toLowerCase();
-    const optType = (userProfile.optType as string)?.toLowerCase();
+    const visaType = userProfile.visaType?.toLowerCase();
+    const employmentStatus = userProfile.employmentStatus?.toLowerCase();
+    const optType = userProfile.optType?.toLowerCase();
     
     if (
       (visaType === 'f1' && optType === 'stem') || 
       (employmentStatus?.includes('stem')) ||
-      (Object.prototype.hasOwnProperty.call(userProfile, 'isStemOpt') && userProfile.isStemOpt === true)
+      (userProfile.hasOwnProperty('isStemOpt') && userProfile.isStemOpt === true)
     ) {
       return "STEM OPT Extension";
     }
@@ -179,14 +179,14 @@ export function useAICompliance() {
     if (
       (visaType === 'f1' && employmentStatus?.includes('opt')) ||
       (optType === 'regular') ||
-      (Object.prototype.hasOwnProperty.call(userProfile, 'isOpt') && userProfile.isOpt === true)
+      (userProfile.hasOwnProperty('isOpt') && userProfile.isOpt === true)
     ) {
       return "OPT";
     }
     
     if (
       (visaType === 'f1' && employmentStatus?.includes('cpt')) ||
-      (Object.prototype.hasOwnProperty.call(userProfile, 'isCpt') && userProfile.isCpt === true)
+      (userProfile.hasOwnProperty('isCpt') && userProfile.isCpt === true)
     ) {
       return "CPT";
     }
