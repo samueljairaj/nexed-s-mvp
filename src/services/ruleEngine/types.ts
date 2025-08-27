@@ -50,7 +50,7 @@ export type DateCalculationType =
 export interface RuleCondition {
   field: string;                    // User data field to check
   operator: RuleOperator;
-  value: any;                      // Value to compare against
+  value?: any;                     // Value to compare against (optional for exists/notExists/regex)
   timeValue?: TimeValue;           // For time-based comparisons
   logicOperator?: 'AND' | 'OR';    // Aggregation across nested conditions
   negate?: boolean;                // Invert the aggregated result (NOT)
