@@ -35,8 +35,9 @@ export const AppLayout = () => {
     ];
 
     // Add settings only if basic settings are enabled
-    // Keep basic settings for now
-    commonItems.push({ to: "/app/settings", label: "Settings", icon: <Settings size={20} /> });
+    if (true) { // Keep basic settings for now
+      commonItems.push({ to: "/app/settings", label: "Settings", icon: <Settings size={20} /> });
+    }
 
     // DSO-specific items (disabled for MVP)
     if (isDSO) {

@@ -183,6 +183,17 @@ export const sevisInfoSchema = z.object({
   i20IssueDate: z.date().nullable(),
   i20ExpirationDate: z.date().nullable(),
   previousSevisIds: z.array(z.string()).default([]),
+}).superRefine((data, ctx) => {
+  const today = new Date(new Date().setHours(0,0,0,0));
+  if (data.i20IssueDate && data.i20IssueDate > today) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["i20IssueDate"], message: "Issue date cannot be in the future" });
+  }
+  if (data.i20ExpirationDate && data.i20ExpirationDate < today) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["i20ExpirationDate"], message: "Expiration date cannot be in the past" });
+  }
+  if (data.i20IssueDate && data.i20ExpirationDate && data.i20ExpirationDate < data.i20IssueDate) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["i20ExpirationDate"], message: "Expiration must be on/after issue date" });
+  }
 });
 
 export const preferencesSchema = z.object({

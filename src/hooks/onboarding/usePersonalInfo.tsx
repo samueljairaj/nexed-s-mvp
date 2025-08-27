@@ -24,7 +24,7 @@ export function usePersonalInfo() {
     
     try {
       // Create a plain object with string values only - no Date objects
-      const updateData: Record<string, string | undefined> = {
+      const updateData: Record<string, any> = {
         country: data.country,
         currentCountry: data.currentCountry,
         phone: data.phoneNumber, // Map to proper database field

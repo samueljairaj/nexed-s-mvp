@@ -5,23 +5,6 @@ import { formatFileSize } from "@/utils/documentUtilsLocal";
 import { generateMockDocuments } from "@/utils/mockDocuments";
 import { mockFolders, mockPackets } from "@/utils/mockDocumentsData";
 
-// Define the interface for the function parameters
-interface DocumentActionsParams {
-  saveDocumentToDatabase: (doc: Document) => Promise<string | null>;
-  updateDocumentInDatabase: (id: string, updates: Partial<Document>) => Promise<boolean>;
-  deleteDocumentFromDatabase: (id: string) => Promise<boolean>;
-  syncDocuments: () => Promise<void>;
-  saveDocumentVersionToDatabase: (docId: string, version: DocumentVersion) => Promise<boolean>;
-  setDocuments: React.Dispatch<React.SetStateAction<Document[]>>;
-  setFolders: React.Dispatch<React.SetStateAction<DocumentFolder[]>>;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedDocument: Document | null;
-  setSelectedDocument: React.Dispatch<React.SetStateAction<Document | null>>;
-  selectedDocuments: Document[];
-  setSelectedDocuments: React.Dispatch<React.SetStateAction<Document[]>>;
-  processDocuments: (docs: Document[]) => Document[];
-}
-
 // All arguments and return types are unchanged for compatibility.
 
 export function getDocumentActions({
@@ -38,7 +21,7 @@ export function getDocumentActions({
   selectedDocuments,
   setSelectedDocuments,
   processDocuments
-}: DocumentActionsParams) {
+}: any) {
 
   // Toggle document selection for multi-select
   const toggleDocumentSelection = (doc: Document) => {

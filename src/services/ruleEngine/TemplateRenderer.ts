@@ -217,26 +217,26 @@ export class TemplateRenderer {
   /**
    * Evaluate calculation expression
    */
-    private evaluateCalculation(calculation: string, context: TemplateContext): string {
+  private evaluateCalculation(calculation: string, context: TemplateContext): string {
     switch (calculation.toLowerCase()) {
       case 'days_until_graduation':
         return String(context.calculated.daysUntilGraduation ?? 'N/A');
-
+        
       case 'days_until_opt_expiry':
         return String(context.calculated.daysUntilOptExpiry ?? 'N/A');
-
+        
       case 'days_until_passport_expiry':
         return String(context.calculated.daysUntilPassportExpiry ?? 'N/A');
-
+        
       case 'unemployment_days_remaining':
         return String(context.calculated.unemploymentDaysRemaining ?? 'N/A');
-
+        
       case 'time_remaining_friendly':
         return context.calculated.timeRemaining ?? 'Unknown';
-
+        
       case 'urgency_indicator':
         return this.getUrgencyIndicator(context.calculated.urgencyLevel);
-
+        
       default: {
         // Allow upstream (RuleEngine/DateCalculator) to supply arbitrary computed values
         const v = (context.calculated as any)?.[calculation];
@@ -255,10 +255,10 @@ export class TemplateRenderer {
   }
 
   private calculateDaysUntilExpiry(userContext: UserContext): number | undefined {
-    const passportExpiry = userContext.dates.passportExpiryDate;
-    if (!passportExpiry) return undefined;
+    const visaExpiry = userContext.dates.visaExpiryDate;
+    if (!visaExpiry) return undefined;
     
-    return this.daysBetween(new Date(), passportExpiry);
+    return this.daysBetween(new Date(), visaExpiry);
   }
 
   private calculateTimeRemaining(userContext: UserContext): string | undefined {
@@ -398,7 +398,8 @@ export class TemplateRenderer {
   }
 
   private daysBetween(date1: Date, date2: Date): number {
-    const diffTime = date2.getTime() - date1.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const diffDays = (date2.getTime() - date1.getTime()) / msPerDay;
+    return diffDays >= 0 ? Math.ceil(diffDays) : Math.floor(diffDays);
   }
 }

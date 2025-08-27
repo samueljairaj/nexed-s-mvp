@@ -48,7 +48,7 @@ export function DocumentSidebar({
     document.versions?.find(v => v.is_current) || document.versions?.[0]
   );
   
-  const handleVersionSelect = (version: { id: string; version_number: number; file_path: string; notes?: string; is_current: boolean; created_at: string }) => {
+  const handleVersionSelect = (version: any) => {
     setSelectedVersion(version);
   };
 

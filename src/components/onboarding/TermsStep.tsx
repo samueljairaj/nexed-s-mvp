@@ -20,7 +20,7 @@ interface TermsStepProps {
     dataUsage: boolean;
     legalDisclaimer: boolean;
   };
-  onSubmit: (data: { termsOfService: boolean; privacyPolicy: boolean; dataUsage: boolean; legalDisclaimer: boolean }) => void;
+  onSubmit: (data: any) => void;
 }
 
 export function TermsStep({ defaultValues, onSubmit }: TermsStepProps) {

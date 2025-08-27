@@ -43,7 +43,7 @@ const profileEditorSchema = z.object({
 });
 
 interface ProfileEditorProps {
-  user?: { id: string; name?: string; email?: string; country?: string; address?: string; bio?: string } | null; // Make user prop optional
+  user?: any; // Make user prop optional
 }
 
 export function ProfileEditor({ user }: ProfileEditorProps) {
