@@ -105,17 +105,19 @@ export class RuleEngine {
         typeof userContext.academic !== 'object' ||
         userContext.academic === null
       ) {
-        this.logger.warn(`Invalid user context for ${userId}:`, userContext);
-        return { 
+        console.warn(`Invalid user context for ${userId}:`, userContext);
+        return {
           userId,
-          generatedTasks: [],
+          evaluatedAt: new Date(),
+          userContext,
           ruleResults: [],
+          generatedTasks: [],
           errors: ['Invalid user context: missing required fields'],
-          metadata: {
-            evaluationTime: Date.now() - startTime,
-            rulesEvaluated: 0,
-            tasksGenerated: 0,
-            cacheHit: false
+          performance: {
+            totalRulesEvaluated: 0,
+            executionTimeMs: Date.now() - startTime,
+            rulesMatched: 0,
+            tasksGenerated: 0
           }
         };
       }
@@ -261,17 +263,17 @@ export class RuleEngine {
    */
   private async generateTaskFromRule(rule: RuleDefinition, userContext: UserContext): Promise<GeneratedTask> {
     try {
-      // Calculate smart due date
+      // Apply university overrides first to get the effective template
+      const finalTemplate = this.applyUniversityOverrides(rule.taskTemplate, userContext);
+
+      // Calculate smart due date using the effective template
       const dueDate = this.config.enableSmartDates
-        ? await this.dateCalculator.calculateDueDate(rule.taskTemplate.dueDateConfig, userContext)
+        ? await this.dateCalculator.calculateDueDate(finalTemplate.dueDateConfig, userContext)
         : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default: 7 days from now
 
-      // Render title and description from templates
-      const renderedTitle = await this.templateRenderer.render(rule.taskTemplate.titleTemplate, userContext);
-      const renderedDescription = await this.templateRenderer.render(rule.taskTemplate.descriptionTemplate, userContext);
-
-      // Apply university overrides if applicable
-      const finalTemplate = this.applyUniversityOverrides(rule.taskTemplate, userContext);
+      // Render title and description from the effective template
+      const renderedTitle = await this.templateRenderer.render(finalTemplate.titleTemplate, userContext);
+      const renderedDescription = await this.templateRenderer.render(finalTemplate.descriptionTemplate, userContext);
 
       const task: GeneratedTask = {
         ruleId: rule.id,
@@ -286,13 +288,15 @@ export class RuleEngine {
         contextData: {
           userPhase: userContext.currentPhase,
           triggerConditions: rule.conditions.map(c => `${c.field} ${c.operator} ${c.value}`),
-          smartDateCalculation: `Calculated from ${rule.taskTemplate.dueDateConfig.type}`,
+          smartDateCalculation: `Calculated from ${finalTemplate.dueDateConfig?.type ?? 'default'}`,
           placeholderValues: this.extractPlaceholderValues(userContext)
         },
-        dependencies: rule.taskTemplate.dependsOn || [],
-        autoCompleteWhen: rule.taskTemplate.autoCompleteConditions,
-        isRecurring: rule.taskTemplate.dueDateConfig.type === 'recurring',
-        recurringInterval: rule.taskTemplate.dueDateConfig.type === 'recurring' ? rule.taskTemplate.dueDateConfig.calculation : undefined
+        dependencies: finalTemplate.dependsOn || [],
+        autoCompleteWhen: finalTemplate.autoCompleteConditions,
+        isRecurring: finalTemplate.dueDateConfig?.type === 'recurring',
+        recurringInterval: finalTemplate.dueDateConfig?.type === 'recurring'
+          ? finalTemplate.dueDateConfig.calculation
+          : undefined
       };
 
       return task;

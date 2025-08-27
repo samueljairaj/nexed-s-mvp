@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
+import { format, addDays, startOfToday } from "date-fns";
 import { CalendarIcon, Plus, X, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,10 +36,13 @@ interface SevisInfoStepProps {
 }
 
 export function SevisInfoStep({ defaultValues, onSubmit, visaType }: SevisInfoStepProps) {
-  const form = useForm({
+  const form = useForm<z.infer<typeof sevisInfoSchema>>({
     resolver: zodResolver(sevisInfoSchema),
     defaultValues,
   });
+
+  const today = startOfToday();
+  const sixtyDaysFromToday = addDays(today, 60);
 
   // Add a previous SEVIS ID field
   const addPreviousSevisId = () => {
@@ -106,7 +109,7 @@ export function SevisInfoStep({ defaultValues, onSubmit, visaType }: SevisInfoSt
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date > new Date()}
+                      disabled={(date) => date > today}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
@@ -149,14 +152,14 @@ export function SevisInfoStep({ defaultValues, onSubmit, visaType }: SevisInfoSt
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date < new Date()}
+                      disabled={(date) => date < today}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
-                {field.value && new Date(field.value) < new Date(new Date().setDate(new Date().getDate() + 60)) && (
+                {field.value && field.value < sixtyDaysFromToday && (
                   <div className="mt-2 p-2 bg-amber-50 text-amber-800 text-sm rounded-md flex items-center">
                     <AlertTriangle className="h-4 w-4 mr-2" />
                     Your {visaType === "F-1" ? "I-20" : "DS-2019"} expires within 60 days. Contact your DSO soon!
