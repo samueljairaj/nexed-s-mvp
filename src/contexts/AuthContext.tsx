@@ -80,7 +80,7 @@ interface AuthContextType {
   dsoProfile?: Record<string, unknown> | null;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -219,7 +219,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     try {
       // Map camelCase to snake_case for database
-      const dbUpdates: Record<string, string | boolean | undefined> = {
+      const dbUpdates: any = {
         id: user.id, // Always include id for upsert
         email: user.email // Include email from auth
       };
@@ -261,7 +261,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Use upsert instead of update to handle profile creation
       const { error } = await supabase
         .from('profiles')
-        .upsert(dbUpdates as Record<string, unknown>, { 
+        .upsert(dbUpdates, { 
           onConflict: 'id' 
         });
 
@@ -432,4 +432,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export default AuthContext;
+// Named export used above, no default export needed
