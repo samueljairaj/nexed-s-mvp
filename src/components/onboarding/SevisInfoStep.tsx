@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { sevisInfoSchema } from "@/types/onboarding";
+import { z } from "zod";
 import { 
   Popover, 
   PopoverContent, 
@@ -30,7 +31,7 @@ interface SevisInfoStepProps {
     i20ExpirationDate: Date | null;
     previousSevisIds: string[];
   };
-  onSubmit: (data: any) => void;
+  onSubmit: (data: z.infer<typeof sevisInfoSchema>) => void;
   visaType: string;
 }
 

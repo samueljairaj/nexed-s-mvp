@@ -97,6 +97,30 @@ export class RuleEngine {
       // Build comprehensive user context
       const userContext = await this.contextBuilder.buildContext(userId);
       
+      // ─── Validate userContext shape ───────────────────────────────────
+      if (
+        typeof userContext.userId !== 'string' ||
+        typeof userContext.visaType !== 'string' ||
+        typeof userContext.currentPhase !== 'string' ||
+        typeof userContext.academic !== 'object' ||
+        userContext.academic === null
+      ) {
+        this.logger.warn(`Invalid user context for ${userId}:`, userContext);
+        return { 
+          userId,
+          generatedTasks: [],
+          ruleResults: [],
+          errors: ['Invalid user context: missing required fields'],
+          metadata: {
+            evaluationTime: Date.now() - startTime,
+            rulesEvaluated: 0,
+            tasksGenerated: 0,
+            cacheHit: false
+          }
+        };
+      }
+      // ─────────────────────────────────────────────────────────────────
+      
       if (this.config.debugMode) {
         console.log(`📊 Built context for user ${userId}:`, {
           visaType: userContext.visaType,
@@ -394,5 +418,7 @@ export class RuleEngine {
    */
   public clearRules(): void {
     this.rules.clear();
+    // Clear any cached evaluation results since rules have changed
+    this.clearCache();
   }
 }

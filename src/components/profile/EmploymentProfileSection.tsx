@@ -46,7 +46,7 @@ export function EmploymentProfileSection() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await handleEmploymentInfo(employmentData as any);
+    const success = await handleEmploymentInfo(employmentData);
     if (success) {
       setIsEditing(false);
       toast.success("Employment information updated successfully");
