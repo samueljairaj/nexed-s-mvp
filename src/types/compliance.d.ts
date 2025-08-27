@@ -1,6 +1,6 @@
 
 import { ReactNode } from 'react';
-import { VisaType } from '@/contexts';
+import { VisaType } from '@/types/onboarding';
 
 export interface ComplianceChecklistProps {
   open: boolean;

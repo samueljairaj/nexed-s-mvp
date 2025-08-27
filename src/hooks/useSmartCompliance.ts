@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts';
+import { useAuth } from '@/contexts/AuthContext';
 import { SmartComplianceService, TaskGenerationResult } from '@/services/SmartComplianceService';
 import { Task } from '@/hooks/useComplianceTasks';
 import { toast } from 'sonner';

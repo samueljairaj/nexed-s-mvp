@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RoleBasedRedirectProps {
   children: React.ReactNode;
