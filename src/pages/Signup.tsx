@@ -101,6 +101,7 @@ const Signup = () => {
       newErrors.acceptTerms = "You must accept the terms and conditions";
     }
     
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -299,7 +300,7 @@ const Signup = () => {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                {formData.password && (
+                {formData.password.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span>Password strength:</span>
