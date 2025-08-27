@@ -1,7 +1,7 @@
 
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,

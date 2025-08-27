@@ -261,7 +261,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Use upsert instead of update to handle profile creation
       const { error } = await supabase
         .from('profiles')
+<<<<<<< Updated upstream
         .upsert(dbUpdates, { 
+=======
+        .upsert(dbUpdates as any, { 
+>>>>>>> Stashed changes
           onConflict: 'id' 
         });
 
@@ -432,4 +436,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+<<<<<<< Updated upstream
 // Named export used above, no default export needed
+=======
+// AuthContext is exported as named export above
+>>>>>>> Stashed changes

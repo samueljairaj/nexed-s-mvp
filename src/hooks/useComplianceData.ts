@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { Task } from "@/hooks/useComplianceTasks";
 import { ComplianceService } from "@/services/complianceService";
 import { toast } from "sonner";

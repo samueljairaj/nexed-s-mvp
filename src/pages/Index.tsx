@@ -1,7 +1,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileCheck, FolderArchive, MessageCircle, GraduationCap, Shield, Clock, CheckCircle, Star, ArrowRight } from "lucide-react";
