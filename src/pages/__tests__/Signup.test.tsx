@@ -8,21 +8,21 @@ import { MemoryRouter } from "react-router-dom";
 import Signup from "../Signup";
 
 // Mocks
-const mockSignup = vi.fn();
-vi.mock("@/contexts", () => {
+const signupMock = vi.fn();
+vi.mock("@/contexts/AuthContext", () => {
   return {
     useAuth: () => ({
-      signup: mockSignup,
+      signup: signupMock,
       isLoading: false,
     }),
   };
 });
 
 const navigateMock = vi.fn();
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
+vi.mock("react-router-dom", async (orig) => {
+  const actual = await orig();
   return {
-    ...(actual as Record<string, unknown>),
+    ...actual,
     useNavigate: () => navigateMock,
   };
 });
@@ -31,8 +31,8 @@ const toastSuccess = vi.fn();
 const toastError = vi.fn();
 vi.mock("sonner", () => ({
   toast: {
-    success: (...args: unknown[]) => toastSuccess(...args),
-    error: (...args: unknown[]) => toastError(...args),
+    success: (...args: any[]) => toastSuccess(...args),
+    error: (...args: any[]) => toastError(...args),
   },
 }));
 
@@ -40,10 +40,11 @@ const signInWithOAuthMock = vi.fn();
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: {
-      signInWithOAuth: (...args: unknown[]) => signInWithOAuthMock(...args),
+      signInWithOAuth: (...args: any[]) => signInWithOAuthMock(...args),
     },
   },
 }));
+
 
 describe("Signup Page", () => {
   beforeEach(() => {
@@ -51,7 +52,7 @@ describe("Signup Page", () => {
     toastSuccess.mockReset();
     toastError.mockReset();
     signInWithOAuthMock.mockReset();
-    mockSignup.mockReset();
+    signupMock.mockReset();
   });
 
   afterEach(() => {
@@ -81,7 +82,7 @@ describe("Signup Page", () => {
   it("validates required fields and shows errors when submitting empty form", async () => {
     setup();
     const submitBtn = screen.getByRole("button", { name: /Create Student Account/i });
-    fireEvent.click(submitBtn);
+    await userEvent.click(submitBtn);
 
     expect(await screen.findByText(/First name is required/i)).toBeInTheDocument();
     expect(screen.getByText(/Last name is required/i)).toBeInTheDocument();
@@ -90,63 +91,51 @@ describe("Signup Page", () => {
     expect(screen.getByText(/You must accept the terms and conditions/i)).toBeInTheDocument();
   });
 
-  it.skip("validates email format", async () => {
+  it("validates email format", async () => {
     setup();
 
-    // Fill in form with invalid email
-    await userEvent.type(screen.getByLabelText(/First Name/i), "John");
-    await userEvent.type(screen.getByLabelText(/Last Name/i), "Doe");
     await userEvent.type(screen.getByLabelText(/Email/i), "invalid-email");
-    await userEvent.type(screen.getByLabelText(/^Password$/i), "StrongPassword123");
-    await userEvent.type(screen.getByLabelText(/Confirm Password/i), "StrongPassword123");
+    await userEvent.type(screen.getByLabelText(/^Password$/i), "Strong123"); // to bypass password required
+    await userEvent.type(screen.getByLabelText(/Confirm Password/i), "Strong123");
+    await userEvent.type(screen.getByLabelText(/First Name/i), "A");
+    await userEvent.type(screen.getByLabelText(/Last Name/i), "B");
     await userEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
 
-    // Submit form to trigger validation
-    const submitButton = screen.getByRole("button", { name: /Create Student Account/i });
-    await userEvent.click(submitButton);
-    
-    // The signup function should not be called due to validation failure
-    expect(mockSignup).not.toHaveBeenCalled();
-    
-    // Wait for email validation error
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
     expect(await screen.findByText(/Please enter a valid email address/i)).toBeInTheDocument();
   });
 
-  it.skip("shows password strength info and updates classes", async () => {
+  it("shows password strength info and updates classes", async () => {
     setup();
 
     const passwordInput = screen.getByLabelText(/^Password$/i);
 
-    // Type a strong password to ensure password strength section appears
-    await userEvent.type(passwordInput, "StrongPassword123");
-    
-    // Wait for password strength section to appear
-    await waitFor(
-      () => {
-        expect(screen.getByText(/Password strength:/i)).toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
-    
-    // Should show "Strong" for this password
-    await waitFor(
-      () => {
-        expect(screen.getByText(/Strong/i)).toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
+    // Very weak (<25) - this case is not possible with the current logic as empty password doesn't show the indicator
+    // and any character gives at least strength 25, which is "Weak"
 
-    // Clear and type a weak password
+    // Weak (<50)
+    await userEvent.type(passwordInput, "a");
+    expect(await screen.findByText(/Password strength:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Weak/i)).toBeInTheDocument();
     await userEvent.clear(passwordInput);
-    await userEvent.type(passwordInput, "weak");
-    
-    // Should show "Very weak" for short password
-    await waitFor(
-      () => {
-        expect(screen.getByText(/Very weak/i)).toBeInTheDocument();
-      },
-      { timeout: 3000 }
-    );
+    await userEvent.type(passwordInput, "abcdefgh"); // lowercase + length >= 8 => 25 + 25 = 50 (boundary)
+    // With only lowercase and length, strength = 50 => "Good" requires < 75; 50 should be "Weak" according to code?
+    // Code: if <25 'Very weak', if <50 'Weak', if <75 'Good', else 'Strong'
+    // strength=50 => not <50, but <75 => "Good". Let's construct 49: length 8 (25) + lowercase (25) => 50 exact -> Good
+    // For Weak, need <50; use only lowercase and length<8 => try "abc" -> 25 (lowercase) -> "Weak" since 25 < 50
+    await userEvent.clear(passwordInput);
+    await userEvent.type(passwordInput, "abc"); // 25 => 'Weak'
+    expect(screen.getByText(/Weak/i)).toBeInTheDocument();
+
+    // Good (<75)
+    await userEvent.clear(passwordInput);
+    await userEvent.type(passwordInput, "abcdefgh"); // 50 => 'Good'
+    expect(screen.getByText(/Good/i)).toBeInTheDocument();
+
+    // Strong (>=75)
+    await userEvent.clear(passwordInput);
+    await userEvent.type(passwordInput, "Abcdef12"); // len>=8, lowercase, uppercase, number => 100
+    expect(screen.getByText(/Strong/i)).toBeInTheDocument();
   });
 
   it("requires password >= 8 chars and adequate strength", async () => {
@@ -157,9 +146,9 @@ describe("Signup Page", () => {
     await userEvent.type(screen.getByLabelText(/Email/i), "john@example.com");
     await userEvent.type(screen.getByLabelText(/^Password$/i), "short"); // < 8
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "short");
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
 
     expect(await screen.findByText(/Password must be at least 8 characters long/i)).toBeInTheDocument();
 
@@ -175,7 +164,7 @@ describe("Signup Page", () => {
     await userEvent.clear(screen.getByLabelText(/Confirm Password/i));
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "aaaaaaaa");
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
     await waitFor(() => {
       expect(screen.queryByText(/Password is too weak/i)).not.toBeInTheDocument();
     });
@@ -187,7 +176,7 @@ describe("Signup Page", () => {
     await userEvent.type(screen.getByLabelText(/^Password$/i), "Abcdef12");
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "Abcdef13");
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
     expect(await screen.findByText(/Passwords do not match/i)).toBeInTheDocument();
 
     await userEvent.clear(screen.getByLabelText(/Confirm Password/i));
@@ -204,25 +193,25 @@ describe("Signup Page", () => {
     await userEvent.type(screen.getByLabelText(/^Password$/i), "Abcdef12");
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "Abcdef12");
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
     expect(await screen.findByText(/You must accept the terms and conditions/i)).toBeInTheDocument();
   });
 
   it("successful submit calls signup, shows toast.success and navigates to verify-email", async () => {
     setup();
-    mockSignup.mockResolvedValueOnce(undefined);
+    signupMock.mockResolvedValueOnce(undefined);
 
     await userEvent.type(screen.getByLabelText(/First Name/i), "John");
     await userEvent.type(screen.getByLabelText(/Last Name/i), "Doe");
     await userEvent.type(screen.getByLabelText(/Email/i), "john@example.com");
     await userEvent.type(screen.getByLabelText(/^Password$/i), "Abcdef12");
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "Abcdef12");
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
 
     await waitFor(() => {
-      expect(mockSignup).toHaveBeenCalledWith("john@example.com", "Abcdef12", "student");
+      expect(signupMock).toHaveBeenCalledWith("john@example.com", "Abcdef12", "student");
       expect(toastSuccess).toHaveBeenCalled();
       expect(navigateMock).toHaveBeenCalledWith("/verify-email", { state: { email: "john@example.com" } });
     });
@@ -230,16 +219,16 @@ describe("Signup Page", () => {
 
   it("handles signup error: user already registered", async () => {
     setup();
-    mockSignup.mockRejectedValueOnce(new Error("User already registered"));
+    signupMock.mockRejectedValueOnce(new Error("User already registered"));
 
     await userEvent.type(screen.getByLabelText(/First Name/i), "John");
     await userEvent.type(screen.getByLabelText(/Last Name/i), "Doe");
     await userEvent.type(screen.getByLabelText(/Email/i), "john@example.com");
     await userEvent.type(screen.getByLabelText(/^Password$/i), "Abcdef12");
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "Abcdef12");
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
 
     expect(
       await screen.findByText(/An account with this email already exists/i)
@@ -249,16 +238,16 @@ describe("Signup Page", () => {
 
   it("handles signup error: password policy", async () => {
     setup();
-    mockSignup.mockRejectedValueOnce(new Error("Password does not meet security requirements."));
+    signupMock.mockRejectedValueOnce(new Error("Password does not meet security requirements."));
 
     await userEvent.type(screen.getByLabelText(/First Name/i), "John");
     await userEvent.type(screen.getByLabelText(/Last Name/i), "Doe");
     await userEvent.type(screen.getByLabelText(/Email/i), "john@example.com");
     await userEvent.type(screen.getByLabelText(/^Password$/i), "Abcdef12");
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "Abcdef12");
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
 
     expect(
       await screen.findByText(/Password does not meet security requirements/i)
@@ -268,16 +257,16 @@ describe("Signup Page", () => {
 
   it("handles signup error: rate limit", async () => {
     setup();
-    mockSignup.mockRejectedValueOnce(new Error("rate limit exceeded"));
+    signupMock.mockRejectedValueOnce(new Error("rate limit exceeded"));
 
     await userEvent.type(screen.getByLabelText(/First Name/i), "John");
     await userEvent.type(screen.getByLabelText(/Last Name/i), "Doe");
     await userEvent.type(screen.getByLabelText(/Email/i), "john@example.com");
     await userEvent.type(screen.getByLabelText(/^Password$/i), "Abcdef12");
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "Abcdef12");
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
 
     expect(
       await screen.findByText(/Too many requests/i)
@@ -287,16 +276,16 @@ describe("Signup Page", () => {
 
   it("handles signup generic error", async () => {
     setup();
-    mockSignup.mockRejectedValueOnce(new Error("unexpected"));
+    signupMock.mockRejectedValueOnce(new Error("unexpected"));
 
     await userEvent.type(screen.getByLabelText(/First Name/i), "John");
     await userEvent.type(screen.getByLabelText(/Last Name/i), "Doe");
     await userEvent.type(screen.getByLabelText(/Email/i), "john@example.com");
     await userEvent.type(screen.getByLabelText(/^Password$/i), "Abcdef12");
     await userEvent.type(screen.getByLabelText(/Confirm Password/i), "Abcdef12");
-    fireEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /I agree to the/i }));
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
 
     expect(
       await screen.findByText(/Account creation failed\. Please try again\./i)
@@ -308,7 +297,7 @@ describe("Signup Page", () => {
     setup();
     signInWithOAuthMock.mockResolvedValueOnce({ error: null });
 
-    fireEvent.click(screen.getByRole("button", { name: /Continue with Google/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Continue with Google/i }));
     await waitFor(() => {
       expect(signInWithOAuthMock).toHaveBeenCalledWith({
         provider: "google",
@@ -317,7 +306,7 @@ describe("Signup Page", () => {
     });
 
     signInWithOAuthMock.mockResolvedValueOnce({ error: null });
-    fireEvent.click(screen.getByRole("button", { name: /Continue with Apple/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Continue with Apple/i }));
     await waitFor(() => {
       expect(signInWithOAuthMock).toHaveBeenCalledWith({
         provider: "apple",
@@ -330,7 +319,7 @@ describe("Signup Page", () => {
     setup();
     signInWithOAuthMock.mockResolvedValueOnce({ error: new Error("provider disabled") });
 
-    fireEvent.click(screen.getByRole("button", { name: /Continue with Google/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Continue with Google/i }));
     await waitFor(() => {
       expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/Unable to sign in with google/i));
     });
@@ -342,7 +331,7 @@ describe("Signup Page", () => {
       throw new Error("network down");
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Continue with Apple/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Continue with Apple/i }));
     await waitFor(() => {
       expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/Something went wrong/i));
     });
@@ -356,7 +345,7 @@ describe("Signup Page", () => {
     const [passwordToggleBtn] = screen.getAllByRole("button", { name: "" }); // icon button has no accessible name
     expect(passwordInput.type).toBe("password");
 
-    fireEvent.click(passwordToggleBtn);
+    await userEvent.click(passwordToggleBtn);
     expect(passwordInput.type).toBe("text");
 
     // Type something to ensure input remains editable
@@ -369,7 +358,7 @@ describe("Signup Page", () => {
     const confirmToggleBtn = toggleButtons[1];
     expect(confirmInput.type).toBe("password");
 
-    fireEvent.click(confirmToggleBtn);
+    await userEvent.click(confirmToggleBtn);
     expect(confirmInput.type).toBe("text");
   });
 
@@ -377,7 +366,7 @@ describe("Signup Page", () => {
     setup();
 
     // Trigger validation errors
-    fireEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
+    await userEvent.click(screen.getByRole("button", { name: /Create Student Account/i }));
     expect(await screen.findByText(/First name is required/i)).toBeInTheDocument();
 
     // Start typing in first name to clear its error

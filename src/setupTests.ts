@@ -1,22 +1,24 @@
 import '@testing-library/jest-dom/vitest';
+import { vi } from 'vitest';
 
-// Polyfill ResizeObserver for tests (used by Radix UI components)
-global.ResizeObserver = class ResizeObserver {
-  constructor(callback: ResizeObserverCallback) {
-    this.callback = callback;
-  }
-  
-  private callback: ResizeObserverCallback;
-  
-  observe() {
-    // Mock implementation - do nothing
-  }
-  
-  unobserve() {
-    // Mock implementation - do nothing
-  }
-  
-  disconnect() {
-    // Mock implementation - do nothing
-  }
-};
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+const ResizeObserverMock = vi.fn(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+vi.stubGlobal('ResizeObserver', ResizeObserverMock);

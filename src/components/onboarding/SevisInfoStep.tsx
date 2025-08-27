@@ -30,7 +30,7 @@ interface SevisInfoStepProps {
     i20ExpirationDate: Date | null;
     previousSevisIds: string[];
   };
-  onSubmit: (data: { sevisId: string; i20IssueDate: Date | null; i20ExpirationDate: Date | null; previousSevisIds: string[] }) => void;
+  onSubmit: (data: any) => void;
   visaType: string;
 }
 

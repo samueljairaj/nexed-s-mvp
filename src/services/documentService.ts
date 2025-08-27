@@ -163,7 +163,7 @@ export class DocumentService {
     }
   }
 
-  private static mapDocumentFromDB(dbDoc: DocumentData): Document {
+  private static mapDocumentFromDB(dbDoc: any): Document {
     return {
       id: dbDoc.id,
       name: dbDoc.title,

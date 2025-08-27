@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ export function useAIAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastCreatedReminder, setLastCreatedReminder] = useState<ReminderDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [realtimeSubscription, setRealtimeSubscription] = useState<{ unsubscribe: () => void } | null>(null);
+  const [realtimeSubscription, setRealtimeSubscription] = useState<any>(null);
   const { currentUser } = useAuth();
 
   // Set up Supabase realtime subscription for messages
@@ -128,10 +128,10 @@ export function useAIAssistant() {
     };
     
     loadMessages();
-  }, [currentUser?.id, currentUser?.name, currentUser?.visaType, saveMessageToDatabase]);
+  }, [currentUser?.id]);
 
   // Save message to Supabase
-  const saveMessageToDatabase = useCallback(async (message: Message) => {
+  const saveMessageToDatabase = async (message: Message) => {
     if (!currentUser?.id) return;
     
     try {
@@ -151,7 +151,7 @@ export function useAIAssistant() {
     } catch (error) {
       console.error('Error saving message to database:', error);
     }
-  }, [currentUser?.id]);
+  };
 
   const sendMessage = async (prompt: string, messageHistory: Message[] = []) => {
     setIsLoading(true);

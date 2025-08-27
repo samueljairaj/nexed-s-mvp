@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -101,15 +101,17 @@ const Signup = () => {
       newErrors.acceptTerms = "You must accept the terms and conditions";
     }
     
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    const newErrors = validateForm();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
     
     setIsSubmitting(true);
     setErrors({});
@@ -118,7 +120,7 @@ const Signup = () => {
       await signup(formData.email, formData.password, "student");
       toast.success("Account created successfully! Please check your email for verification.");
       navigate("/verify-email", { state: { email: formData.email } });
-    } catch (error: Error | unknown) {
+    } catch (error: any) {
       console.error("Signup error:", error);
       
       let errorMessage = "Account creation failed. Please try again.";
@@ -300,7 +302,7 @@ const Signup = () => {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                {formData.password.length > 0 && (
+                {formData.password && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span>Password strength:</span>

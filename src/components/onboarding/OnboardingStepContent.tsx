@@ -5,39 +5,23 @@ import { VisaStatusStep } from "./VisaStatusStep";
 import { AcademicInfoStep, AcademicInfoStepRef } from "./AcademicInfoStep";
 import { EmploymentStep } from "./EmploymentStep";
 import { CompletionStep } from "./CompletionStep";
-import { 
-  AccountCreationFormValues, 
-  PersonalInfoFormValues, 
-  VisaStatusFormValues, 
-  AcademicInfoFormValues, 
-  EmploymentInfoFormValues 
-} from "@/types/onboarding";
-
-// Minimal shape used by this component
-interface OnboardingCurrentUser {
-  name?: string;
-  visaType?: VisaStatusFormValues["visaType"];
-  university?: string;
-  fieldOfStudy?: string;
-  employerName?: string;
-  employer?: string;
-}
+import { useAuth } from "@/contexts/AuthContext";
 
 interface OnboardingStepContentProps {
   currentStep: number;
-  accountData: AccountCreationFormValues | null;
-  personalData: PersonalInfoFormValues | null;
-  visaData: VisaStatusFormValues | null;
-  academicData: AcademicInfoFormValues | null;
-  employmentData: EmploymentInfoFormValues | null;
+  accountData: any;
+  personalData: any;
+  visaData: any;
+  academicData: any;
+  employmentData: any;
   isSubmitting: boolean;
-  currentUser: OnboardingCurrentUser | null;
-  handleAccountCreation: (data: AccountCreationFormValues) => Promise<boolean>;
-  handlePersonalInfo: (data: PersonalInfoFormValues) => Promise<boolean>;
-  handleVisaStatus: (data: VisaStatusFormValues) => Promise<boolean>;
-  handleVisaTypeChange: (type: VisaStatusFormValues["visaType"]) => void;
-  handleAcademicInfo: (data: AcademicInfoFormValues) => Promise<boolean>;
-  handleEmploymentInfo: (data: EmploymentInfoFormValues) => Promise<boolean>;
+  currentUser: any;
+  handleAccountCreation: (data: any) => Promise<boolean>;
+  handlePersonalInfo: (data: any) => Promise<boolean>;
+  handleVisaStatus: (data: any) => Promise<boolean>;
+  handleVisaTypeChange: (type: any) => void;
+  handleAcademicInfo: (data: any) => Promise<boolean>;
+  handleEmploymentInfo: (data: any) => Promise<boolean>;
   handleEmploymentStatusChange: (status: string) => void;
   isF1OrJ1: boolean;
   isEmployed: boolean;
@@ -70,29 +54,22 @@ export const OnboardingStepContent = ({
   handleFinish,
   handleBackToLogin
 }: OnboardingStepContentProps) => {
-  if (import.meta.env.DEV) {
-    // Use debug to reduce noise
-    console.debug("OnboardingStepContent - currentStep:", currentStep);
-    console.debug("OnboardingStepContent - isF1OrJ1:", isF1OrJ1);
-  }
+  console.log("OnboardingStepContent - currentStep:", currentStep);
+  console.log("OnboardingStepContent - isF1OrJ1:", isF1OrJ1);
   
   // Create refs for form components
   const academicStepRef = useRef<AcademicInfoStepRef>(null);
 
   // Prepare user data for completion step
   const userData = {
-    name:
-      currentUser?.name ??
-      [accountData?.firstName, accountData?.lastName].filter(Boolean).join(" "),
+    name: currentUser?.name || accountData?.firstName + " " + accountData?.lastName,
     visaType: visaData?.visaType || currentUser?.visaType || "F1",
     university: academicData?.university || currentUser?.university || "",
     fieldOfStudy: academicData?.fieldOfStudy || currentUser?.fieldOfStudy || "",
     employer: employmentData?.employerName || currentUser?.employerName || currentUser?.employer || "", 
   };
   
-  if (import.meta.env.DEV) {
-    console.debug("User data prepared for completion checklist:", userData);
-  }
+  console.log("User data prepared for completion checklist:", userData);
 
   // Student onboarding flow
   const renderStep = () => {
@@ -100,7 +77,7 @@ export const OnboardingStepContent = ({
       case 0:
         return (
           <AccountCreationStep
-            defaultValues={accountData ?? undefined}
+            defaultValues={accountData}
             onSubmit={handleAccountCreation}
             isSubmitting={isSubmitting}
           />
@@ -108,7 +85,7 @@ export const OnboardingStepContent = ({
       case 1:
         return (
           <PersonalInfoStep
-            defaultValues={personalData ?? undefined}
+            defaultValues={personalData}
             onSubmit={handlePersonalInfo}
             isSubmitting={isSubmitting}
           />
@@ -116,7 +93,7 @@ export const OnboardingStepContent = ({
       case 2:
         return (
           <VisaStatusStep
-            defaultValues={visaData ?? undefined}
+            defaultValues={visaData}
             onSubmit={handleVisaStatus}
             onVisaTypeChange={handleVisaTypeChange}
             isSubmitting={isSubmitting}
@@ -127,7 +104,7 @@ export const OnboardingStepContent = ({
         return (
           <AcademicInfoStep
             ref={academicStepRef}
-            defaultValues={academicData ?? undefined}
+            defaultValues={academicData}
             onSubmit={handleAcademicInfo}
             isSubmitting={isSubmitting}
             isF1OrJ1={isF1OrJ1}
@@ -137,7 +114,7 @@ export const OnboardingStepContent = ({
       case 4:
         return (
           <EmploymentStep
-            defaultValues={employmentData ?? undefined}
+            defaultValues={employmentData}
             onSubmit={handleEmploymentInfo}
             onEmploymentStatusChange={handleEmploymentStatusChange}
             isSubmitting={isSubmitting}
@@ -162,3 +139,15 @@ export const OnboardingStepContent = ({
 
   return renderStep();
 }
+
+// Add a method to get the ref for the current step
+export const getActiveStepRef = (currentStep: number, refs: {
+  academicStepRef: React.RefObject<AcademicInfoStepRef>
+}) => {
+  switch (currentStep) {
+    case 3:
+      return refs.academicStepRef;
+    default:
+      return null;
+  }
+};

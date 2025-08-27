@@ -34,10 +34,6 @@ export class RuleEngine {
   private contextBuilder: ContextBuilder;
   private templateRenderer: TemplateRenderer;
   private dependencyResolver: DependencyResolver;
-  
-  // Caching mechanism
-  private evaluationCache: Map<string, { result: RuleEngineResult; timestamp: number }> = new Map();
-  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache TTL
 
   private constructor(config: RuleEngineConfig) {
     this.config = config;
@@ -83,8 +79,6 @@ export class RuleEngine {
       if (this.config.debugMode) {
         console.log(`✅ Loaded ${rules.length} rules into engine`);
       }
-      // Invalidate evaluation cache as rules changed
-      this.clearCache();
     } catch (error) {
       throw new RuleEngineError(
         `Failed to load rules: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -98,17 +92,6 @@ export class RuleEngine {
    */
   public async evaluateRulesForUser(userId: string): Promise<RuleEngineResult> {
     const startTime = Date.now();
-    
-    // Check cache if enabled
-    if (this.config.cacheEvaluationResults) {
-      const cached = this.getCachedResult(userId);
-      if (cached) {
-        if (this.config.debugMode) {
-          console.log(`🚀 Cache hit for user ${userId}`);
-        }
-        return cached;
-      }
-    }
     
     try {
       // Build comprehensive user context
@@ -193,11 +176,6 @@ export class RuleEngine {
         });
       }
 
-      // Cache the result if enabled
-      if (this.config.cacheEvaluationResults) {
-        this.cacheResult(userId, result);
-      }
-
       return result;
 
     } catch (error) {
@@ -264,10 +242,12 @@ export class RuleEngine {
         ? await this.dateCalculator.calculateDueDate(rule.taskTemplate.dueDateConfig, userContext)
         : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default: 7 days from now
 
-      // Apply university overrides first, then render from the effective template
+      // Render title and description from templates
+      const renderedTitle = await this.templateRenderer.render(rule.taskTemplate.titleTemplate, userContext);
+      const renderedDescription = await this.templateRenderer.render(rule.taskTemplate.descriptionTemplate, userContext);
+
+      // Apply university overrides if applicable
       const finalTemplate = this.applyUniversityOverrides(rule.taskTemplate, userContext);
-      const renderedTitle = await this.templateRenderer.render(finalTemplate.titleTemplate, userContext);
-      const renderedDescription = await this.templateRenderer.render(finalTemplate.descriptionTemplate, userContext);
 
       const task: GeneratedTask = {
         ruleId: rule.id,
@@ -393,7 +373,6 @@ export class RuleEngine {
    */
   public updateConfig(newConfig: Partial<RuleEngineConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    this.clearCache();
   }
 
   /**
@@ -415,82 +394,5 @@ export class RuleEngine {
    */
   public clearRules(): void {
     this.rules.clear();
-  }
-
-  // ============================================================================
-  // CACHING METHODS
-  // ============================================================================
-
-  /**
-   * Get cached evaluation result for a user
-   */
-  private getCachedResult(userId: string): RuleEngineResult | null {
-    const cacheKey = this.generateCacheKey(userId);
-    const cached = this.evaluationCache.get(cacheKey);
-    
-    if (!cached) {
-      return null;
-    }
-    
-    // Check if cache has expired
-    const now = Date.now();
-    if (now - cached.timestamp > this.CACHE_TTL_MS) {
-      this.evaluationCache.delete(cacheKey);
-      return null;
-    }
-    
-    return cached.result;
-  }
-
-  /**
-   * Cache evaluation result for a user
-   */
-  private cacheResult(userId: string, result: RuleEngineResult): void {
-    const cacheKey = this.generateCacheKey(userId);
-    this.evaluationCache.set(cacheKey, {
-      result,
-      timestamp: Date.now()
-    });
-    
-    // Clean up expired entries periodically
-    if (this.evaluationCache.size % 10 === 0) {
-      this.cleanupExpiredCache();
-    }
-  }
-
-  /**
-   * Generate cache key for a user
-   */
-  private generateCacheKey(userId: string): string {
-    return `eval_${userId}`;
-  }
-
-  /**
-   * Clean up expired cache entries
-   */
-  private cleanupExpiredCache(): void {
-    const now = Date.now();
-    for (const [key, cached] of this.evaluationCache.entries()) {
-      if (now - cached.timestamp > this.CACHE_TTL_MS) {
-        this.evaluationCache.delete(key);
-      }
-    }
-  }
-
-  /**
-   * Clear all cached results
-   */
-  public clearCache(): void {
-    this.evaluationCache.clear();
-  }
-
-  /**
-   * Get cache statistics
-   */
-  public getCacheStats(): { size: number; ttlMs: number } {
-    return {
-      size: this.evaluationCache.size,
-      ttlMs: this.CACHE_TTL_MS
-    };
   }
 }

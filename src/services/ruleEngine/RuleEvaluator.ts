@@ -59,12 +59,7 @@ export class RuleEvaluator {
     const actualValue = this.getValueFromContext(condition.field, userContext);
     
     // Perform comparison
-    let passed = this.compareValues(actualValue, condition.operator, condition.value, condition.timeValue);
-
-    // Apply leaf-level negation (NOT)
-    if (condition.negate) {
-      passed = !passed;
-    }
+    const passed = this.compareValues(actualValue, condition.operator, condition.value, condition.timeValue);
     
     return {
       condition,
@@ -118,7 +113,7 @@ export class RuleEvaluator {
   /**
    * Get value from user context using dot notation
    */
-  private getValueFromContext(fieldPath: string, userContext: UserContext): unknown {
+  private getValueFromContext(fieldPath: string, userContext: UserContext): any {
     const paths = fieldPath.split('.');
     let value: any = userContext;
     
@@ -136,9 +131,9 @@ export class RuleEvaluator {
    * Compare actual value with expected value using operator
    */
   private compareValues(
-    actualValue: unknown, 
+    actualValue: any,
     operator: RuleOperator, 
-    expectedValue: unknown, 
+    expectedValue: any,
     timeValue?: string
   ): boolean {
     
@@ -152,12 +147,6 @@ export class RuleEvaluator {
     }
     
     if (actualValue === null || actualValue === undefined) {
-      if (operator === 'equals') {
-        return expectedValue === null || expectedValue === undefined;
-      }
-      if (operator === 'notEquals') {
-        return !(expectedValue === null || expectedValue === undefined);
-      }
       return false;
     }
 
@@ -193,18 +182,15 @@ export class RuleEvaluator {
         return !this.contains(actualValue, expectedValue);
         
       case 'in':
-        return Array.isArray(expectedValue) && expectedValue.some(item => this.isEqual(item, actualValue));
+        return Array.isArray(expectedValue) && expectedValue.includes(actualValue);
         
       case 'notIn':
-        return Array.isArray(expectedValue) && !expectedValue.some(item => this.isEqual(item, actualValue));
+        return Array.isArray(expectedValue) && !expectedValue.includes(actualValue);
         
       case 'between':
         return this.isBetween(actualValue, expectedValue);
         
       case 'regex':
-        if (typeof expectedValue !== 'string') {
-          throw new RuleEngineError('Regex operator requires a string pattern', 'CONDITION_EVALUATION_FAILED');
-        }
         return this.matchesRegex(actualValue, expectedValue);
         
       default:
@@ -216,9 +202,9 @@ export class RuleEvaluator {
    * Compare time-based values (e.g., dates with offsets)
    */
   private compareTimeValues(
-    actualValue: unknown, 
+    actualValue: any,
     operator: RuleOperator, 
-    expectedValue: unknown, 
+    expectedValue: any,
     timeValue: string
   ): boolean {
     
@@ -226,9 +212,7 @@ export class RuleEvaluator {
     if (!actualDate) return false;
     
     const offsetMs = this.parseTimeValue(timeValue);
-    // If expectedValue is a valid date, use it as the base; else, use now
-    const baseDate = this.parseDate(expectedValue) || new Date();
-    const comparisonDate = new Date(baseDate.getTime() + offsetMs);
+    const comparisonDate = new Date(Date.now() + offsetMs);
     
     switch (operator) {
       case 'lessThan':
@@ -298,18 +282,6 @@ export class RuleEvaluator {
   }
 
   /**
-   * Convert value to number if possible
-   */
-  private toNumber(value: any): number | null {
-    if (typeof value === 'number' && Number.isFinite(value)) return value;
-    if (typeof value === 'string' && value.trim() !== '') {
-      const n = Number(value);
-      return Number.isFinite(n) ? n : null;
-    }
-    return null;
-  }
-
-  /**
    * Deep equality comparison
    */
   private isEqual(a: any, b: any): boolean {
@@ -340,18 +312,14 @@ export class RuleEvaluator {
    * Compare primitive values
    */
   private comparePrimitive(a: any, b: any): number {
-    // Handle dates (including date-like inputs)
-    const aDate = a instanceof Date ? a : this.parseDate(a);
-    const bDate = b instanceof Date ? b : this.parseDate(b);
-    if (aDate && bDate) {
-      return aDate.getTime() - bDate.getTime();
+    // Handle dates
+    if (a instanceof Date && b instanceof Date) {
+      return a.getTime() - b.getTime();
     }
     
-    // Handle numbers (including number-like strings)
-    const aNum = this.toNumber(a);
-    const bNum = this.toNumber(b);
-    if (aNum !== null && bNum !== null) {
-      return aNum - bNum;
+    // Handle numbers
+    if (typeof a === 'number' && typeof b === 'number') {
+      return a - b;
     }
     
     // Handle strings
@@ -397,12 +365,9 @@ export class RuleEvaluator {
   /**
    * Check if value matches regex pattern
    */
-  private matchesRegex(value: unknown, pattern: string): boolean {
-    let stringValue: string;
+  private matchesRegex(value: any, pattern: string): boolean {
     if (typeof value !== 'string') {
-      stringValue = String(value);
-    } else {
-      stringValue = value;
+      value = String(value);
     }
     
     try {
@@ -417,21 +382,9 @@ export class RuleEvaluator {
         throw new RuleEngineError(`Potentially unsafe regex pattern`, 'CONDITION_EVALUATION_FAILED');
       }
       const regex = new RegExp(pattern);
-      return regex.test(stringValue);
+      return regex.test(value);
     } catch (error) {
-      if (error instanceof RuleEngineError) {
-        // Preserve original diagnostic
-        throw error;
-      }
-      // Likely a SyntaxError from RegExp constructor; wrap with context
-      throw new RuleEngineError(
-        `Invalid regex pattern: ${pattern}`,
-        'CONDITION_EVALUATION_FAILED',
-        undefined,
-        undefined,
-        undefined,
-        { cause: error as unknown }
-      );
+      throw new RuleEngineError(`Invalid regex pattern: ${pattern}`, 'CONDITION_EVALUATION_FAILED');
     }
   }
 
