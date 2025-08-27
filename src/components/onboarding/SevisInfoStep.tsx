@@ -152,7 +152,11 @@ export function SevisInfoStep({ defaultValues, onSubmit, visaType }: SevisInfoSt
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date < today}
+                      disabled={(date) => {
+                        const issueDate = form.watch("i20IssueDate");
+                        const minExpiry = issueDate && issueDate > today ? issueDate : today;
+                        return date < minExpiry;
+                      }}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
