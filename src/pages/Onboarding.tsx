@@ -12,7 +12,8 @@ import {
   PersonalInfoFormValues, 
   VisaStatusFormValues, 
   AcademicInfoFormValues, 
-  EmploymentInfoFormValues 
+  EmploymentInfoFormValues,
+  VisaType 
 } from "@/types/onboarding";
 
 const Onboarding = () => {
@@ -147,7 +148,13 @@ const Onboarding = () => {
         academicData={formData.academic}
         employmentData={formData.employment}
         isSubmitting={isSubmitting}
-        currentUser={currentUser}
+        currentUser={currentUser ? {
+          name: currentUser.name,
+          visaType: currentUser.visaType as VisaType,
+          university: currentUser.university,
+          fieldOfStudy: currentUser.fieldOfStudy,
+          employer: currentUser.employer
+        } : null}
         handleAccountCreation={handleAccountFormSubmit}
         handlePersonalInfo={handlePersonalFormSubmit}
         handleVisaStatus={handleVisaFormSubmit}
