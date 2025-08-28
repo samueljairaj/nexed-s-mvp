@@ -321,5 +321,79 @@
       "tags": ["financial", "funding", "reporting"],
       "version": "1.0"
     }
+    ,
+    {
+      "id": "f1-i20-expiry-check",
+      "name": "I-20 Expiration Approaching",
+      "description": "Ensure I-20 remains valid; renew if expiring soon",
+      "ruleGroup": "documents",
+      "phase": ["during_program", "general"],
+      "visaTypes": ["F1"],
+      "priority": 85,
+      "conditions": [
+        {
+          "field": "dates.i20ExpiryDate",
+          "operator": "lessThan",
+          "timeValue": "30days",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "documents.i20Current",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "Renew I-20 Before Expiration",
+        "descriptionTemplate": "Your I-20 expires on {dates.i20ExpiryDate}. Renew it to maintain F1 status.\n\n📋 **Steps**:\n1. Contact DSO for I-20 extension\n2. Provide updated financial docs\n3. Verify program end date and details\n\n⚠️ Operating with an expired I-20 can jeopardize your status.",
+        "category": "documents",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.i20ExpiryDate",
+          "offset": "-15days"
+        }
+      },
+      "isActive": true,
+      "tags": ["i20", "documents", "renewal"],
+      "version": "1.0"
+    }
+    ,
+    {
+      "id": "f1-travel-signature-reminder",
+      "name": "Travel Signature Refresh Reminder",
+      "description": "Refresh I-20 travel signature annually even if not traveling",
+      "ruleGroup": "travel",
+      "phase": ["during_program"],
+      "visaTypes": ["F1"],
+      "priority": 55,
+      "conditions": [
+        {
+          "field": "dates.i20TravelSignatureDate",
+          "operator": "lessThan",
+          "timeValue": "11months",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "flags.planningToTravel",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "Refresh I-20 Travel Signature",
+        "descriptionTemplate": "Your I-20 travel signature is nearing 12 months. Refresh to avoid last-minute issues if plans change.",
+        "category": "travel",
+        "priority": "medium",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.i20TravelSignatureDate",
+          "offset": "+335days"
+        }
+      },
+      "isActive": true,
+      "tags": ["i20", "travel", "signature"],
+      "version": "1.0"
+    }
   ]
 }

@@ -375,12 +375,26 @@ export class RuleValidator {
     
     // Conditions validation
     rule.conditions?.forEach((condition, index) => {
-      if (!condition.field) {
-        errors.push(`Condition ${index} must have a field`);
-      }
-      
-      if (!condition.operator) {
-        errors.push(`Condition ${index} must have an operator`);
+      // If condition has nested conditions, validate those instead of expecting field/operator
+      if (condition.nested && Array.isArray(condition.nested)) {
+        condition.nested.forEach((nestedCondition, nestedIndex) => {
+          if (!nestedCondition.field) {
+            errors.push(`Condition ${index} nested condition ${nestedIndex} must have a field`);
+          }
+          
+          if (!nestedCondition.operator) {
+            errors.push(`Condition ${index} nested condition ${nestedIndex} must have an operator`);
+          }
+        });
+      } else {
+        // Regular condition validation
+        if (!condition.field) {
+          errors.push(`Condition ${index} must have a field`);
+        }
+        
+        if (!condition.operator) {
+          errors.push(`Condition ${index} must have an operator`);
+        }
       }
     });
     
@@ -474,8 +488,15 @@ export class RuleValidator {
       }
       
       // Check for missing calculation prefix
-      if (placeholder.includes('days_until') && !placeholder.startsWith('#')) {
-        issues.push(`Calculated placeholder missing # prefix: ${placeholder}`);
+      // Note: calculated placeholders are extracted without the # prefix, so we check the original template
+      if (placeholder.includes('days_until')) {
+        // This is a calculated placeholder - verify it was properly formatted in the original template
+        const titleHasProperFormat = rule.taskTemplate.titleTemplate.includes(`{#${placeholder}}`);
+        const descHasProperFormat = rule.taskTemplate.descriptionTemplate.includes(`{#${placeholder}}`);
+        
+        if (!titleHasProperFormat && !descHasProperFormat) {
+          issues.push(`Calculated placeholder missing # prefix: ${placeholder}`);
+        }
       }
     });
     
