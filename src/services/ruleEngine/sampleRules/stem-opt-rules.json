@@ -287,13 +287,14 @@
       "priority": 78,
       "conditions": [
         {
-          "field": "dates.stemOptStartDate",
-          "operator": "lessThan",
-          "timeValue": "6months",
+          "nested": [
+            { "field": "dates.stemOptStartDate", "operator": "greaterThan", "timeValue": "5months" },
+            { "field": "dates.stemOptStartDate", "operator": "lessThan",  "timeValue": "6months" }
+          ],
           "logicOperator": "AND"
         },
         {
-          "field": "employment.twelveMonthEvaluationCompleted",
+          "field": "employment.sixMonthEvaluationCompleted",
           "operator": "equals",
           "value": false,
           "logicOperator": "AND"
@@ -325,13 +326,14 @@
       "priority": 78,
       "conditions": [
         {
-          "field": "dates.stemOptStartDate",
-          "operator": "lessThan",
-          "timeValue": "18months",
+          "nested": [
+            { "field": "dates.stemOptStartDate", "operator": "greaterThan", "timeValue": "17months" },
+            { "field": "dates.stemOptStartDate", "operator": "lessThan",  "timeValue": "18months" }
+          ],
           "logicOperator": "AND"
         },
         {
-          "field": "employment.finalEvaluationCompleted",
+          "field": "employment.eighteenMonthEvaluationCompleted",
           "operator": "equals",
           "value": false
         }

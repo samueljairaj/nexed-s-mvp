@@ -376,12 +376,20 @@ export class RuleValidator {
     // Conditions validation
     rule.conditions?.forEach((condition, index) => {
       // If condition has nested conditions, validate those instead of expecting field/operator
-      if (condition.nested && Array.isArray(condition.nested)) {
+      if (Array.isArray(condition.nested)) {
+        if (condition.nested.length === 0) {
+          errors.push(`Condition ${index} has an empty nested group`);
+        }
+        if (!condition.logicOperator) {
+          errors.push(`Condition ${index} with nested group must specify a logicOperator (AND/OR)`);
+        }
+        if (condition.field || condition.operator) {
+          errors.push(`Condition ${index} must not mix "field/operator" with "nested" group`);
+        }
         condition.nested.forEach((nestedCondition, nestedIndex) => {
           if (!nestedCondition.field) {
             errors.push(`Condition ${index} nested condition ${nestedIndex} must have a field`);
           }
-          
           if (!nestedCondition.operator) {
             errors.push(`Condition ${index} nested condition ${nestedIndex} must have an operator`);
           }
@@ -488,13 +496,14 @@ export class RuleValidator {
       }
       
       // Check for missing calculation prefix
-      // Note: calculated placeholders are extracted without the # prefix, so we check the original template
-      if (placeholder.includes('days_until')) {
-        // This is a calculated placeholder - verify it was properly formatted in the original template
+      // Heuristic: calculated placeholders typically don't contain dots and use snake_case (e.g., days_until_*, *_deadline)
+      const isLikelyCalculated = (name: string) => !name.includes('.') && /_/.test(name);
+      if (isLikelyCalculated(placeholder)) {
         const titleHasProperFormat = rule.taskTemplate.titleTemplate.includes(`{#${placeholder}}`);
         const descHasProperFormat = rule.taskTemplate.descriptionTemplate.includes(`{#${placeholder}}`);
-        
-        if (!titleHasProperFormat && !descHasProperFormat) {
+        const titleHasPlain = rule.taskTemplate.titleTemplate.includes(`{${placeholder}}`);
+        const descHasPlain = rule.taskTemplate.descriptionTemplate.includes(`{${placeholder}}`);
+        if ((titleHasPlain || descHasPlain) && !titleHasProperFormat && !descHasProperFormat) {
           issues.push(`Calculated placeholder missing # prefix: ${placeholder}`);
         }
       }

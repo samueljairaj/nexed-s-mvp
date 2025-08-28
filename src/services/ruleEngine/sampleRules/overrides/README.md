@@ -31,6 +31,6 @@ This folder contains university-specific overrides layered on top of the built-i
 }
 ```
 
-Note: Loading/merging of overrides is handled by the rule engine/services. If not yet wired, these files serve as scaffolding and documentation for future integration.
+Note: Loading/merging of overrides is handled by the rule engine/services. The engine currently reads per-rule overrides from `taskTemplate.universityOverrides[<universityId>]`. If you use top-level override bundles (as in this README), ensure a loader transforms them into the per-rule structure before invoking the engine. Merge semantics: deep-merge `taskTemplate` fields; `priority` is replaced; `null` removes the field.
 
 

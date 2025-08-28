@@ -340,7 +340,7 @@
         {
           "field": "documents.i20Current",
           "operator": "equals",
-          "value": false
+          "value": true
         }
       ],
       "taskTemplate": {
