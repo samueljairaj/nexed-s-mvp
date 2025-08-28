@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { EmploymentInfoFormValues, OptStatus } from "@/types/onboarding";
 import { dateUtils } from "@/lib/date-utils";
@@ -31,7 +31,7 @@ export function useEmploymentInfo() {
     
     try {
       // Create a plain object with string values only - no Date objects
-      const updateData: Record<string, string | boolean | undefined> = {
+      const updateData: Record<string, any> = {
         // Basic employment data
         employment_status: data.employmentStatus, // Use correct column name with underscore
       };
@@ -132,3 +132,4 @@ export function useEmploymentInfo() {
     isSubmitting
   };
 }
+

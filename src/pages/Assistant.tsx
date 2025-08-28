@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageCircle, Send, Clock, FileText, AlertTriangle, Info, Loader2, BellPlus } from "lucide-react";
 import { useAIAssistant, Message } from "@/hooks/useAIAssistant";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -378,3 +378,4 @@ const faqs: {
 ];
 
 export default Assistant;
+

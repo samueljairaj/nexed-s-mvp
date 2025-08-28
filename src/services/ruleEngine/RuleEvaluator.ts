@@ -131,9 +131,9 @@ export class RuleEvaluator {
    * Compare actual value with expected value using operator
    */
   private compareValues(
-    actualValue: any, 
+    actualValue: any,
     operator: RuleOperator, 
-    expectedValue: any, 
+    expectedValue: any,
     timeValue?: string
   ): boolean {
     
@@ -202,9 +202,9 @@ export class RuleEvaluator {
    * Compare time-based values (e.g., dates with offsets)
    */
   private compareTimeValues(
-    actualValue: any, 
+    actualValue: any,
     operator: RuleOperator, 
-    expectedValue: any, 
+    expectedValue: any,
     timeValue: string
   ): boolean {
     

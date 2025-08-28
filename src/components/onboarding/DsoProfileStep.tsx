@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 
 const dsoProfileSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
@@ -215,3 +215,4 @@ export function DsoProfileStep({
     </div>
   );
 }
+

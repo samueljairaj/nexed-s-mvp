@@ -1,7 +1,7 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 
 interface OnboardingCompletionProps {
   onComplete: () => Promise<boolean>;
@@ -61,3 +61,4 @@ export function OnboardingCompletion({
     </div>
   );
 }
+

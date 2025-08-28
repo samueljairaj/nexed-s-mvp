@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,7 +52,7 @@ const Login = () => {
       await login(formData.email, formData.password);
       toast.success("Successfully logged in!");
       navigate("/app/dashboard");
-    } catch (error: Error | unknown) {
+    } catch (error: any) {
       console.error("Login error:", error);
       
       // User-friendly error messages
@@ -209,3 +209,4 @@ const Login = () => {
 };
 
 export default Login;
+

@@ -1,7 +1,7 @@
 
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -35,8 +35,9 @@ export const AppLayout = () => {
     ];
 
     // Add settings only if basic settings are enabled
-    // Keep basic settings for now
-    commonItems.push({ to: "/app/settings", label: "Settings", icon: <Settings size={20} /> });
+    if (true) { // Keep basic settings for now
+      commonItems.push({ to: "/app/settings", label: "Settings", icon: <Settings size={20} /> });
+    }
 
     // DSO-specific items (disabled for MVP)
     if (isDSO) {
@@ -164,3 +165,4 @@ export const AppLayout = () => {
     </div>
   );
 };
+

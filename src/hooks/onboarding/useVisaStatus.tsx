@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useAuth } from "@/contexts/auth-hooks";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { VisaStatusFormValues, VisaType } from "@/types/onboarding";
 import { dateUtils } from "@/lib/date-utils";
@@ -27,7 +27,7 @@ export function useVisaStatus() {
       setIsSubmitting(true);
       
       // Format data using camelCase for the userProfile object
-      const formattedData: Record<string, string | boolean | undefined> = {
+      const formattedData: Record<string, any> = {
         visaType: data.visaType,
         visaStatus: data.visaStatus,
         sevisId: data.sevisId,

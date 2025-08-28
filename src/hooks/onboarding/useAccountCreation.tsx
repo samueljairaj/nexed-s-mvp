@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { AccountCreationFormData } from "@/components/onboarding/AccountCreationStep";
 
@@ -29,8 +29,8 @@ export function useAccountCreation() {
         });
         toast.success("Account created successfully!");
         return true;
-      } catch (error: Error | unknown) {
-        toast.error(`Account creation failed: ${(error as Error).message}`);
+      } catch (error: any) {
+        toast.error(`Account creation failed: ${error.message}`);
         return false;
       } finally {
         setIsSubmitting(false);
@@ -59,3 +59,4 @@ export function useAccountCreation() {
     isSubmitting
   };
 }
+

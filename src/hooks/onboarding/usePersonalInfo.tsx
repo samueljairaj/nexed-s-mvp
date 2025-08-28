@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { PersonalInfoFormValues } from "@/types/onboarding";
 import { dateUtils } from "@/lib/date-utils";
@@ -24,7 +24,7 @@ export function usePersonalInfo() {
     
     try {
       // Create a plain object with string values only - no Date objects
-      const updateData: Record<string, string | undefined> = {
+      const updateData: Record<string, any> = {
         country: data.country,
         currentCountry: data.currentCountry,
         phone: data.phoneNumber, // Map to proper database field
@@ -62,3 +62,4 @@ export function usePersonalInfo() {
     isSubmitting
   };
 }
+

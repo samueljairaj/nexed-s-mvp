@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -75,12 +75,13 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
-  updateDSOProfile?: (updates: Record<string, unknown>) => Promise<void>;
+  updateDSOProfile?: (updates: any) => Promise<void>;
   completeOnboarding: () => Promise<void>;
-  dsoProfile?: Record<string, unknown> | null;
+  dsoProfile?: any;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
+
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -94,7 +95,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const profileFetchPromiseRef = useRef<Promise<void> | null>(null);
 
-  const fetchUserProfile = useCallback(async (userId: string) => {
+  // Debounced profile fetch to prevent rapid-fire calls
+  const debouncedFetchProfile = (userId: string): Promise<void> => {
+    return new Promise((resolve) => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+
+      debounceTimeoutRef.current = setTimeout(async () => {
+        await fetchUserProfile(userId);
+        resolve();
+      }, 300);
+    });
+  };
+
+  useEffect(() => {
+    const session = supabase.auth.getSession()
+    console.log("Initial session:", session);
+
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await fetchUserProfile(user.id);
+        }
+      } catch (error) {
+        console.error("Authentication initialization error:", error);
+      } finally {
+        setIsInitialized(true);
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, [navigate]);
+
+  const fetchUserProfile = async (userId: string) => {
     // Prevent duplicate fetches
     if (fetchInProgressRef.current || lastFetchedUserIdRef.current === userId) {
       console.log("Skipping duplicate profile fetch for user:", userId);
@@ -105,7 +142,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     lastFetchedUserIdRef.current = userId;
 
     try {
-      const { data: userProfile, error } = await supabase
+      let { data: userProfile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -179,47 +216,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       fetchInProgressRef.current = false;
       setIsLoading(false);
     }
-  }, [navigate]);
-
-  // Debounced profile fetch to prevent rapid-fire calls
-  const debouncedFetchProfile = useCallback((userId: string): Promise<void> => {
-    return new Promise((resolve) => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-      
-      debounceTimeoutRef.current = setTimeout(async () => {
-        await fetchUserProfile(userId);
-        resolve();
-      }, 300);
-    });
-  }, [fetchUserProfile]);
-
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await fetchUserProfile(user.id);
-        }
-      } catch (error) {
-        console.error("Authentication initialization error:", error);
-      } finally {
-        setIsInitialized(true);
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-  }, [navigate, fetchUserProfile]);
+  };
 
   const updateProfile = async (updates: Partial<User>) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("No user authenticated");
     
     try {
-      // Map camelCase to snake_case for database
-      const dbUpdates: Record<string, string | boolean | undefined> = {
+    // Map camelCase to snake_case for database
+      const dbUpdates: Record<string, any> = {
         id: user.id, // Always include id for upsert
         email: user.email // Include email from auth
       };
@@ -261,7 +266,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Use upsert instead of update to handle profile creation
       const { error } = await supabase
         .from('profiles')
-        .upsert(dbUpdates as Record<string, unknown>, { 
+        .upsert(dbUpdates as any, {
           onConflict: 'id' 
         });
 
@@ -270,9 +275,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Update local state
       setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
       console.log("Profile updated successfully");
-    } catch (error: Error | unknown) {
+    } catch (error: any) {
       console.error("Profile update error:", error);
-      toast.error(`Failed to update profile: ${(error as Error).message}`);
+      toast.error(`Failed to update profile: ${error.message}`);
       throw error;
     }
   };
@@ -290,9 +295,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setCurrentUser(prev => prev ? { ...prev, onboardingComplete: true } : null);
       toast.success("Onboarding completed!");
-    } catch (error: Error | unknown) {
+    } catch (error: any) {
       console.error("Complete onboarding error:", error);
-      toast.error(`Failed to complete onboarding: ${(error as Error).message}`);
+      toast.error(`Failed to complete onboarding: ${error.message}`);
       throw error;
     }
   };
@@ -319,7 +324,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (user) {
         debouncedFetchProfile(user.id);
       }
-    } catch (error: Error | unknown) {
+    } catch (error: any) {
       console.error("Signup error:", error);
       throw error;
     } finally {
@@ -340,7 +345,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (user) {
         debouncedFetchProfile(user.id);
       }
-    } catch (error: Error | unknown) {
+    } catch (error: any) {
       console.error("Signin error:", error);
       throw error;
     } finally {
@@ -359,7 +364,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       lastFetchedUserIdRef.current = null;
       fetchInProgressRef.current = false;
       navigate('/');
-    } catch (error: Error | unknown) {
+    } catch (error: any) {
       console.error("Signout error:", error);
       toast.error("Failed to sign out.");
     }
@@ -368,7 +373,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Alias for logout
   const logout = signout;
 
-  const updateDSOProfile = async (updates: Record<string, unknown>) => {
+  const updateDSOProfile = async (updates: any) => {
     // Placeholder for DSO profile updates
     console.log("DSO profile update not implemented:", updates);
   };
@@ -405,7 +410,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [currentUser, debouncedFetchProfile]);
+  }, [currentUser]);
 
   const value = {
     currentUser,
@@ -432,4 +437,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export default AuthContext;
+// AuthContext is exported as named export above

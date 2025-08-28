@@ -1,0 +1,3 @@
+[33mdb04ef6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/smart-rule-engine-core[m[33m, [m[1;31morigin/feature/smart-rule-engine-core[m[33m)[m fix: address critical CodeRabbit review issues
+[33m303fde2[m feat: core rule engine architecture
+[33m7a58006[m Merge pull request #4 from samueljairaj/chore/env-setup

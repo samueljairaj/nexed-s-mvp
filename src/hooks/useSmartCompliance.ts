@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts';
 import { SmartComplianceService, TaskGenerationResult } from '@/services/SmartComplianceService';
 import { Task } from '@/hooks/useComplianceTasks';
 import { toast } from 'sonner';
@@ -406,3 +406,4 @@ export const useSmartCompliance = (options: UseSmartComplianceOptions = {}): Use
     errors
   };
 };
+

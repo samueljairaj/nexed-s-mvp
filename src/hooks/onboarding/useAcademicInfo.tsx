@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { AcademicInfoFormValues } from "@/types/onboarding";
 import { dateUtils } from "@/lib/date-utils";
@@ -18,7 +18,7 @@ export function useAcademicInfo() {
     
     try {
       // Format data using camelCase for the userProfile object
-      const formattedData: Record<string, string | boolean | string[] | Record<string, string> | undefined> = {
+      const formattedData: Record<string, any> = {
         university: data.university,
         fieldOfStudy: data.fieldOfStudy,
         degreeLevel: data.degreeLevel,
@@ -77,3 +77,4 @@ export function useAcademicInfo() {
     isSubmitting
   };
 }
+

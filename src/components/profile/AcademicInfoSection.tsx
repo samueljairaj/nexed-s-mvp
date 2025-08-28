@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,7 +70,7 @@ export function AcademicInfoSection() {
   const onSubmit = async (data: z.infer<typeof academicInfoSchema>) => {
     setIsSubmitting(true);
     try {
-      const updateData: Record<string, string | boolean | { name: string; email: string }> = {
+      const updateData: Record<string, any> = {
         university: data.university,
         fieldOfStudy: data.fieldOfStudy,
         degreeLevel: data.degreeLevel,
@@ -297,3 +297,4 @@ export function AcademicInfoSection() {
     </Card>
   );
 }
+

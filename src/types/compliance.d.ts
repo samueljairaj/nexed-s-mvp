@@ -1,6 +1,6 @@
 
 import { ReactNode } from 'react';
-import { VisaType } from '@/contexts/AuthContext';
+import { VisaType } from '@/types/onboarding';
 
 export interface ComplianceChecklistProps {
   open: boolean;
@@ -26,8 +26,9 @@ export interface ComplianceChecklistProps {
     title: string;
     items: Array<{
       label: string;
-      value: string | number | boolean | Date | null;
+      value: any;
       complete: boolean;
     }>;
   }>;
 }
+

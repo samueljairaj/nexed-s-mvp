@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { countries } from "@/lib/countries"; // Updated import path
 import {
@@ -43,7 +43,7 @@ const profileEditorSchema = z.object({
 });
 
 interface ProfileEditorProps {
-  user?: { id: string; name?: string; email?: string; country?: string; address?: string; bio?: string } | null; // Make user prop optional
+  user?: any; // Make user prop optional
 }
 
 export function ProfileEditor({ user }: ProfileEditorProps) {
@@ -182,3 +182,4 @@ export function ProfileEditor({ user }: ProfileEditorProps) {
     </Form>
   );
 }
+

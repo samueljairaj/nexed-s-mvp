@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/auth-hooks';
+import { useAuth } from '@/contexts';
 import { DocumentCategory } from '@/types/document';
 import { getBaselineChecklist, baselineItemsToAITasks } from '@/utils/baselineChecklists';
 import { toast } from 'sonner';
@@ -46,7 +46,7 @@ export const useComplianceTasks = () => {
   const [selectedFilters, setSelectedFilters] = useState<DocumentCategory[]>([]);
   const [selectedPhase, setSelectedPhase] = useState<string>('all_phases');
   const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
-  const [realtimeSubscription, setRealtimeSubscription] = useState<{ removeChannel: (channel: { topic: string }) => void } | null>(null);
+  const [realtimeSubscription, setRealtimeSubscription] = useState<any>(null);
   const [subscriptionSetup, setSubscriptionSetup] = useState<boolean>(false);
 
   // Helper function to format dates or provide defaults
@@ -156,91 +156,12 @@ export const useComplianceTasks = () => {
     };
   }, [currentUser?.id, subscriptionSetup]);
 
-  // Cache tasks to localStorage
-  const cacheTasksToLocalStorage = useCallback((tasksToCache: Task[]) => {
-    try {
-      localStorage.setItem('compliance_tasks', JSON.stringify({
-        userId: currentUser?.id,
-        tasks: tasksToCache,
-        lastGeneratedAt: lastGeneratedAt?.toISOString()
-      }));
-    } catch (e) {
-      console.error('Error caching tasks to local storage:', e);
+  // Load tasks on component mount - FIXED to prevent infinite loops
+  useEffect(() => {
+    if (currentUser?.id) {
+      loadTasks();
     }
-  }, [currentUser?.id, lastGeneratedAt]);
-
-  // Load user's tasks from database first, then local storage if needed
-  const loadTasks = useCallback(async () => {
-    setIsLoading(true);
-    
-    try {
-      // First try to load from database
-      const dbTasks = await loadTasksFromDatabase();
-      
-      if (dbTasks && dbTasks.length > 0) {
-        console.log('Loaded tasks from database:', dbTasks.length);
-        setTasks(dbTasks);
-        setLastGeneratedAt(new Date());
-        
-        // Update local storage with the latest from database
-        cacheTasksToLocalStorage(dbTasks);
-      } else {
-        // Fallback to local storage
-        const cachedTasksJson = localStorage.getItem('compliance_tasks');
-        let cachedTasks = null;
-        
-        if (cachedTasksJson) {
-          try {
-            const cached = JSON.parse(cachedTasksJson);
-            // Validate structure and ensure it has the expected user ID
-            if (cached && cached.tasks && cached.userId === currentUser?.id) {
-              cachedTasks = cached;
-              console.log('Loaded cached tasks from local storage');
-            }
-          } catch (e) {
-            console.error('Error parsing cached tasks:', e);
-          }
-        }
-        
-        if (cachedTasks) {
-          // Parse dates since JSON.stringify doesn't preserve Date objects
-          const parsedTasks = cachedTasks.tasks.map((task: { deadline?: string; createdAt?: string; updatedAt?: string; [key: string]: unknown }) => ({
-            ...task,
-            deadline: task.deadline ? new Date(task.deadline) : null,
-            createdAt: task.createdAt ? new Date(task.createdAt) : new Date(),
-            updatedAt: task.updatedAt ? new Date(task.updatedAt) : new Date()
-          }));
-          
-          setTasks(parsedTasks);
-          if (cachedTasks.lastGeneratedAt) {
-            setLastGeneratedAt(new Date(cachedTasks.lastGeneratedAt));
-          }
-          
-          // Save the cached tasks to database for future use
-          await saveTasksToDatabase(parsedTasks);
-        } else {
-          // No cached tasks, generate mock tasks immediately
-          const mockTasks = generateMockTasks(currentUser?.visaType || 'F1');
-          setTasks(mockTasks);
-          setLastGeneratedAt(new Date());
-          
-          // Save mock tasks to database and local storage
-          await saveTasksToDatabase(mockTasks);
-          cacheTasksToLocalStorage(mockTasks);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-      toast.error('Failed to load compliance tasks');
-      
-      // Fallback to mock tasks
-      const mockTasks = generateMockTasks(currentUser?.visaType || 'F1');
-      setTasks(mockTasks);
-      cacheTasksToLocalStorage(mockTasks);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentUser?.id, currentUser?.visaType, loadTasksFromDatabase, saveTasksToDatabase, cacheTasksToLocalStorage]);
+  }, [currentUser?.id]);
 
   // New function to save tasks to the database with proper date handling
   const saveTasksToDatabase = async (tasksToSave: Task[]) => {
@@ -309,7 +230,7 @@ export const useComplianceTasks = () => {
       
       if (data && data.length > 0) {
         // Transform database format to our Task format
-        return data.map((dbTask: { id: string; title: string; description?: string; due_date?: string; is_completed?: boolean; category: string; phase?: string; priority?: string; created_at?: string; updated_at?: string; is_recurring?: boolean; recurring_interval?: string }) => ({
+        return data.map((dbTask: any) => ({
           id: dbTask.id,
           title: dbTask.title,
           description: dbTask.description || '',
@@ -330,6 +251,92 @@ export const useComplianceTasks = () => {
     } catch (error) {
       console.error('Failed to load tasks from database:', error);
       return null;
+    }
+  };
+
+  // Load user's tasks from database first, then local storage if needed
+  const loadTasks = async () => {
+    setIsLoading(true);
+
+    try {
+      // First try to load from database
+      const dbTasks = await loadTasksFromDatabase();
+
+      if (dbTasks && dbTasks.length > 0) {
+        console.log('Loaded tasks from database:', dbTasks.length);
+        setTasks(dbTasks);
+        setLastGeneratedAt(new Date());
+
+        // Update local storage with the latest from database
+        cacheTasksToLocalStorage(dbTasks);
+      } else {
+        // Fallback to local storage
+        const cachedTasksJson = localStorage.getItem('compliance_tasks');
+        let cachedTasks = null;
+
+        if (cachedTasksJson) {
+          try {
+            const cached = JSON.parse(cachedTasksJson);
+            // Validate structure and ensure it has the expected user ID
+            if (cached && cached.tasks && cached.userId === currentUser?.id) {
+              cachedTasks = cached;
+              console.log('Loaded cached tasks from local storage');
+            }
+          } catch (e) {
+            console.error('Error parsing cached tasks:', e);
+          }
+        }
+
+        if (cachedTasks) {
+          // Parse dates since JSON.stringify doesn't preserve Date objects
+          const parsedTasks = cachedTasks.tasks.map((task: any) => ({
+            ...task,
+            deadline: task.deadline ? new Date(task.deadline) : null,
+            createdAt: task.createdAt ? new Date(task.createdAt) : new Date(),
+            updatedAt: task.updatedAt ? new Date(task.updatedAt) : new Date()
+          }));
+
+          setTasks(parsedTasks);
+          if (cachedTasks.lastGeneratedAt) {
+            setLastGeneratedAt(new Date(cachedTasks.lastGeneratedAt));
+          }
+
+          // Save the cached tasks to database for future use
+          await saveTasksToDatabase(parsedTasks);
+        } else {
+          // No cached tasks, generate mock tasks immediately
+          const mockTasks = generateMockTasks(currentUser?.visaType || 'F1');
+          setTasks(mockTasks);
+          setLastGeneratedAt(new Date());
+
+          // Save mock tasks to database and local storage
+          await saveTasksToDatabase(mockTasks);
+          cacheTasksToLocalStorage(mockTasks);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      toast.error('Failed to load compliance tasks');
+
+      // Fallback to mock tasks
+      const mockTasks = generateMockTasks(currentUser?.visaType || 'F1');
+      setTasks(mockTasks);
+      cacheTasksToLocalStorage(mockTasks);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Cache tasks to localStorage
+  const cacheTasksToLocalStorage = (tasksToCache: Task[]) => {
+    try {
+      localStorage.setItem('compliance_tasks', JSON.stringify({
+        userId: currentUser?.id,
+        tasks: tasksToCache,
+        lastGeneratedAt: lastGeneratedAt?.toISOString()
+      }));
+    } catch (e) {
+      console.error('Error caching tasks to local storage:', e);
     }
   };
 
@@ -499,7 +506,7 @@ export const useComplianceTasks = () => {
       toast.success("Added new reminder");
       return newTask;
     }
-  }, [currentUser?.id, addCustomTaskToDatabase, cacheTasksToLocalStorage]);
+  }, [currentUser?.id]);
 
   // Toggle category filter
   const toggleFilter = useCallback((category: DocumentCategory) => {
