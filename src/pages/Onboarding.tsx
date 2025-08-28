@@ -16,6 +16,10 @@ import {
   VisaType 
 } from "@/types/onboarding";
 
+// Type guard and constants for visa type validation
+const VISA_TYPES: ReadonlyArray<VisaType> = ["F1", "J1", "H1B", "Other"] as const;
+const isVisaType = (v: unknown): v is VisaType => VISA_TYPES.includes(v as VisaType);
+
 const Onboarding = () => {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated, isLoading, logout } = useAuth();
@@ -150,7 +154,7 @@ const Onboarding = () => {
         isSubmitting={isSubmitting}
         currentUser={currentUser ? {
           name: currentUser.name,
-          visaType: currentUser.visaType as VisaType,
+          visaType: isVisaType(currentUser.visaType) ? currentUser.visaType : "Other",
           university: currentUser.university,
           fieldOfStudy: currentUser.fieldOfStudy,
           employer: currentUser.employer
