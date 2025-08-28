@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts';
 import { DocumentCategory } from '@/types/document';
 import { getBaselineChecklist, baselineItemsToAITasks } from '@/utils/baselineChecklists';
 import { toast } from 'sonner';

@@ -80,15 +80,8 @@ interface AuthContextType {
   dsoProfile?: any;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -230,7 +223,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) throw new Error("No user authenticated");
     
     try {
-      // Map camelCase to snake_case for database
+    // Map camelCase to snake_case for database
       const dbUpdates: Record<string, any> = {
         id: user.id, // Always include id for upsert
         email: user.email // Include email from auth
@@ -444,4 +437,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export default AuthContext;
+// AuthContext is exported as named export above

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { DocumentCategory } from "@/types/document";
 import { getBaselineChecklist, baselineItemsToAITasks } from "@/utils/baselineChecklists";
 import { Task } from "@/hooks/useComplianceTasks";

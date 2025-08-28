@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { VisaStatusFormValues, VisaType } from "@/types/onboarding";
 import { dateUtils } from "@/lib/date-utils";

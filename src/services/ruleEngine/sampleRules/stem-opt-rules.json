@@ -1,0 +1,280 @@
+{
+  "ruleSet": {
+    "name": "STEM OPT Extension Rules",
+    "description": "Advanced compliance rules for STEM OPT extension with enhanced training and reporting requirements",
+    "version": "1.0",
+    "lastUpdated": "2025-01-25"
+  },
+  "rules": [
+    {
+      "id": "stem-opt-application-window",
+      "name": "STEM OPT Extension Application Window",
+      "description": "Apply for STEM extension 90 days before current OPT expires",
+      "ruleGroup": "employment",
+      "phase": ["opt_active", "stem_application"],
+      "visaTypes": ["OPT"],
+      "priority": 95,
+      "conditions": [
+        {
+          "field": "dates.optEndDate",
+          "operator": "lessThan",
+          "timeValue": "90days",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "academic.isSTEM",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.stemOptApplicationSubmitted",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "🚀 STEM OPT Application Window Open - Apply Now!",
+        "descriptionTemplate": "Your OPT expires on {dates.optEndDate} ({#days_until_opt_expiry} days). Apply for STEM extension immediately!\n\n🎓 **Your STEM Eligibility**:\n• **Degree**: {academic.fieldOfStudy}\n• **CIP Code**: {academic.cipCode}\n• **University**: {academic.university}\n• **STEM Verified**: ✅ Confirmed\n\n⏰ **Critical Timeline**:\n• **OPT Expires**: {dates.optEndDate}\n• **Application Deadline**: Must apply within 90 days\n• **Processing Time**: 3-5 months typical\n• **Gap Risk**: Apply NOW to avoid work authorization gap\n\n📋 **Required for Application**:\n• Form I-765 with STEM documents\n• Form I-983 (Training Plan)\n• E-Verify employer confirmation\n• $410 filing fee\n• Current I-20 with STEM recommendation\n\n💼 **Employer Requirements**:\n• Must be enrolled in E-Verify\n• Provide structured training program\n• Complete Form I-983 training plan\n• Commit to mentorship and evaluation\n\n🏃‍♂️ **URGENT NEXT STEPS**:\n1. Confirm employer E-Verify enrollment TODAY\n2. Schedule DSO meeting this week\n3. Complete I-983 with employer\n4. Gather all required documents\n5. Submit I-765 application ASAP\n\n⚠️ **CRITICAL**: Delays can result in work authorization gaps!",
+        "category": "employment",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "calculated",
+          "calculation": "stem_extension_deadline"
+        },
+        "dependsOn": ["stem-opt-everify-check", "stem-opt-i983-completion"]
+      },
+      "isActive": true,
+      "tags": ["stem-extension", "application", "urgent", "deadline"],
+      "version": "1.0"
+    },
+    {
+      "id": "stem-opt-everify-check",
+      "name": "Verify Employer E-Verify Enrollment",
+      "description": "STEM OPT requires employer to be enrolled in E-Verify system",
+      "ruleGroup": "employment",
+      "phase": ["opt_active", "stem_application"],
+      "visaTypes": ["OPT"],
+      "priority": 90,
+      "conditions": [
+        {
+          "field": "academic.isSTEM",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.status",
+          "operator": "equals",
+          "value": "employed",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.employerEVerifyVerified",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "🔍 Verify Employer E-Verify Enrollment (REQUIRED)",
+        "descriptionTemplate": "STEM OPT requires your employer to be enrolled in E-Verify. Verify this immediately!\n\n🏢 **Your Employer**: {employment.employer}\n📍 **Location**: {employment.workLocation}\n👤 **Supervisor**: {employment.supervisorName}\n\n✅ **E-Verify Requirements**:\n• Employer must be enrolled in E-Verify system\n• Must verify all employees' work authorization\n• Required for ALL STEM OPT students\n• No exceptions or alternatives\n\n🔍 **How to Verify**:\n1. **Ask HR directly**: \"Is [Company] enrolled in E-Verify?\"\n2. **Check E-Verify website**: www.e-verify.gov/about-e-verify/e-verify-data/how-to-find-participating-employers\n3. **Request documentation**: Ask for E-Verify MOU number\n4. **Verify with DSO**: They can help confirm enrollment\n\n⚠️ **If NOT Enrolled**:\n• Employer MUST enroll before STEM application\n• Enrollment process takes 1-2 weeks\n• Cannot proceed with STEM extension without E-Verify\n• Consider changing employers if they won't enroll\n\n📋 **Documentation Needed**:\n• E-Verify enrollment confirmation\n• Company E-Verify MOU number\n• HR contact information\n\n🚨 **URGENT**: This is a hard requirement - no E-Verify = no STEM OPT",
+        "category": "employment",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.optEndDate",
+          "offset": "-120days"
+        }
+      },
+      "isActive": true,
+      "tags": ["e-verify", "employer", "requirement", "stem"],
+      "version": "1.0"
+    },
+    {
+      "id": "stem-opt-i983-completion",
+      "name": "Complete Form I-983 Training Plan",
+      "description": "I-983 training plan must be completed with employer for STEM OPT",
+      "ruleGroup": "employment",
+      "phase": ["stem_application"],
+      "visaTypes": ["OPT"],
+      "priority": 88,
+      "conditions": [
+        {
+          "field": "academic.isSTEM",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.i983Completed",
+          "operator": "equals",
+          "value": false,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.employerEVerifyVerified",
+          "operator": "equals",
+          "value": true
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "📋 Complete I-983 Training Plan with Employer",
+        "descriptionTemplate": "Work with your employer to complete the mandatory I-983 Training Plan for STEM OPT.\n\n📄 **Form I-983 Overview**:\n• **Purpose**: Structured training plan for STEM students\n• **Parties**: You, employer, and DSO must sign\n• **Content**: Detailed training objectives and evaluation methods\n• **Requirement**: Mandatory for ALL STEM OPT applications\n\n🏢 **Employer Responsibilities**:\n• Define specific training objectives\n• Outline learning goals and milestones\n• Assign qualified supervisor/mentor\n• Commit to periodic evaluations\n• Provide structured professional development\n\n👤 **Your Role**:\n• Collaborate on training plan development\n• Commit to learning objectives\n• Participate in evaluation process\n• Complete required self-evaluations\n\n📋 **I-983 Sections**:\n1. **Student Information**: Your academic and contact details\n2. **Employer Information**: Company details and E-Verify status\n3. **Training Plan**: Specific objectives and evaluation methods\n4. **Signatures**: Student, employer supervisor, DSO\n\n💼 **Training Plan Elements**:\n• Specific STEM skills to be developed\n• Measurable learning objectives\n• Timeline for achievement\n• Evaluation criteria and methods\n• Supervisor mentorship plan\n\n📅 **Timeline**:\n• **Start**: Begin discussions with supervisor now\n• **Draft**: Complete draft within 2 weeks\n• **Review**: DSO review and approval\n• **Final**: Submit with I-765 application\n\n👥 **Key Contacts**:\n• **Supervisor**: {employment.supervisorName}\n• **HR**: {employment.hrContact}\n• **DSO**: {user.academic.dsoContact.name}",
+        "category": "employment",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.optEndDate",
+          "offset": "-100days"
+        },
+        "dependsOn": ["stem-opt-everify-check"]
+      },
+      "isActive": true,
+      "tags": ["i983", "training-plan", "employer", "stem"],
+      "version": "1.0"
+    },
+    {
+      "id": "stem-opt-self-evaluation-12month",
+      "name": "Complete 12-Month Self-Evaluation",
+      "description": "Mandatory self-evaluation at 12 months of STEM OPT",
+      "ruleGroup": "reporting",
+      "phase": ["stem_active"],
+      "visaTypes": ["STEM_OPT"],
+      "priority": 80,
+      "conditions": [
+        {
+          "field": "dates.stemOptStartDate",
+          "operator": "lessThan",
+          "timeValue": "12months",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.twelveMonthEvaluationCompleted",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "📊 Complete 12-Month STEM OPT Self-Evaluation",
+        "descriptionTemplate": "Your 12-month STEM OPT evaluation is due. Complete this mandatory self-assessment.\n\n📅 **Evaluation Timeline**:\n• **STEM Start Date**: {dates.stemOptStartDate}\n• **12-Month Mark**: {#stem_12_month_date}\n• **Evaluation Due**: Within 10 days of 12-month mark\n• **Status**: {#days_since_stem_start} days into STEM OPT\n\n📋 **Self-Evaluation Requirements**:\n• Assess progress toward I-983 training objectives\n• Document skills and knowledge gained\n• Evaluate training plan effectiveness\n• Identify areas for improvement\n• Plan for remaining STEM period\n\n💼 **Training Progress Review**:\n• **Original Objectives**: Review I-983 training plan\n• **Skills Developed**: List specific STEM competencies gained\n• **Projects Completed**: Document major accomplishments\n• **Mentorship Received**: Evaluate supervisor guidance\n• **Professional Growth**: Career development progress\n\n📄 **Evaluation Components**:\n1. **Academic Connection**: How work relates to STEM degree\n2. **Skill Development**: Technical and professional growth\n3. **Training Effectiveness**: Quality of structured learning\n4. **Future Goals**: Plans for remaining STEM period\n5. **Recommendations**: Improvements for training plan\n\n👥 **Collaboration Required**:\n• **Supervisor Input**: Gather feedback on performance\n• **HR Review**: Discuss professional development\n• **DSO Submission**: Submit to international office\n\n📊 **Success Metrics**:\n• Measurable progress toward I-983 objectives\n• Enhanced STEM knowledge and skills\n• Increased professional competency\n• Stronger career prospects in STEM field\n\n⏰ **Submission Deadline**: 10 days after 12-month anniversary",
+        "category": "reporting",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.stemOptStartDate",
+          "offset": "+375days"
+        }
+      },
+      "isActive": true,
+      "tags": ["self-evaluation", "12-month", "stem", "mandatory"],
+      "version": "1.0"
+    },
+    {
+      "id": "stem-opt-employer-evaluation",
+      "name": "Ensure Employer Completes Evaluation",
+      "description": "Employer must complete periodic evaluations during STEM OPT",
+      "ruleGroup": "employment",
+      "phase": ["stem_active"],
+      "visaTypes": ["STEM_OPT"],
+      "priority": 75,
+      "conditions": [
+        {
+          "field": "employment.lastEmployerEvaluation",
+          "operator": "lessThan",
+          "timeValue": "6months",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.employerEvaluationOverdue",
+          "operator": "equals",
+          "value": true
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "👔 Request Employer Evaluation (Overdue)",
+        "descriptionTemplate": "Your employer evaluation is overdue. STEM OPT requires periodic employer assessments.\n\n📊 **Evaluation Status**:\n• **Last Evaluation**: {employment.lastEmployerEvaluation}\n• **Frequency Required**: Every 6 months\n• **Current Status**: {#days_since_last_evaluation} days overdue\n• **Next Due**: Immediately\n\n👤 **Supervisor Information**:\n• **Name**: {employment.supervisorName}\n• **Title**: {employment.supervisorTitle}\n• **Email**: {employment.supervisorEmail}\n• **Department**: {employment.department}\n\n📋 **Employer Evaluation Components**:\n• Student's progress toward training objectives\n• Quality of work performance\n• Professional skill development\n• Training plan effectiveness\n• Recommendations for improvement\n\n💼 **Request Process**:\n1. **Schedule Meeting**: Book evaluation meeting with supervisor\n2. **Prepare Materials**: Gather work samples and achievements\n3. **Review I-983**: Reference original training objectives\n4. **Document Discussion**: Take notes during evaluation\n5. **Request Written Summary**: Ask for formal evaluation report\n\n📄 **Evaluation Documentation**:\n• Written assessment of performance\n• Progress toward I-983 objectives\n• Skills development summary\n• Training plan adjustments (if needed)\n• Supervisor signature and date\n\n🔄 **Follow-Up Actions**:\n• Submit evaluation to DSO\n• Update training plan if necessary\n• Schedule next evaluation (6 months)\n• Address any improvement areas identified\n\n⚠️ **Compliance Importance**:\n• Required for STEM OPT maintenance\n• Documentation for future applications\n• Evidence of structured training\n• Support for potential H1B applications\n\n📧 **Sample Request Email**:\n\"Hi [Supervisor Name], My STEM OPT requires periodic evaluations every 6 months. Could we schedule a meeting this week to complete my evaluation? I'll bring my I-983 training plan and recent work examples. Thank you!\"",
+        "category": "employment",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "employment.lastEmployerEvaluation",
+          "offset": "+180days"
+        }
+      },
+      "isActive": true,
+      "tags": ["employer-evaluation", "overdue", "stem", "supervisor"],
+      "version": "1.0"
+    },
+    {
+      "id": "stem-opt-unemployment-limit",
+      "name": "STEM OPT Unemployment Tracking",
+      "description": "STEM OPT allows 150 days total unemployment (60 additional)",
+      "ruleGroup": "employment",
+      "phase": ["stem_active"],
+      "visaTypes": ["STEM_OPT"],
+      "priority": 90,
+      "conditions": [
+        {
+          "field": "employment.unemploymentDaysUsed",
+          "operator": "greaterThan",
+          "value": 120,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.status",
+          "operator": "equals",
+          "value": "unemployed"
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "⚠️ STEM OPT Unemployment Limit Warning ({employment.unemploymentDaysUsed}/150 days)",
+        "descriptionTemplate": "You're approaching the STEM OPT unemployment limit. Take immediate action to find employment.\n\n📊 **Unemployment Status**:\n• **Days Used**: {employment.unemploymentDaysUsed}/150 total allowed\n• **Days Remaining**: {#unemployment_days_remaining}\n• **Regular OPT**: {employment.regularOptUnemploymentDays}/90 days used\n• **STEM Additional**: {#stem_unemployment_days_used}/60 additional days used\n\n🚨 **Critical Timeline**:\n• **Unemployed Since**: {dates.lastEmploymentEndDate}\n• **Days Remaining**: {#unemployment_days_remaining}\n• **Status at Risk**: {#unemployment_days_remaining} days until termination\n\n💼 **Immediate Actions Required**:\n1. **Intensify Job Search**: Apply to multiple positions daily\n2. **Network Actively**: Reach out to professional contacts\n3. **Consider Consulting**: Temporary or contract work counts\n4. **Update Resume**: Highlight STEM skills and experience\n5. **Prepare for Interviews**: Practice technical questions\n\n🔍 **Job Search Strategies**:\n• **STEM-Focused Platforms**: AngelList, Dice, Stack Overflow Jobs\n• **Company Direct Applications**: Target E-Verify enrolled companies\n• **Recruiting Agencies**: Specialized in STEM placements\n• **University Resources**: Career center, alumni network\n• **Professional Associations**: Industry-specific job boards\n\n📋 **Employment Requirements**:\n• Must be related to STEM field of study\n• Employer must be E-Verify enrolled\n• Full-time or part-time (20+ hours/week)\n• Report new job within 10 days of starting\n\n⚠️ **Consequences of Exceeding Limit**:\n• Automatic termination of STEM OPT\n• Loss of work authorization\n• Must leave US or change status\n• Affects future immigration applications\n\n👤 **Support Resources**:\n• **DSO**: {user.academic.dsoContact.name}\n• **Career Center**: {user.academic.careerCenter}\n• **Alumni Network**: {user.academic.alumniServices}\n\n📞 **Emergency Planning**:\nIf you cannot find employment within {#unemployment_days_remaining} days, consult with DSO about:\n• Returning to school (new program)\n• Changing to dependent status\n• Voluntary departure planning",
+        "category": "employment",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "calculated",
+          "calculation": "stem_unemployment_grace_end"
+        }
+      },
+      "isActive": true,
+      "tags": ["unemployment", "critical", "stem", "job-search"],
+      "version": "1.0"
+    },
+    {
+      "id": "stem-opt-final-evaluation",
+      "name": "Complete Final STEM OPT Evaluation",
+      "description": "Final evaluation required at end of STEM OPT period",
+      "ruleGroup": "reporting",
+      "phase": ["stem_active"],
+      "visaTypes": ["STEM_OPT"],
+      "priority": 70,
+      "conditions": [
+        {
+          "field": "dates.stemOptEndDate",
+          "operator": "lessThan",
+          "timeValue": "30days",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.finalEvaluationCompleted",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "🎯 Complete Final STEM OPT Evaluation",
+        "descriptionTemplate": "Your STEM OPT period ends soon. Complete your final comprehensive evaluation.\n\n📅 **STEM OPT Timeline**:\n• **Start Date**: {dates.stemOptStartDate}\n• **End Date**: {dates.stemOptEndDate}\n• **Days Remaining**: {#days_until_stem_end}\n• **Total Duration**: 24 months of STEM training\n\n📊 **Final Evaluation Scope**:\n• **Comprehensive Assessment**: Full 24-month period review\n• **Training Objectives**: All I-983 goals and outcomes\n• **Professional Growth**: Career development achievements\n• **STEM Skills**: Technical competencies gained\n• **Future Planning**: Post-STEM career strategy\n\n📋 **Evaluation Components**:\n1. **Training Plan Review**: I-983 objectives achievement\n2. **Skill Development**: Technical and professional growth\n3. **Project Portfolio**: Major accomplishments and contributions\n4. **Mentorship Impact**: Supervisor guidance effectiveness\n5. **Career Advancement**: Professional development progress\n6. **STEM Knowledge**: Field-specific expertise gained\n7. **Future Goals**: Post-OPT career planning\n\n💼 **Documentation Required**:\n• Complete work portfolio\n• Performance reviews and evaluations\n• Training certificates or completions\n• Project reports and achievements\n• Supervisor recommendations\n• Professional development records\n\n👥 **Stakeholder Input**:\n• **Self-Assessment**: Personal reflection and growth\n• **Supervisor Evaluation**: Manager performance review\n• **Mentor Feedback**: Training and development input\n• **Peer Reviews**: Colleague assessments (if applicable)\n\n🎓 **Academic Connection**:\n• How STEM degree knowledge was applied\n• Integration of academic theory with practical work\n• Advancement of field-specific expertise\n• Contribution to STEM innovation\n\n📈 **Success Metrics**:\n• Achievement of all I-983 training objectives\n• Measurable skill and knowledge advancement\n• Professional competency development\n• Career progression and opportunities\n• Industry recognition and contributions\n\n🔮 **Future Planning**:\n• **H1B Applications**: Prepare for potential sponsorship\n• **Career Advancement**: Next steps in STEM career\n• **Further Education**: Advanced degree considerations\n• **Entrepreneurship**: Startup or innovation opportunities\n\n📄 **Submission Requirements**:\n• Submit to DSO within 10 days of completion\n• Include all supporting documentation\n• Provide digital and hard copies\n• Maintain personal records for future reference\n\n⏰ **Completion Deadline**: 10 days before STEM OPT expiration",
+        "category": "reporting",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.stemOptEndDate",
+          "offset": "-40days"
+        }
+      },
+      "isActive": true,
+      "tags": ["final-evaluation", "stem", "completion", "comprehensive"],
+      "version": "1.0"
+    }
+  ]
+}

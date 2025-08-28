@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { countries } from "@/lib/countries"; // Updated import path
 import {
@@ -182,3 +182,4 @@ export function ProfileEditor({ user }: ProfileEditorProps) {
     </Form>
   );
 }
+

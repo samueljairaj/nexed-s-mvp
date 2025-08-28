@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { ComplianceChecklist } from "@/components/onboarding/ComplianceChecklist";
 import { useNavigate } from "react-router-dom";
 import { useAICompliance } from "@/hooks/useAICompliance";
@@ -130,3 +130,4 @@ export function OnboardingChecklist({ open, onOpenChange }: OnboardingChecklistP
 }
 
 export default OnboardingChecklist;
+

@@ -198,9 +198,9 @@ export class TemplateRenderer {
   private compareValues(left: any, operator: string, right: any): boolean {
     switch (operator) {
       case '==':
-        return left == right;
+        return left === right;
       case '!=':
-        return left != right;
+        return left !== right;
       case '>':
         return left > right;
       case '<':
@@ -240,7 +240,7 @@ export class TemplateRenderer {
       default: {
         // Allow upstream (RuleEngine/DateCalculator) to supply arbitrary computed values
         const v = (context.calculated as any)?.[calculation];
-        return v !== undefined && v !== null ? String(v) : `Unknown calculation: ${calculation}`;
+        return v !== undefined && v !== null ? String(v) : `{Unknown calculation: ${calculation}}`;
       }
     }
   }
@@ -254,9 +254,10 @@ export class TemplateRenderer {
     return undefined;
   }
 
-    private calculateDaysUntilExpiry(userContext: UserContext): number | undefined {
+  private calculateDaysUntilExpiry(userContext: UserContext): number | undefined {
     const visaExpiry = userContext.dates.visaExpiryDate;
     if (!visaExpiry) return undefined;
+    
     return this.daysBetween(new Date(), visaExpiry);
   }
 

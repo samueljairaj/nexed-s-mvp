@@ -1,0 +1,295 @@
+{
+  "ruleSet": {
+    "name": "OPT Compliance Rules",
+    "description": "Intelligent compliance rules for students on Optional Practical Training with real-time unemployment tracking",
+    "version": "1.0",
+    "lastUpdated": "2025-01-25"
+  },
+  "rules": [
+    {
+      "id": "opt-unemployment-tracking",
+      "name": "OPT Unemployment Days Alert",
+      "description": "Track unemployment days to prevent exceeding 90-day limit",
+      "ruleGroup": "employment",
+      "phase": ["opt_active"],
+      "visaTypes": ["OPT"],
+      "priority": 95,
+      "conditions": [
+        {
+          "field": "employment.unemploymentDaysUsed",
+          "operator": "greaterThan",
+          "value": 60,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.status",
+          "operator": "equals",
+          "value": "unemployed"
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "🚨 OPT Unemployment Limit Warning ({employment.unemploymentDaysUsed}/90 days used)",
+        "descriptionTemplate": "⚠️ **CRITICAL**: You've used {employment.unemploymentDaysUsed} of your 90 allowed unemployment days.\n\n📊 **Your Status**:\n• Days Used: {employment.unemploymentDaysUsed}/90\n• Days Remaining: {#unemployment_days_remaining}\n• Current Status: Unemployed since {dates.lastEmploymentEndDate}\n\n🚨 **Immediate Action Required**:\n• Find employment within {#unemployment_days_remaining} days\n• Report new job to DSO within 10 days of starting\n• Consider returning to school if no job prospects\n\n💼 **Job Search Resources**:\n• University career center\n• Professional networking events\n• LinkedIn job alerts\n• Industry-specific job boards\n\n📞 **DSO Contact**: {user.academic.dsoContact.name}\n📧 **Email**: {user.academic.dsoContact.email}\n\n⏰ **Status at Risk**: Exceeding 90 days terminates OPT authorization",
+        "category": "employment",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "calculated",
+          "calculation": "unemployment_grace_end"
+        }
+      },
+      "isActive": true,
+      "tags": ["unemployment", "critical", "job-search"],
+      "version": "1.0"
+    },
+    {
+      "id": "opt-job-reporting",
+      "name": "Report New Employment to DSO",
+      "description": "New OPT employment must be reported within 10 days",
+      "ruleGroup": "reporting",
+      "phase": ["opt_active"],
+      "visaTypes": ["OPT"],
+      "priority": 85,
+      "conditions": [
+        {
+          "field": "employment.newJobStarted",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.jobReportedToDSO",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "📝 Report New Job to DSO (Due: {#job_reporting_deadline})",
+        "descriptionTemplate": "Congratulations on your new position! Report your employment details to your DSO within 10 days.\n\n🎉 **New Position**:\n• **Company**: {employment.employer}\n• **Title**: {employment.jobTitle}\n• **Start Date**: {dates.employmentStartDate}\n• **Location**: {employment.workLocation}\n\n📋 **Required Reporting**:\n• Employer name and address\n• Job title and duties\n• Start and end dates\n• Supervisor contact information\n• Salary information\n\n👤 **DSO Contact**: {user.academic.dsoContact.name}\n📧 **Email**: {user.academic.dsoContact.email}\n📞 **Phone**: {user.academic.dsoContact.phone}\n\n📄 **How to Report**:\n1. Log into university's international student portal\n2. Submit OPT employment report form\n3. Upload offer letter or employment verification\n4. Save confirmation receipt\n\n⏰ **Legal Deadline**: 10 days from start date\n🏛️ **Regulation**: 8 CFR 214.2(f)(10)(ii)(D)",
+        "category": "reporting",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.employmentStartDate",
+          "offset": "+10days"
+        }
+      },
+      "isActive": true,
+      "tags": ["employment", "reporting", "dso"],
+      "version": "1.0"
+    },
+    {
+      "id": "opt-address-update",
+      "name": "Update Address in SEVP Portal",
+      "description": "Address changes must be reported within 10 days during OPT",
+      "ruleGroup": "reporting",
+      "phase": ["opt_active"],
+      "visaTypes": ["OPT"],
+      "priority": 80,
+      "conditions": [
+        {
+          "field": "flags.addressChangeRecent",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "location.sevpPortalUpdated",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "🏠 Update Address in SEVP Portal",
+        "descriptionTemplate": "You moved to {location.currentAddress}. Update your address in the SEVP Portal within 10 days.\n\n📍 **New Address**:\n{location.currentAddress}\n{location.city}, {location.state} {location.zipCode}\n\n🌐 **SEVP Portal Steps**:\n1. Visit studyinthestates.dhs.gov/students\n2. Log in with your SEVIS ID: {user.sevisId}\n3. Navigate to \"Update Information\"\n4. Enter new address details\n5. Submit and save confirmation\n\n📋 **Required Information**:\n• Complete street address\n• City, state, ZIP code\n• Phone number\n• Email address\n\n⚠️ **Important**: This is separate from university address updates\n\n⏰ **Deadline**: {#address_update_deadline}\n🏛️ **Legal Requirement**: 8 CFR 214.2(f)(10)(ii)(A)",
+        "category": "reporting",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "calculated",
+          "calculation": "address_update_deadline"
+        }
+      },
+      "isActive": true,
+      "tags": ["address", "sevp-portal", "reporting"],
+      "version": "1.0"
+    },
+    {
+      "id": "opt-travel-planning",
+      "name": "Plan International Travel Carefully",
+      "description": "OPT travel requires specific documents and timing considerations",
+      "ruleGroup": "travel",
+      "phase": ["opt_active"],
+      "visaTypes": ["OPT"],
+      "priority": 60,
+      "conditions": [
+        {
+          "field": "flags.planningToTravel",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "travel.optTravelPrepped",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "✈️ Prepare for International Travel on OPT",
+        "descriptionTemplate": "International travel during OPT requires careful preparation. Ensure you have all required documents.\n\n📄 **Required Documents**:\n• Valid passport (6+ months validity)\n• Valid F1 visa stamp\n• Current I-20 with recent travel signature\n• EAD card (OPT work authorization)\n• Employment verification letter\n• Pay stubs (if employed)\n\n💼 **Employment Considerations**:\n• {?employment.status == 'employed':Notify employer of travel dates:Traveling while unemployed uses unemployment days}\n• Bring employment verification letter\n• Consider impact on unemployment day count\n\n⚠️ **Travel Risks**:\n• Re-entry not guaranteed\n• Unemployment days continue during travel\n• Expired documents = denied entry\n• Processing delays at border\n\n📅 **Recommended Timeline**:\n• Plan travel 4-6 weeks in advance\n• Get I-20 signed 2 weeks before travel\n• Confirm all documents are current\n\n👤 **DSO Consultation**: Recommended before travel",
+        "category": "travel",
+        "priority": "medium",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.plannedTravelDate",
+          "offset": "-21days"
+        }
+      },
+      "isActive": true,
+      "tags": ["travel", "documents", "preparation"],
+      "version": "1.0"
+    },
+    {
+      "id": "opt-ead-renewal-check",
+      "name": "Monitor EAD Card Expiration",
+      "description": "Track EAD card expiration and renewal needs",
+      "ruleGroup": "documents",
+      "phase": ["opt_active"],
+      "visaTypes": ["OPT"],
+      "priority": 70,
+      "conditions": [
+        {
+          "field": "dates.eadExpiryDate",
+          "operator": "lessThan",
+          "timeValue": "90days",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.stemOptEligible",
+          "operator": "equals",
+          "value": true
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "📋 EAD Card Expires Soon - Consider STEM Extension",
+        "descriptionTemplate": "Your EAD card expires on {dates.eadExpiryDate} ({#days_until_ead_expiry} days). Time to consider STEM OPT extension!\n\n📊 **Your Eligibility**:\n• **Degree**: {academic.fieldOfStudy}\n• **STEM Eligible**: {?academic.isSTEM:Yes - You qualify!:Check STEM list}\n• **Current EAD**: Expires {dates.eadExpiryDate}\n\n🔬 **STEM OPT Benefits**:\n• Additional 24 months of work authorization\n• Apply 90 days before current OPT expires\n• Must have STEM degree and E-Verify employer\n• Enhanced training and mentorship requirements\n\n📋 **Next Steps**:\n1. Confirm STEM eligibility with DSO\n2. Secure E-Verify compliant employer\n3. Prepare STEM OPT application\n4. Submit I-765 with STEM documents\n\n⏰ **Application Window**:\n• **Opens**: 90 days before EAD expiry\n• **Recommended**: Apply within next 30 days\n• **Latest**: 90 days before expiration\n\n👤 **DSO Meeting**: Schedule STEM consultation now",
+        "category": "employment",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.eadExpiryDate",
+          "offset": "-90days"
+        }
+      },
+      "isActive": true,
+      "tags": ["ead", "stem-extension", "renewal"],
+      "version": "1.0"
+    },
+    {
+      "id": "opt-job-relationship-verification",
+      "name": "Ensure Job Relates to Field of Study",
+      "description": "OPT employment must be directly related to academic program",
+      "ruleGroup": "employment",
+      "phase": ["opt_active"],
+      "visaTypes": ["OPT"],
+      "priority": 65,
+      "conditions": [
+        {
+          "field": "employment.status",
+          "operator": "equals",
+          "value": "employed",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.fieldRelationshipVerified",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "🔍 Verify Job Relates to Your Field of Study",
+        "descriptionTemplate": "Ensure your current position meets OPT requirements for field-related employment.\n\n🎓 **Your Academic Background**:\n• **Degree**: {academic.degreeLevel} in {academic.fieldOfStudy}\n• **University**: {academic.university}\n\n💼 **Current Employment**:\n• **Company**: {employment.employer}\n• **Position**: {employment.jobTitle}\n• **Duties**: {employment.jobDescription}\n\n✅ **Field Relationship Requirements**:\n• Job must be directly related to your field of study\n• Skills and knowledge from degree must be utilized\n• Position should advance career goals in your field\n• Part-time work (20+ hours/week) acceptable\n\n📋 **Documentation to Maintain**:\n• Job description highlighting field relationship\n• Letter from employer explaining connection\n• Performance reviews showing skill utilization\n• Training records in your field\n\n⚠️ **Non-Compliant Work**:\n• Generic labor positions\n• Unrelated service jobs\n• Work requiring no specialized knowledge\n• Employment outside degree field\n\n👤 **DSO Guidance**: Consult if unsure about relationship",
+        "category": "employment",
+        "priority": "medium",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.employmentStartDate",
+          "offset": "+30days"
+        }
+      },
+      "isActive": true,
+      "tags": ["employment", "field-relationship", "compliance"],
+      "version": "1.0"
+    },
+    {
+      "id": "opt-employer-change-reporting",
+      "name": "Report Employer Changes",
+      "description": "Job changes during OPT must be reported within 10 days",
+      "ruleGroup": "reporting",
+      "phase": ["opt_active"],
+      "visaTypes": ["OPT"],
+      "priority": 85,
+      "conditions": [
+        {
+          "field": "employment.employerChanged",
+          "operator": "equals",
+          "value": true,
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.changeReportedToDSO",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "📢 Report Employer Change to DSO",
+        "descriptionTemplate": "You changed employers during OPT. Report this change within 10 days to maintain status.\n\n🔄 **Employment Change**:\n• **Previous**: {employment.previousEmployer}\n• **Current**: {employment.employer}\n• **Change Date**: {dates.employerChangeDate}\n\n📋 **Required Reporting**:\n• New employer information\n• Job title and responsibilities\n• Start date with new employer\n• End date with previous employer\n• Reason for change\n\n📄 **Documents Needed**:\n• New offer letter\n• Employment verification\n• Last pay stub from previous employer\n• Resignation letter (if applicable)\n\n👤 **Report To**: {user.academic.dsoContact.name}\n📧 **Email**: {user.academic.dsoContact.email}\n\n⚠️ **Important**: Gaps in employment count toward unemployment days\n\n⏰ **Deadline**: 10 days from employer change\n🏛️ **Regulation**: 8 CFR 214.2(f)(10)(ii)(D)",
+        "category": "reporting",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.employerChangeDate",
+          "offset": "+10days"
+        }
+      },
+      "isActive": true,
+      "tags": ["employer-change", "reporting", "dso"],
+      "version": "1.0"
+    },
+    {
+      "id": "opt-tax-obligations",
+      "name": "Understand OPT Tax Obligations",
+      "description": "OPT students have specific tax filing requirements",
+      "ruleGroup": "reporting",
+      "phase": ["opt_active"],
+      "visaTypes": ["OPT"],
+      "priority": 40,
+      "conditions": [
+        {
+          "field": "dates.taxFilingDue",
+          "operator": "lessThan",
+          "timeValue": "60days",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "financial.taxEducationCompleted",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "💰 Understand Your OPT Tax Obligations",
+        "descriptionTemplate": "Tax season is approaching. Understand your filing requirements as an OPT student.\n\n📊 **Your Tax Status**:\n• **Visa Type**: F1 on OPT\n• **Tax Year**: {dates.currentTaxYear}\n• **Filing Deadline**: {dates.taxFilingDue}\n• **Estimated Income**: {financial.annualIncome}\n\n📋 **Key Tax Considerations**:\n• Generally considered \"non-resident alien\"\n• May be exempt from Social Security/Medicare taxes\n• Must file Form 1040NR or 1040NR-EZ\n• State tax obligations vary by state\n\n📄 **Required Forms**:\n• Form 1040NR (Federal)\n• Form 8843 (all F1 students)\n• W-2 from employer(s)\n• State forms if required\n\n💡 **Tax Benefits**:\n• Standard deduction available\n• Treaty benefits (if applicable)\n• Education credits may apply\n\n🔍 **Resources**:\n• IRS Publication 519\n• University tax workshops\n• VITA (Volunteer Income Tax Assistance)\n• Professional tax preparers familiar with non-resident taxes\n\n⚠️ **Deadline**: April 15, {dates.currentTaxYear + 1}",
+        "category": "financial",
+        "priority": "medium",
+        "dueDateConfig": {
+          "type": "fixed",
+          "baseDate": "2025-04-15"
+        }
+      },
+      "isActive": true,
+      "tags": ["taxes", "financial", "obligations"],
+      "version": "1.0"
+    }
+  ]
+}

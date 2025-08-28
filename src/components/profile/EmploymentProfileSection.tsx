@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { useEmploymentInfo } from "@/hooks/onboarding/useEmploymentInfo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

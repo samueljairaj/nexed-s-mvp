@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { DsoProfileFormData } from "@/components/onboarding/DsoProfileStep";
 
