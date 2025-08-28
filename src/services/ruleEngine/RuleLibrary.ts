@@ -382,9 +382,11 @@ export class RuleValidator {
         }
         if (!condition.logicOperator) {
           errors.push(`Condition ${index} with nested group must specify a logicOperator (AND/OR)`);
+        } else if (condition.logicOperator !== 'AND' && condition.logicOperator !== 'OR') {
+          errors.push(`Condition ${index} logicOperator must be AND or OR`);
         }
-        if (condition.field || condition.operator) {
-          errors.push(`Condition ${index} must not mix "field/operator" with "nested" group`);
+        if (condition.field || condition.operator || 'value' in condition || 'timeValue' in condition) {
+          errors.push(`Condition ${index} must not mix "field/operator/value/timeValue" with "nested" group`);
         }
         condition.nested.forEach((nestedCondition, nestedIndex) => {
           if (!nestedCondition.field) {

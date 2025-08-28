@@ -333,6 +333,11 @@
       "conditions": [
         {
           "field": "dates.i20ExpiryDate",
+          "operator": "exists",
+          "logicOperator": "AND"
+        },
+        {
+          "field": "dates.i20ExpiryDate",
           "operator": "lessThan",
           "timeValue": "30days",
           "logicOperator": "AND"
@@ -368,6 +373,11 @@
       "visaTypes": ["F1"],
       "priority": 55,
       "conditions": [
+        {
+          "field": "dates.i20TravelSignatureDate",
+          "operator": "exists",
+          "logicOperator": "AND"
+        },
         {
           "field": "dates.i20TravelSignatureDate",
           "operator": "lessThan",
