@@ -5,7 +5,7 @@ import { VisaStatusStep } from "./VisaStatusStep";
 import { AcademicInfoStep, AcademicInfoStepRef } from "./AcademicInfoStep";
 import { EmploymentStep } from "./EmploymentStep";
 import { CompletionStep } from "./CompletionStep";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { 
   AccountCreationFormValues,
   PersonalInfoFormValues,

@@ -2,7 +2,7 @@
 import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { Document, DocumentCategory, DocumentFolder, DocumentVersion } from "@/types/document";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { getDocumentStatus, detectDocumentType, suggestDocumentTags } from "@/utils/documentUtils";
 
 // Define the database document type to match what Supabase returns

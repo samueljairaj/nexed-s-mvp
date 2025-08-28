@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../contexts";
+import { useAuth } from "@/contexts";
 import { supabase } from "@/integrations/supabase/client";
 import DocumentVault from "@/components/dashboard/DocumentVault";
 import QuickLinksCard from "@/components/dashboard/QuickLinksCard";

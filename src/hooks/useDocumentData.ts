@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { Document, DocumentCategory } from "@/types/document";
 import { DocumentService } from "@/services/documentService";
 import { toast } from "sonner";

@@ -5,7 +5,7 @@ import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { OnboardingNavigation } from "@/components/onboarding/OnboardingNavigation";
 import { OnboardingStepContent } from "@/components/onboarding/OnboardingStepContent";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { toast } from "sonner";
 import { 
   AccountCreationFormValues, 

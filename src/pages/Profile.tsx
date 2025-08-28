@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
 import { EmploymentProfileSection } from "@/components/profile/EmploymentProfileSection";
