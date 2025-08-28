@@ -61,3 +61,4 @@ export function OnboardingCompletion({
     </div>
   );
 }
+

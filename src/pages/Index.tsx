@@ -499,3 +499,4 @@ const TestimonialCard = ({ quote, author, role, university }: {
 );
 
 export default Index;
+
