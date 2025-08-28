@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PersonalInfoFormValues } from "@/types/onboarding";
 import { dateUtils } from "@/lib/date-utils";
@@ -62,3 +62,4 @@ export function usePersonalInfo() {
     isSubmitting
   };
 }
+

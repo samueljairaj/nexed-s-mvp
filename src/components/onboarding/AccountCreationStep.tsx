@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts";
+import { useAuth } from "@/contexts/AuthContext";
 
 const accountCreationSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -303,3 +303,4 @@ export function AccountCreationStep({
     </div>
   );
 }
+
