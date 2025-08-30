@@ -1,49 +1,3 @@
-<<<<<<< HEAD
-# AI Rules for Sentry Integration
-
-## Sentry Usage Guidelines
-
-When implementing Sentry for error tracking and monitoring, follow these best practices:
-
-### ✅ Correct Usage
-
-Use Sentry's supported APIs for logging and error tracking:
-
-```javascript
-// For adding context and breadcrumbs
-Sentry.addBreadcrumb({
-  category: "document",
-  level: "info",
-  message: "Document uploaded",
-  data: { documentType: "visa", userId: user.id, fileSize: file.size },
-});
-
-// For capturing messages and errors
-Sentry.captureMessage("Visa status update failed", "error");
-
-// For capturing exceptions
-try {
-  // risky operation
-} catch (error) {
-  Sentry.captureException(error, {
-    tags: {
-      feature: "visa-tracking"
-    },
-    extra: {
-      userId: user.id,
-      context: "visa status update"
-    }
-  });
-}
-```
-
-### ❌ Incorrect Usage
-
-Do not use internal Sentry logger APIs that are not publicly exposed:
-
-```javascript
-// DON'T DO THIS - internal logger is not a public API
-=======
 # AI Development Rules for neXed MVP
 
 This file contains development guidelines and patterns that should be followed by ALL AI assistants working on this project.
@@ -56,7 +10,7 @@ This file contains development guidelines and patterns that should be followed b
 
 ---
 
-# Sentry Error Monitoring Rules
+# Sentry Error Monitoring Rules (Code Rabbit Compliant)
 
 ## Import Pattern
 Always import Sentry using:
@@ -64,24 +18,42 @@ Always import Sentry using:
 import * as Sentry from "@sentry/react";
 ```
 
-## Configuration
-Use environment variables for DSN:
+## ✅ Secure Configuration (Code Rabbit Approved)
+Use environment variables with proper security controls:
 ```javascript
+const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+if (DSN) {
+  Sentry.init({
+    dsn: DSN,
+    environment: import.meta.env.VITE_ENVIRONMENT ?? "development",
+    // Default OFF; opt-in via VITE_SENTRY_SEND_PII=true  
+    sendDefaultPii: (import.meta.env.VITE_SENTRY_SEND_PII === "true"),
+    integrations: [
+      Sentry.browserTracingIntegration(),
+    ],
+    // Use lower sampling in production for performance
+    tracesSampleRate: Number(import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? (import.meta.env.PROD ? "0.1" : "1.0")),
+    profilesSampleRate: Number(import.meta.env.VITE_SENTRY_PROFILES_SAMPLE_RATE ?? "0"),
+    release: import.meta.env.VITE_RELEASE,
+  });
+} else if (import.meta.env.DEV) {
+  console.warn("Sentry DSN not set; Sentry.init skipped.");
+}
+```
+
+## ❌ Deprecated Configuration (Code Rabbit Flagged)
+**DO NOT USE** - Security and performance issues:
+```javascript
+// ❌ BAD - No DSN validation, insecure defaults
 Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN,
-  environment: import.meta.env.VITE_ENVIRONMENT || "development",
-  sendDefaultPii: true,
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
-  ],
-  tracesSampleRate: 1.0,
-  enableLogs: true,
+  dsn: import.meta.env.VITE_SENTRY_DSN, // No validation
+  sendDefaultPii: true,                  // Security risk
+  tracesSampleRate: 1.0,                // Performance issue in prod
 });
 ```
 
-## Error Tracking
-Use `Sentry.captureException(error)` in try-catch blocks, especially for:
+## ✅ Error Tracking (Recommended Patterns)
+Use `Sentry.captureException()` in try-catch blocks for:
 - Document upload/download failures
 - Visa status update errors
 - Authentication failures
@@ -97,67 +69,29 @@ try {
       feature: 'document-upload',
       documentType: file.type
     },
-    user: { id: userId, visaStatus: user.visaStatus }
+    extra: {
+      userId: userId, 
+      visaStatus: user.visaStatus
+    }
   });
-  throw error;
+  throw error; // Re-throw for UI handling
 }
 ```
 
-## Performance Tracking
-Create spans for meaningful user actions:
-
-### Document Operations
+## ✅ Context and Breadcrumbs (Recommended)
 ```javascript
-function DocumentUpload() {
-  const handleUpload = (file) => {
-    Sentry.startSpan(
-      {
-        op: "document.upload",
-        name: "Upload Visa Document",
-      },
-      (span) => {
-        span.setAttribute("document.type", file.type);
-        span.setAttribute("document.size", file.size);
-        span.setAttribute("user.visaStatus", user.visaStatus);
-        
-        return uploadDocument(file);
-      },
-    );
-  };
-}
-```
+// Add context breadcrumbs
+Sentry.addBreadcrumb({
+  category: "document",
+  level: "info",
+  message: "Document uploaded",
+  data: { documentType: "visa", userId: user.id, fileSize: file.size },
+});
 
-### API Calls
-```javascript
-async function fetchUserData(userId) {
-  return Sentry.startSpan(
-    {
-      op: "db.query",
-      name: "GET user visa status",
-    },
-    async (span) => {
-      span.setAttribute("user.id", userId);
-      
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId);
-        
-      if (error) {
-        Sentry.captureException(error, {
-          tags: { feature: 'user-data' }
-        });
-      }
-      
-      return data;
-    },
-  );
-}
-```
+// Capture messages for important events
+Sentry.captureMessage("Visa status update failed", "error");
 
-## User Context
-Always set user context for better debugging:
-```javascript
+// Set user context
 Sentry.setUser({
   id: user.id,
   email: user.email,
@@ -165,19 +99,12 @@ Sentry.setUser({
   schoolName: user.schoolName,
   visaType: user.visaType
 });
-
-Sentry.setTag("feature", "feature-name");
-Sentry.setContext("visa", {
-  type: user.visaType,
-  expiryDate: user.visaExpiry,
-  isCompliant: user.isCompliant
-});
 ```
 
-## Logging
-Use structured logging with Sentry logger:
+## ❌ Incorrect Usage (Code Rabbit Flagged)
+**DO NOT USE** internal Sentry APIs:
 ```javascript
->>>>>>> 8e13f94cc76537f67908e0200e9bffdb7208ca54
+// ❌ BAD - Internal logger is not a public API
 const { logger } = Sentry;
 
 logger.info("Document uploaded", { 
@@ -193,51 +120,16 @@ logger.error("Visa status update failed", {
 });
 ```
 
-<<<<<<< HEAD
-### Environment Configuration
-
-Ensure proper environment-based configuration:
-
-```javascript
-// Secure initialization with environment checks
-const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
-if (DSN) {
-  Sentry.init({
-    dsn: DSN,
-    environment: import.meta.env.VITE_ENVIRONMENT ?? "development",
-    // Default OFF; opt-in via VITE_SENTRY_SEND_PII=true
-    sendDefaultPii: (import.meta.env.VITE_SENTRY_SEND_PII === "true"),
-    integrations: [
-      Sentry.browserTracingIntegration(),
-    ],
-    // Use lower default in prod; override via env
-    tracesSampleRate: Number(import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? (import.meta.env.PROD ? "0.1" : "1.0")),
-    profilesSampleRate: Number(import.meta.env.VITE_SENTRY_PROFILES_SAMPLE_RATE ?? "0"),
-    release: import.meta.env.VITE_RELEASE,
-  });
-} else if (import.meta.env.DEV) {
-  console.warn("Sentry DSN not set; Sentry.init skipped.");
-}
-```
-
-### Key Security Considerations
-
-1. **PII Protection**: Keep `sendDefaultPii` disabled by default
-2. **Sample Rates**: Use lower trace sampling in production (0.1) vs development (1.0)
-3. **DSN Validation**: Always check for DSN presence before initialization
-4. **Environment Variables**: Use environment-based configuration for all sensitive settings
-
-### Environment Variables Required
-
+## Environment Variables Required
 ```bash
 VITE_SENTRY_DSN=your_sentry_dsn_here
-VITE_ENVIRONMENT=development|staging|production
+VITE_ENVIRONMENT=development|staging|production  
 VITE_SENTRY_SEND_PII=false
 VITE_SENTRY_TRACES_SAMPLE_RATE=0.1
 VITE_SENTRY_PROFILES_SAMPLE_RATE=0
 VITE_RELEASE=git_sha_or_version
 ```
-=======
+
 ---
 
 # React Development Rules
@@ -372,4 +264,3 @@ Required environment variables:
 ---
 
 **Note for AI Assistants**: Always reference these rules when implementing features, fixing bugs, or adding monitoring to the neXed platform. These patterns ensure consistent error tracking and monitoring across the entire application.
->>>>>>> 8e13f94cc76537f67908e0200e9bffdb7208ca54
