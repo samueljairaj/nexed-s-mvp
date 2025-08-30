@@ -119,6 +119,12 @@ describe('Rule Validation Tests', () => {
       const rule = sampleRules.passportRenewalUrgent;
       const validation = RuleValidator.validateTemplatePlaceholders(rule);
       
+      if (!validation.valid) {
+        console.log('Template validation issues:', validation.issues);
+        console.log('Title template:', rule.taskTemplate.titleTemplate);
+        console.log('Description template:', rule.taskTemplate.descriptionTemplate.substring(0, 200) + '...');
+      }
+      
       expect(validation.valid).toBe(true);
       expect(validation.issues).toHaveLength(0);
     });

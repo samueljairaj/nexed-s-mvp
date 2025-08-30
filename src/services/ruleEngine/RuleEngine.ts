@@ -435,4 +435,12 @@ export class RuleEngine {
     // Clear any cached evaluation results since rules have changed
     this.clearCache();
   }
+
+  /**
+   * Clear cached evaluation results (placeholder implementation)
+   */
+  private clearCache(): void {
+    // TODO: Implement cache clearing when caching is added
+    // For now, this is a no-op to satisfy the clearRules method
+  }
 }

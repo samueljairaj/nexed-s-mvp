@@ -45,17 +45,29 @@ export type DateCalculationType =
   | 'recurring';      // Recurring pattern
 
 /**
- * Rule condition - supports complex logic
+ * A condition that evaluates a single field against a value.
  */
-export interface RuleCondition {
-  field: string;                    // User data field to check
+export type LeafCondition = {
+  field: string;
   operator: RuleOperator;
-  value?: any;                     // Value to compare against (optional for exists/notExists/regex)
-  timeValue?: TimeValue;           // For time-based comparisons
-  logicOperator?: 'AND' | 'OR';    // Aggregation across nested conditions
-  negate?: boolean;                // Invert the aggregated result (NOT)
-  nested?: RuleCondition[];        // For complex nested logic
-}
+  value?: any;
+  timeValue?: TimeValue;
+};
+
+/**
+ * A condition that groups other conditions with a logical operator.
+ */
+export type NestedCondition = {
+  logicOperator: 'AND' | 'OR';
+  nested: RuleCondition[];
+  negate?: boolean;
+};
+
+/**
+ * A rule condition can be a single leaf or a nested group.
+ * This union type ensures that a condition cannot be both.
+ */
+export type RuleCondition = LeafCondition | NestedCondition;
 
 /**
  * Smart date calculation configuration

@@ -5,17 +5,10 @@
  * utilities to ensure rule integrity and proper structure.
  */
 
+import { RuleCondition } from '../types';
+
 // Note: These types will eventually be imported from the main rule engine
 // For now, we define simplified versions for validation
-
-interface RuleCondition {
-  field: string;
-  operator: string;
-  value?: any;
-  timeValue?: string;
-  logicOperator?: 'AND' | 'OR';
-  nested?: RuleCondition[];
-}
 
 interface TaskTemplate {
   titleTemplate: string;
@@ -374,35 +367,48 @@ export class RuleValidator {
     }
     
     // Conditions validation
-    rule.conditions?.forEach((condition, index) => {
-      if (condition.nested) {
-        if (!Array.isArray(condition.nested) || condition.nested.length === 0) {
-          errors.push(`Nested condition at index ${index} must be a non-empty array`);
-        } else {
-          condition.nested.forEach((nestedCondition, nestedIndex) => {
-            if (!nestedCondition.field) {
-              errors.push(`Nested condition at index ${index}[${nestedIndex}] must have a field`);
-            }
-            if (!nestedCondition.operator) {
-              errors.push(`Nested condition at index ${index}[${nestedIndex}] must have an operator`);
-            }
-          });
-        }
-      } else {
-        if (!condition.field) {
-          errors.push(`Condition ${index} must have a field`);
-        }
+    if (rule.conditions) {
+      this.validateConditionsRecursive(rule.conditions, 'root', errors);
+    }
 
-        if (!condition.operator) {
-          errors.push(`Condition ${index} must have an operator`);
-        }
-      }
-    });
-    
     return {
       valid: errors.length === 0,
       errors
     };
+  }
+
+  /**
+   * Recursively validate a list of conditions.
+   */
+  private static validateConditionsRecursive(conditions: RuleCondition[], path: string, errors: string[]): void {
+    conditions.forEach((condition, index) => {
+      const currentPath = `${path}[${index}]`;
+
+      // Use a type guard to differentiate between Leaf and Nested conditions
+      if ('nested' in condition) {
+        // This is potentially a NestedCondition
+        if (Array.isArray(condition.nested)) {
+            if (condition.nested.length === 0) {
+                errors.push(`${currentPath} has an empty nested group.`);
+            }
+            // Recurse into the nested array
+            this.validateConditionsRecursive(condition.nested, currentPath, errors);
+        } else {
+            // Guard against 'nested' being defined but not an array
+            errors.push(`${currentPath}.nested must be an array when provided.`);
+        }
+      } else if ('field' in condition) {
+        // This is a LeafCondition, validate its properties
+        if (!condition.field) {
+          errors.push(`${currentPath} is missing a "field".`);
+        }
+        if (!condition.operator) {
+          errors.push(`${currentPath} is missing an "operator".`);
+        }
+      } else {
+        errors.push(`${currentPath} is not a valid Leaf or Nested condition.`);
+      }
+    });
   }
   
   /**
@@ -489,8 +495,16 @@ export class RuleValidator {
       }
       
       // Check for missing calculation prefix
-      if (placeholder.includes('days_until') && !placeholder.startsWith('#')) {
-        issues.push(`Calculated placeholder missing # prefix: ${placeholder}`);
+      // Heuristic: calculated placeholders typically don't contain dots and use snake_case (e.g., days_until_*, *_deadline)
+      const isLikelyCalculated = (name: string) => !name.includes('.') && /_/.test(name) && !name.startsWith('#');
+      if (isLikelyCalculated(placeholder)) {
+        const titleHasProperFormat = rule.taskTemplate.titleTemplate.includes(`{#${placeholder}}`);
+        const descHasProperFormat = rule.taskTemplate.descriptionTemplate.includes(`{#${placeholder}}`);
+        const titleHasPlain = rule.taskTemplate.titleTemplate.includes(`{${placeholder}}`);
+        const descHasPlain = rule.taskTemplate.descriptionTemplate.includes(`{${placeholder}}`);
+        if ((titleHasPlain || descHasPlain) && !titleHasProperFormat && !descHasProperFormat) {
+          issues.push(`Calculated placeholder missing # prefix: ${placeholder}`);
+        }
       }
     });
     

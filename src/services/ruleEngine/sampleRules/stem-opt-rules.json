@@ -276,5 +276,82 @@
       "tags": ["final-evaluation", "stem", "completion", "comprehensive"],
       "version": "1.0"
     }
+    ,
+    {
+      "id": "stem-opt-self-evaluation-6month",
+      "name": "Complete 6-Month Self-Evaluation",
+      "description": "Mandatory self-evaluation at 6 months of STEM OPT",
+      "ruleGroup": "reporting",
+      "phase": ["stem_active"],
+      "visaTypes": ["STEM_OPT"],
+      "priority": 78,
+      "conditions": [
+        {
+          "nested": [
+            { "field": "dates.stemOptStartDate", "operator": "greaterThan", "timeValue": "5months" },
+            { "field": "dates.stemOptStartDate", "operator": "lessThan",  "timeValue": "6months" }
+          ],
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.sixMonthEvaluationCompleted",
+          "operator": "equals",
+          "value": false,
+          "logicOperator": "AND"
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "📊 Complete 6-Month STEM OPT Self-Evaluation",
+        "descriptionTemplate": "Your 6-month STEM OPT evaluation is due. Complete this mandatory self-assessment.",
+        "category": "reporting",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.stemOptStartDate",
+          "offset": "+185days"
+        }
+      },
+      "isActive": true,
+      "tags": ["self-evaluation", "6-month", "stem", "mandatory"],
+      "version": "1.0"
+    }
+    ,
+    {
+      "id": "stem-opt-self-evaluation-18month",
+      "name": "Complete 18-Month Self-Evaluation",
+      "description": "Mandatory self-evaluation at 18 months of STEM OPT",
+      "ruleGroup": "reporting",
+      "phase": ["stem_active"],
+      "visaTypes": ["STEM_OPT"],
+      "priority": 78,
+      "conditions": [
+        {
+          "nested": [
+            { "field": "dates.stemOptStartDate", "operator": "greaterThan", "timeValue": "17months" },
+            { "field": "dates.stemOptStartDate", "operator": "lessThan",  "timeValue": "18months" }
+          ],
+          "logicOperator": "AND"
+        },
+        {
+          "field": "employment.eighteenMonthEvaluationCompleted",
+          "operator": "equals",
+          "value": false
+        }
+      ],
+      "taskTemplate": {
+        "titleTemplate": "📊 Complete 18-Month STEM OPT Self-Evaluation",
+        "descriptionTemplate": "Your 18-month STEM OPT evaluation is due. Complete this required assessment.",
+        "category": "reporting",
+        "priority": "high",
+        "dueDateConfig": {
+          "type": "relative",
+          "baseDate": "dates.stemOptStartDate",
+          "offset": "+545days"
+        }
+      },
+      "isActive": true,
+      "tags": ["self-evaluation", "18-month", "stem", "mandatory"],
+      "version": "1.0"
+    }
   ]
 }
