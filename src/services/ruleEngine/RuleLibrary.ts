@@ -499,7 +499,7 @@ export class RuleValidator {
       
       // Check for missing calculation prefix
       // Heuristic: calculated placeholders typically don't contain dots and use snake_case (e.g., days_until_*, *_deadline)
-      const isLikelyCalculated = (name: string) => !name.includes('.') && /_/.test(name);
+      const isLikelyCalculated = (name: string) => !name.includes('.') && /_/.test(name) && !name.startsWith('#');
       if (isLikelyCalculated(placeholder)) {
         const titleHasProperFormat = rule.taskTemplate.titleTemplate.includes(`{#${placeholder}}`);
         const descHasProperFormat = rule.taskTemplate.descriptionTemplate.includes(`{#${placeholder}}`);
