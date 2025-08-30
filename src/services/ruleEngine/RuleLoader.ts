@@ -177,14 +177,24 @@ export class RuleLoader {
    * Load embedded rules based on location
    */
   private async loadEmbeddedRules(location: string): Promise<RuleDefinition[]> {
-    const filePath = path.join(process.cwd(), 'src', 'services', 'ruleEngine', 'sampleRules', `${location}.json`);
+    // Try build-relative first, then source-relative as fallback
+    const candidates = [
+      path.resolve(__dirname, 'sampleRules', `${location}.json`),
+      path.resolve(process.cwd(), 'src', 'services', 'ruleEngine', 'sampleRules', `${location}.json`),
+    ];
+    const filePath = candidates.find(p => fs.existsSync(p));
+
+    if (!filePath) {
+      throw new RuleEngineError(`Rule file not found for location: ${location}`, 'RULE_LOADING_FAILED');
+    }
+
     try {
       const fileContent = await fs.promises.readFile(filePath, 'utf-8');
       const ruleSet = JSON.parse(fileContent);
       if (ruleSet && Array.isArray(ruleSet.rules)) {
         return ruleSet.rules;
       }
-      console.warn(`Warning: Rule file at ${location}.json is not structured correctly or has no rules.`);
+      console.warn(`Warning: Rule file at ${path.basename(filePath)} is not structured correctly or has no rules.`);
       return [];
     } catch (error) {
       console.error(`Error loading rule file ${location}.json:`, error);

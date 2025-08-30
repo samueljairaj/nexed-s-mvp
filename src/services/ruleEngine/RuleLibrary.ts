@@ -5,17 +5,10 @@
  * utilities to ensure rule integrity and proper structure.
  */
 
+import { RuleCondition } from '../types';
+
 // Note: These types will eventually be imported from the main rule engine
 // For now, we define simplified versions for validation
-
-interface RuleCondition {
-  field: string;
-  operator: string;
-  value?: any;
-  timeValue?: string;
-  logicOperator?: 'AND' | 'OR';
-  nested?: RuleCondition[];
-}
 
 interface TaskTemplate {
   titleTemplate: string;
@@ -390,35 +383,32 @@ export class RuleValidator {
   private static validateConditionsRecursive(conditions: RuleCondition[], path: string, errors: string[]): void {
     conditions.forEach((condition, index) => {
       const currentPath = `${path}[${index}]`;
-      // If condition is a nested group
-      if (Array.isArray(condition.nested)) {
-        if (condition.nested.length === 0) {
-          errors.push(`${currentPath} has an empty nested group.`);
+
+      // Use a type guard to differentiate between Leaf and Nested conditions
+      if ('nested' in condition) {
+        // This is potentially a NestedCondition
+        if (Array.isArray(condition.nested)) {
+            if (condition.nested.length === 0) {
+                errors.push(`${currentPath} has an empty nested group.`);
+            }
+            // Recurse into the nested array
+            this.validateConditionsRecursive(condition.nested, currentPath, errors);
+        } else {
+            // Guard against 'nested' being defined but not an array
+            errors.push(`${currentPath}.nested must be an array when provided.`);
         }
-        if (!condition.logicOperator || !['AND', 'OR'].includes(condition.logicOperator)) {
-          errors.push(`${currentPath} with a nested group must have a logicOperator of 'AND' or 'OR'.`);
-        }
-        // A nested group should not have field/operator properties
-        if (condition.field || condition.operator || 'value' in condition || 'timeValue' in condition) {
-          errors.push(`${currentPath} must not mix "field/operator/value" with a "nested" group.`);
-        }
-        // Recurse
-        this.validateConditionsRecursive(condition.nested, currentPath, errors);
-      } else {
-        // It's a simple condition, validate its properties
+      } else if ('field' in condition) {
+        // This is a LeafCondition, validate its properties
         if (!condition.field) {
           errors.push(`${currentPath} is missing a "field".`);
         }
         if (!condition.operator) {
           errors.push(`${currentPath} is missing an "operator".`);
         }
+      } else {
+        errors.push(`${currentPath} is not a valid Leaf or Nested condition.`);
       }
     });
-    
-    return {
-      valid: errors.length === 0,
-      errors
-    };
   }
   
   /**
