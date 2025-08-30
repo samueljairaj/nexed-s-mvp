@@ -182,7 +182,19 @@ export class RuleLoader {
       path.resolve(__dirname, 'sampleRules', `${location}.json`),
       path.resolve(process.cwd(), 'src', 'services', 'ruleEngine', 'sampleRules', `${location}.json`),
     ];
-    const filePath = candidates.find(p => fs.existsSync(p));
+    
+    // Use async fs.access instead of sync existsSync
+    let filePath: string | undefined;
+    for (const candidate of candidates) {
+      try {
+        await fs.promises.access(candidate);
+        filePath = candidate;
+        break;
+      } catch {
+        // Continue to next candidate
+        continue;
+      }
+    }
 
     if (!filePath) {
       throw new RuleEngineError(`Rule file not found for location: ${location}`, 'RULE_LOADING_FAILED');
@@ -192,7 +204,15 @@ export class RuleLoader {
       const fileContent = await fs.promises.readFile(filePath, 'utf-8');
       const ruleSet = JSON.parse(fileContent);
       if (ruleSet && Array.isArray(ruleSet.rules)) {
-        return ruleSet.rules;
+        // Normalize Date fields for JSON rules that lack createdAt/updatedAt
+        const now = new Date();
+        const defaultDate = ruleSet.ruleSet?.lastUpdated ? new Date(ruleSet.ruleSet.lastUpdated) : now;
+        
+        return ruleSet.rules.map((rule: any) => ({
+          ...rule,
+          createdAt: rule.createdAt ? new Date(rule.createdAt) : defaultDate,
+          updatedAt: rule.updatedAt ? new Date(rule.updatedAt) : now
+        }));
       }
       console.warn(`Warning: Rule file at ${path.basename(filePath)} is not structured correctly or has no rules.`);
       return [];
