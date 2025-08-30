@@ -241,6 +241,7 @@ describe('Rule Engine Integration Tests', () => {
           unemploymentDaysUsed: 20,
           maxUnemploymentDays: 90,
           stemOptApplicationSubmitted: false,
+          employerEVerifyVerified: false,
           eVerifyCompliant: false
         },
         documents: {
