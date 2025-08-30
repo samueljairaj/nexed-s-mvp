@@ -467,7 +467,7 @@ export class RuleValidator {
     // Calculated placeholders: {#calculation}
     const calculatedMatches = template.match(/\{#([^}]+)\}/g);
     if (calculatedMatches) {
-      placeholders.push(...calculatedMatches.map(match => match.slice(2, -1)));
+      placeholders.push(...calculatedMatches.map(match => match.slice(1, -1)));
     }
     
     // Conditional placeholders: {?condition:true:false}

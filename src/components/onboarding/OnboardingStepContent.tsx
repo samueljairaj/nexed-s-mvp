@@ -26,11 +26,11 @@ interface OnboardingCurrentUser {
 
 interface OnboardingStepContentProps {
   currentStep: number;
-  accountData: AccountCreationFormValues | null;
-  personalData: PersonalInfoFormValues | null;
-  visaData: VisaStatusFormValues | null;
-  academicData: AcademicInfoFormValues | null;
-  employmentData: EmploymentInfoFormValues | null;
+  accountData: Partial<AccountCreationFormValues> | null;
+  personalData: Partial<PersonalInfoFormValues> | null;
+  visaData: Partial<VisaStatusFormValues> | null;
+  academicData: Partial<AcademicInfoFormValues> | null;
+  employmentData: Partial<EmploymentInfoFormValues> | null;
   isSubmitting: boolean;
   currentUser: OnboardingCurrentUser | null;
   handleAccountCreation: (data: AccountCreationFormValues) => Promise<boolean>;

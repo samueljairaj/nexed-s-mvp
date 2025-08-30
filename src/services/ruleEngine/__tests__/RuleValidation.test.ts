@@ -111,7 +111,7 @@ describe('Rule Validation Tests', () => {
       const placeholders = RuleValidator.extractPlaceholders(template);
       
       expect(placeholders).toContain('dates.passportExpiryDate');
-      expect(placeholders).toContain('days_until_expiry');
+      expect(placeholders).toContain('#days_until_expiry');
       expect(placeholders).toContain('academic.isSTEM:STEM:Regular');
     });
     

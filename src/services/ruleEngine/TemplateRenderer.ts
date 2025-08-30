@@ -131,14 +131,24 @@ export class TemplateRenderer {
    * Evaluate conditional expression: condition:trueValue:falseValue
    */
   private evaluateConditionalExpression(expression: string, context: TemplateContext): string {
-    const parts = expression.split(':');
+    // Parse condition:true:false with support for \"...\", '...' and \: escaping
+    const parts: string[] = [];
+    let buf = '';
+    let inSingle = false, inDouble = false, esc = false;
+    for (const ch of expression) {
+      if (esc) { buf += ch; esc = false; continue; }
+      if (ch === '\\') { esc = true; continue; }
+      if (ch === "'" && !inDouble) { inSingle = !inSingle; buf += ch; continue; }
+      if (ch === '"' && !inSingle) { inDouble = !inDouble; buf += ch; continue; }
+      if (ch === ':' && !inSingle && !inDouble) { parts.push(buf); buf = ''; continue; }
+      buf += ch;
+    }
+    parts.push(buf);
     if (parts.length !== 3) {
       return `{Invalid conditional: ${expression}}`;
     }
-    
     const [condition, trueValue, falseValue] = parts;
     const conditionResult = this.evaluateCondition(condition.trim(), context);
-    
     return conditionResult ? trueValue.trim() : falseValue.trim();
   }
 
@@ -196,19 +206,38 @@ export class TemplateRenderer {
    * Compare values with operator
    */
   private compareValues(left: any, operator: string, right: any): boolean {
+    const coerceDate = (v: any): number | undefined => {
+      if (v instanceof Date) return v.getTime();
+      if (typeof v === 'string') {
+        const d = new Date(v);
+        if (!isNaN(d.getTime())) return d.getTime();
+      }
+      return undefined;
+    };
+    // If either side looks like a date, compare by epoch ms
+    const lDate = coerceDate(left);
+    const rDate = coerceDate(right);
+    const l = lDate !== undefined ? lDate : left;
+    const r = rDate !== undefined ? rDate : right;
+    if (l === undefined || r === undefined) {
+      if (operator === '==' || operator === '!=') {
+        return operator === '==' ? l === r : l !== r;
+      }
+      return false;
+    }
     switch (operator) {
       case '==':
-        return left === right;
+        return l === r;
       case '!=':
-        return left !== right;
+        return l !== r;
       case '>':
-        return left > right;
+        return l > r;
       case '<':
-        return left < right;
+        return l < r;
       case '>=':
-        return left >= right;
+        return l >= r;
       case '<=':
-        return left <= right;
+        return l <= r;
       default:
         return false;
     }

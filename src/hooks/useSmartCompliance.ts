@@ -5,11 +5,14 @@
  * offering enhanced task management with intelligent rule-based generation.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts';
 import { SmartComplianceService, TaskGenerationResult } from '@/services/SmartComplianceService';
 import { Task } from '@/hooks/useComplianceTasks';
 import { toast } from 'sonner';
+
+// Type alias to strongly type performance state
+type TaskPerformance = NonNullable<TaskGenerationResult['performance']>;
 
 /**
  * Hook configuration options
@@ -82,21 +85,23 @@ export const useSmartCompliance = (options: UseSmartComplianceOptions = {}): Use
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastGeneratedAt, setLastGeneratedAt] = useState<Date | null>(null);
   const [source, setSource] = useState<'rule-engine' | 'fallback' | 'hybrid' | null>(null);
-  const [performance, setPerformance] = useState<any>(null);
+  const [performance, setPerformance] = useState<TaskPerformance | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [serviceHealth, setServiceHealth] = useState({
     status: 'healthy' as const,
     ruleEngineAvailable: true,
     fallbackAvailable: true
   });
+  // Prevent concurrent generations and stale updates across user changes
+  const inFlightForUserRef = useRef<string | null>(null);
 
-  // Configuration with defaults
+  // Configuration with defaults - move spread first to prevent nullish coalescing issues
   const config = {
+    ...options,
     enableAutoRefresh: options.enableAutoRefresh ?? false,
     refreshIntervalMinutes: options.refreshIntervalMinutes ?? 30,
     enableNotifications: options.enableNotifications ?? true,
-    debugMode: options.debugMode ?? false,
-    ...options
+    debugMode: options.debugMode ?? false
   };
 
   // Get smart compliance service instance
@@ -119,15 +124,30 @@ export const useSmartCompliance = (options: UseSmartComplianceOptions = {}): Use
       return;
     }
 
+    if (inFlightForUserRef.current) {
+      if (config.debugMode) {
+        console.log('⏳ Generation already in progress; skipping new request');
+      }
+      return;
+    }
+    const userId = currentUser.id;
+    inFlightForUserRef.current = userId;
     setIsGenerating(true);
     setErrors([]);
 
     try {
       if (config.debugMode) {
-        console.log(`🚀 Generating smart tasks for user: ${currentUser.id}`);
+        console.log(`🚀 Generating smart tasks for user: ${userId}`);
       }
 
-      const result: TaskGenerationResult = await smartService.generateSmartTasks(currentUser.id);
+      const result: TaskGenerationResult = await smartService.generateSmartTasks(userId);
+      // Ignore stale response if user changed mid-flight
+      if (inFlightForUserRef.current !== userId) {
+        if (config.debugMode) {
+          console.log('🪄 Stale response ignored (user changed during request)');
+        }
+        return;
+      }
       
       setTasks(result.tasks);
       setLastGeneratedAt(result.generatedAt);
@@ -167,6 +187,7 @@ export const useSmartCompliance = (options: UseSmartComplianceOptions = {}): Use
         });
       }
     } finally {
+      inFlightForUserRef.current = null;
       setIsGenerating(false);
       setIsLoading(false);
     }
@@ -330,6 +351,15 @@ export const useSmartCompliance = (options: UseSmartComplianceOptions = {}): Use
     if (currentUser?.id) {
       generateSmartTasks();
       checkServiceHealth();
+    } else {
+      // Reset state for logged-out / missing user
+      setTasks([]);
+      setIsLoading(false);
+      setIsGenerating(false);
+      setLastGeneratedAt(null);
+      setSource(null);
+      setPerformance(null);
+      setErrors([]);
     }
   }, [currentUser?.id, generateSmartTasks, checkServiceHealth]);
 
