@@ -49,11 +49,7 @@
     "@radix-ui/react-toggle": "^1.1.0",
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.4",
-<<<<<<< HEAD
-    "@sentry/react": "^8.41.0",
-=======
     "@sentry/react": "^10.8.0",
->>>>>>> 8e13f94cc76537f67908e0200e9bffdb7208ca54
     "@supabase/supabase-js": "^2.49.4",
     "@tanstack/react-query": "^5.56.2",
     "caniuse-lite": "^1.0.30001723",
