@@ -192,7 +192,15 @@ export class RuleLoader {
       const fileContent = await fs.promises.readFile(filePath, 'utf-8');
       const ruleSet = JSON.parse(fileContent);
       if (ruleSet && Array.isArray(ruleSet.rules)) {
-        return ruleSet.rules;
+        // Map JSON rules to include required Date fields
+        const now = new Date();
+        const defaultDate = ruleSet.ruleSet?.lastUpdated ? new Date(ruleSet.ruleSet.lastUpdated) : now;
+        
+        return ruleSet.rules.map(rule => ({
+          ...rule,
+          createdAt: rule.createdAt ? new Date(rule.createdAt) : defaultDate,
+          updatedAt: rule.updatedAt ? new Date(rule.updatedAt) : now
+        }));
       }
       console.warn(`Warning: Rule file at ${path.basename(filePath)} is not structured correctly or has no rules.`);
       return [];
@@ -202,7 +210,7 @@ export class RuleLoader {
         `Failed to load or parse rule file: ${location}.json`,
         'RULE_LOADING_FAILED'
       );
-    }
+      }
   }
 
 
