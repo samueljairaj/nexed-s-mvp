@@ -418,6 +418,16 @@ export class RuleEngine {
   }
 
   /**
+   * Clear any cached results.
+   */
+  public clearCache(): void {
+    // TODO: Implement full cache clearing logic if caching is added.
+    if (this.config.debugMode) {
+      console.log('Cache cleared (or would have been).');
+    }
+  }
+
+  /**
    * Clear all loaded rules
    */
   public clearRules(): void {
