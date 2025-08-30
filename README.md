@@ -61,9 +61,23 @@ VITE_SUPABASE_ANON_KEY=your-staging-anon-key
 VITE_ENVIRONMENT=staging
 ```
 
-## 🤖 CodeRabbit Integration
+## 🤖 AI Development Guidelines
 
-This project uses CodeRabbit for AI-powered code reviews. 
+### Universal AI Rules
+This project includes comprehensive AI development guidelines in `AI-RULES.md` that should be followed by ALL AI assistants (Cursor, GitHub Copilot, Windsurf, etc.) when working on this codebase.
+
+The rules cover:
+- Sentry error monitoring patterns
+- React development best practices  
+- Supabase integration guidelines
+- neXed-specific business rules
+- TypeScript and code quality standards
+
+**For AI Assistants**: Always reference `AI-RULES.md` when implementing features or fixes.
+
+### CodeRabbit Integration
+
+This project also uses CodeRabbit for AI-powered code reviews.
 
 ### Setup CodeRabbit
 1. **Install Extension**: Install CodeRabbit extension in Cursor/VS Code
