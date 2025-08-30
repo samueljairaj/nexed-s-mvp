@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileCheck, FolderArchive, MessageCircle, GraduationCap, Shield, Clock, CheckCircle, Star, ArrowRight } from "lucide-react";
+import * as Sentry from '@sentry/react';
 
 const Index = () => {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
@@ -446,7 +447,7 @@ const Index = () => {
             <p className="text-gray-400 text-sm">
               © 2025 neXed. All rights reserved.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
+            <div className="flex space-x-6 mt-4 md:mt-0 items-center">
               <div className="flex items-center space-x-2 text-sm text-gray-400">
                 <Shield className="h-4 w-4" />
                 <span>SOC 2 Compliant</span>
