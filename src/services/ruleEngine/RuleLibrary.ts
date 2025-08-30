@@ -375,12 +375,27 @@ export class RuleValidator {
     
     // Conditions validation
     rule.conditions?.forEach((condition, index) => {
-      if (!condition.field) {
-        errors.push(`Condition ${index} must have a field`);
-      }
-      
-      if (!condition.operator) {
-        errors.push(`Condition ${index} must have an operator`);
+      if (condition.nested) {
+        if (!Array.isArray(condition.nested) || condition.nested.length === 0) {
+          errors.push(`Nested condition at index ${index} must be a non-empty array`);
+        } else {
+          condition.nested.forEach((nestedCondition, nestedIndex) => {
+            if (!nestedCondition.field) {
+              errors.push(`Nested condition at index ${index}[${nestedIndex}] must have a field`);
+            }
+            if (!nestedCondition.operator) {
+              errors.push(`Nested condition at index ${index}[${nestedIndex}] must have an operator`);
+            }
+          });
+        }
+      } else {
+        if (!condition.field) {
+          errors.push(`Condition ${index} must have a field`);
+        }
+
+        if (!condition.operator) {
+          errors.push(`Condition ${index} must have an operator`);
+        }
       }
     });
     
@@ -443,7 +458,7 @@ export class RuleValidator {
     // Calculated placeholders: {#calculation}
     const calculatedMatches = template.match(/\{#([^}]+)\}/g);
     if (calculatedMatches) {
-      placeholders.push(...calculatedMatches.map(match => match.slice(2, -1)));
+      placeholders.push(...calculatedMatches.map(match => match.slice(1, -1)));
     }
     
     // Conditional placeholders: {?condition:true:false}
