@@ -234,40 +234,43 @@
       "priority": 60,
       "conditions": [
         {
-          "field": "academic.fieldOfStudy",
-          "operator": "exists",
-          "logicOperator": "AND"
-        },
-        {
-          "field": "employment.stemEligibilityChecked",
-          "operator": "equals",
-          "value": false,
-          "logicOperator": "AND"
-        },
-        {
+          "logicOperator": "AND",
           "nested": [
             {
               "field": "academic.fieldOfStudy",
-              "operator": "contains",
-              "value": "Computer"
+              "operator": "exists"
             },
             {
-              "field": "academic.fieldOfStudy",
-              "operator": "contains",
-              "value": "Engineering"
+              "field": "employment.stemEligibilityChecked",
+              "operator": "equals",
+              "value": false
             },
             {
-              "field": "academic.fieldOfStudy",
-              "operator": "contains",
-              "value": "Mathematics"
-            },
-            {
-              "field": "academic.fieldOfStudy",
-              "operator": "contains",
-              "value": "Science"
+              "logicOperator": "OR",
+              "nested": [
+                {
+                  "field": "academic.fieldOfStudy",
+                  "operator": "contains",
+                  "value": "Computer"
+                },
+                {
+                  "field": "academic.fieldOfStudy",
+                  "operator": "contains",
+                  "value": "Engineering"
+                },
+                {
+                  "field": "academic.fieldOfStudy",
+                  "operator": "contains",
+                  "value": "Mathematics"
+                },
+                {
+                  "field": "academic.fieldOfStudy",
+                  "operator": "contains",
+                  "value": "Science"
+                }
+              ]
             }
-          ],
-          "logicOperator": "OR"
+          ]
         }
       ],
       "taskTemplate": {
