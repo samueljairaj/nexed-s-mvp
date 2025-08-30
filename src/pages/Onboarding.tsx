@@ -12,8 +12,13 @@ import {
   PersonalInfoFormValues, 
   VisaStatusFormValues, 
   AcademicInfoFormValues, 
-  EmploymentInfoFormValues 
+  EmploymentInfoFormValues,
+  VisaType 
 } from "@/types/onboarding";
+
+// Type guard and constants for visa type validation
+const VISA_TYPES: ReadonlyArray<VisaType> = ["F1", "J1", "H1B", "Other"] as const;
+const isVisaType = (v: unknown): v is VisaType => VISA_TYPES.includes(v as VisaType);
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -147,7 +152,13 @@ const Onboarding = () => {
         academicData={formData.academic}
         employmentData={formData.employment}
         isSubmitting={isSubmitting}
-        currentUser={currentUser}
+        currentUser={currentUser ? {
+          name: currentUser.name,
+          visaType: isVisaType(currentUser.visaType) ? currentUser.visaType : "Other",
+          university: currentUser.university,
+          fieldOfStudy: currentUser.fieldOfStudy,
+          employer: currentUser.employer
+        } : null}
         handleAccountCreation={handleAccountFormSubmit}
         handlePersonalInfo={handlePersonalFormSubmit}
         handleVisaStatus={handleVisaFormSubmit}
